@@ -8,59 +8,28 @@ import { createIconTexture, getGlowDotTexture } from '../../utils/iconTextures'
 
 const R = 2.0
 
-const { vertices, edges, pentagonCenters, hexCenters } = buildSoccerBall()
+const { vertices, edges, hexCenters } = buildSoccerBall()
 
-const pentNeighborVerts = pentagonCenters.map(pc =>
+// ── 8 icon positions = 8 cube vertices normalized to the sphere ───────────────
+// These are the centers of the 8 equal octants of the sphere — the optimal
+// "split into 8 equal areas, one icon per area" arrangement.
+const ICON_CENTERS = (() => {
+  const pts = []
+  for (const x of [-1, 1])
+    for (const y of [-1, 1])
+      for (const z of [-1, 1])
+        pts.push(new THREE.Vector3(x, y, z).normalize())
+  return pts
+})()
+
+// Nearest 5 soccer-ball grid vertices to each icon — used as spoke endpoints
+const ICON_NEAR_VERTS = ICON_CENTERS.map(ic =>
   vertices
-    .map((v, i) => ({ i, d: pc.distanceTo(v) }))
+    .map((v, i) => ({ i, d: ic.distanceTo(v) }))
     .sort((a, b) => a.d - b.d)
     .slice(0, 5)
     .map(x => x.i)
 )
-
-// ── Antipodal pentagon pairs ──────────────────────────────────────────────────
-const ANTIPODAL_PAIRS = (() => {
-  const pairs = []
-  const used = new Set()
-  for (let i = 0; i < pentagonCenters.length; i++) {
-    if (used.has(i)) continue
-    for (let j = i + 1; j < pentagonCenters.length; j++) {
-      if (used.has(j)) continue
-      if (pentagonCenters[i].clone().add(pentagonCenters[j]).length() < 0.01) {
-        pairs.push([i, j])
-        used.add(i); used.add(j)
-        break
-      }
-    }
-  }
-  return pairs
-})()
-
-// Pick 4 antipodal pairs (8 icons) via greedy max-min spread
-const ICON_INDICES = (() => {
-  const selPairs = [0]
-  while (selPairs.length < 4) {
-    let best = -1, bestMinD = -1
-    for (let pi = 0; pi < ANTIPODAL_PAIRS.length; pi++) {
-      if (selPairs.includes(pi)) continue
-      const [pa, pb] = ANTIPODAL_PAIRS[pi]
-      let minD = Infinity
-      for (const sp of selPairs) {
-        const [a, b] = ANTIPODAL_PAIRS[sp]
-        minD = Math.min(minD,
-          pentagonCenters[pa].distanceTo(pentagonCenters[a]),
-          pentagonCenters[pa].distanceTo(pentagonCenters[b]),
-          pentagonCenters[pb].distanceTo(pentagonCenters[a]),
-          pentagonCenters[pb].distanceTo(pentagonCenters[b]),
-        )
-      }
-      if (minD > bestMinD) { bestMinD = minD; best = pi }
-    }
-    selPairs.push(best)
-  }
-  return selPairs.flatMap(pi => ANTIPODAL_PAIRS[pi])
-})()
-const ICON_CENTERS = ICON_INDICES.map(i => pentagonCenters[i])
 
 // ── Arc sampling ──────────────────────────────────────────────────────────────
 function sampleArc(arcPts, spacing) {
@@ -105,7 +74,7 @@ const CARDINAL_SPOKE_POSITIONS = (() => {
   const pts = []
   ICON_CENTERS.forEach((c, idx) => {
     const norm = c.clone().normalize()
-    const nearVerts = pentNeighborVerts[idx].map(vi => vertices[vi])
+    const nearVerts = ICON_NEAR_VERTS[idx].map(vi => vertices[vi])
 
     nearVerts.forEach(v => {
       // Tangent-plane direction from icon center toward this vertex
