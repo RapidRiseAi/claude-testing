@@ -1,10 +1,9 @@
 import * as THREE from 'three'
 
-// Each draw fn receives a canvas 2d context already translated to center (128,128)
-// and scaled so 1 unit = ~6.3px. Draw in 0→24 SVG-coordinate space.
 const DRAW = [
   // 0 Analytics
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     ctx.fillStyle = ctx.strokeStyle
     ctx.fillRect(3, 14, 4, 7); ctx.fillRect(10, 9, 4, 12); ctx.fillRect(17, 5, 4, 16)
     ctx.beginPath(); ctx.moveTo(2, 21); ctx.lineTo(22, 21)
@@ -12,6 +11,7 @@ const DRAW = [
   },
   // 1 IoT / Chip
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     ctx.strokeRect(7, 7, 10, 10)
     for (const y of [9, 12, 15]) {
       ctx.beginPath(); ctx.moveTo(3, y); ctx.lineTo(7, y); ctx.stroke()
@@ -21,9 +21,12 @@ const DRAW = [
       ctx.beginPath(); ctx.moveTo(x, 3); ctx.lineTo(x, 7); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(x, 17); ctx.lineTo(x, 21); ctx.stroke()
     }
+    ctx.fillStyle = ctx.strokeStyle
+    ctx.beginPath(); ctx.arc(12, 12, 1.5, 0, Math.PI * 2); ctx.fill()
   },
   // 2 Identity
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     ctx.strokeRect(2, 5, 20, 14)
     ctx.beginPath(); ctx.arc(8, 12, 2.5, 0, Math.PI * 2); ctx.stroke()
     ctx.beginPath()
@@ -34,6 +37,7 @@ const DRAW = [
   },
   // 3 Integrations (nodes connected)
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     for (const [x, y] of [[3,3],[17,3],[3,17],[17,17]]) ctx.strokeRect(x, y, 4, 4)
     ctx.beginPath(); ctx.arc(12, 12, 2, 0, Math.PI * 2); ctx.stroke()
     ctx.beginPath()
@@ -43,6 +47,7 @@ const DRAW = [
   },
   // 4 Automation (gear)
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 10
     ctx.beginPath(); ctx.arc(12, 12, 7, 0, Math.PI * 2); ctx.stroke()
     ctx.beginPath(); ctx.arc(12, 12, 3, 0, Math.PI * 2); ctx.stroke()
     for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
@@ -54,6 +59,7 @@ const DRAW = [
   },
   // 5 Code
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     ctx.beginPath()
     ctx.moveTo(15, 18); ctx.lineTo(21, 12); ctx.lineTo(15, 6); ctx.stroke()
     ctx.beginPath()
@@ -62,11 +68,12 @@ const DRAW = [
   },
   // 6 Web Platform
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     ctx.strokeRect(2, 3, 20, 15)
     ctx.beginPath(); ctx.moveTo(2, 7); ctx.lineTo(22, 7); ctx.stroke()
-    ctx.beginPath()
-    ctx.arc(5.5, 5, 1, 0, Math.PI * 2)
-    ctx.arc(9, 5, 1, 0, Math.PI * 2); ctx.stroke()
+    ctx.fillStyle = ctx.strokeStyle
+    ctx.beginPath(); ctx.arc(5.5, 5, 1, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(9, 5, 1, 0, Math.PI * 2); ctx.fill()
     ctx.beginPath(); ctx.arc(12, 13, 3, 0, Math.PI * 2); ctx.stroke()
     for (let a = 0; a < Math.PI * 2; a += Math.PI / 3) {
       ctx.beginPath()
@@ -78,6 +85,7 @@ const DRAW = [
   },
   // 7 AI / Robot
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 10
     ctx.strokeRect(3, 8, 18, 11)
     ctx.beginPath()
     ctx.moveTo(8, 8); ctx.lineTo(8, 5); ctx.lineTo(16, 5); ctx.lineTo(16, 8); ctx.stroke()
@@ -90,6 +98,7 @@ const DRAW = [
   },
   // 8 Database
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     for (const y of [5, 12, 19]) {
       ctx.beginPath(); ctx.ellipse(12, y, 8, 2.5, 0, 0, Math.PI * 2); ctx.stroke()
     }
@@ -99,6 +108,7 @@ const DRAW = [
   },
   // 9 Cloud / Server
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     ctx.beginPath()
     ctx.moveTo(8, 19); ctx.lineTo(5, 19)
     ctx.arc(5, 15, 4, Math.PI * 0.5, Math.PI * 1.5)
@@ -109,6 +119,7 @@ const DRAW = [
   },
   // 10 Shield / Security
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 10
     ctx.beginPath()
     ctx.moveTo(12, 2); ctx.lineTo(20, 6); ctx.lineTo(20, 13)
     ctx.quadraticCurveTo(20, 20, 12, 23)
@@ -119,11 +130,11 @@ const DRAW = [
   },
   // 11 Workflow / Pipeline
   ctx => {
+    ctx.shadowColor = '#44ddff'; ctx.shadowBlur = 8
     for (const x of [2, 10, 18]) ctx.strokeRect(x, 9, 5, 6)
     ctx.beginPath()
     ctx.moveTo(7, 12); ctx.lineTo(10, 12)
     ctx.moveTo(15, 12); ctx.lineTo(18, 12); ctx.stroke()
-    // Arrowheads
     ctx.beginPath()
     ctx.moveTo(8.5, 10.5); ctx.lineTo(10, 12); ctx.lineTo(8.5, 13.5); ctx.stroke()
     ctx.beginPath()
@@ -137,41 +148,67 @@ export const ICON_LABELS = [
   'Database', 'Cloud', 'Security', 'Workflow',
 ]
 
+function makeGlowDotTexture() {
+  const S = 64
+  const c = document.createElement('canvas'); c.width = c.height = S
+  const ctx = c.getContext('2d')
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
+  g.addColorStop(0, 'rgba(255,255,255,1)')
+  g.addColorStop(0.2, 'rgba(100,220,255,0.9)')
+  g.addColorStop(0.5, 'rgba(0,120,255,0.4)')
+  g.addColorStop(1, 'rgba(0,0,0,0)')
+  ctx.fillStyle = g; ctx.fillRect(0, 0, S, S)
+  return new THREE.CanvasTexture(c)
+}
+
+let _glowDotTex = null
+export function getGlowDotTexture() {
+  if (!_glowDotTex) _glowDotTex = makeGlowDotTexture()
+  return _glowDotTex
+}
+
 export function createIconTexture(index) {
   const S = 256
-  const c = document.createElement('canvas')
-  c.width = c.height = S
+  const c = document.createElement('canvas'); c.width = c.height = S
   const ctx = c.getContext('2d')
   ctx.clearRect(0, 0, S, S)
 
-  // Outer radial glow
-  const g = ctx.createRadialGradient(128, 128, 60, 128, 128, 128)
-  g.addColorStop(0, 'rgba(0, 110, 255, 0.30)')
-  g.addColorStop(0.6, 'rgba(0, 60, 180, 0.10)')
-  g.addColorStop(1, 'rgba(0, 20, 80, 0)')
-  ctx.fillStyle = g; ctx.fillRect(0, 0, S, S)
+  // Soft dark navy radial background — fades to transparent at edges
+  const bg = ctx.createRadialGradient(128, 128, 0, 128, 128, 128)
+  bg.addColorStop(0,    'rgba(0, 8, 35, 0.95)')
+  bg.addColorStop(0.45, 'rgba(0, 5, 25, 0.88)')
+  bg.addColorStop(0.75, 'rgba(0, 3, 15, 0.60)')
+  bg.addColorStop(1,    'rgba(0,  0, 10, 0)')
+  ctx.fillStyle = bg
+  ctx.beginPath(); ctx.arc(128, 128, 128, 0, Math.PI * 2); ctx.fill()
 
-  // Dark background disc
-  ctx.fillStyle = 'rgba(0, 5, 20, 0.93)'
-  ctx.beginPath(); ctx.arc(128, 128, 112, 0, Math.PI * 2); ctx.fill()
+  // Inner glow halo
+  const halo = ctx.createRadialGradient(128, 128, 50, 128, 128, 115)
+  halo.addColorStop(0,    'rgba(0, 80, 200, 0.18)')
+  halo.addColorStop(0.5,  'rgba(0, 60, 180, 0.10)')
+  halo.addColorStop(1,    'rgba(0, 30, 100, 0)')
+  ctx.fillStyle = halo
+  ctx.beginPath(); ctx.arc(128, 128, 115, 0, Math.PI * 2); ctx.fill()
 
-  // Outer border
-  ctx.strokeStyle = '#0099dd'; ctx.lineWidth = 5
-  ctx.beginPath(); ctx.arc(128, 128, 110, 0, Math.PI * 2); ctx.stroke()
+  // Outer border ring with glow
+  ctx.shadowColor = '#00aaff'; ctx.shadowBlur = 12
+  ctx.strokeStyle = '#0088cc'; ctx.lineWidth = 3.5
+  ctx.beginPath(); ctx.arc(128, 128, 108, 0, Math.PI * 2); ctx.stroke()
+  ctx.shadowBlur = 0
 
   // Inner decorative ring
-  ctx.strokeStyle = 'rgba(0, 160, 220, 0.40)'; ctx.lineWidth = 2
-  ctx.beginPath(); ctx.arc(128, 128, 90, 0, Math.PI * 2); ctx.stroke()
+  ctx.strokeStyle = 'rgba(0, 150, 220, 0.35)'; ctx.lineWidth = 1.5
+  ctx.beginPath(); ctx.arc(128, 128, 88, 0, Math.PI * 2); ctx.stroke()
 
-  // Icon: translate to center, scale from 24-unit SVG space
-  const margin = 48
-  const scale = (S - 2 * margin) / 24  // ≈ 6.67 px per SVG unit
+  // Icon in center with glow
+  const margin = 52
+  const scale = (S - 2 * margin) / 24
   ctx.save()
   ctx.translate(margin, margin)
   ctx.scale(scale, scale)
-  ctx.strokeStyle = '#44ddff'
-  ctx.fillStyle = '#44ddff'
-  ctx.lineWidth = 1.8 / scale
+  ctx.strokeStyle = '#66eeff'
+  ctx.fillStyle = '#66eeff'
+  ctx.lineWidth = 1.6 / scale
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
   if (index < DRAW.length) DRAW[index](ctx)
