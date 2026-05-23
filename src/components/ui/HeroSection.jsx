@@ -5,44 +5,42 @@ export default function HeroSection() {
   const headingRef = useRef()
   const subRef = useRef()
   const ctaRef = useRef()
+  const badgeRef = useRef()
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-    tl.from(headingRef.current, { y: 60, opacity: 0, duration: 1, delay: 0.3 })
-      .from(subRef.current, { y: 30, opacity: 0, duration: 0.8 }, '-=0.5')
-      .from(ctaRef.current, { y: 20, opacity: 0, duration: 0.6 }, '-=0.4')
+    tl.from(badgeRef.current, { y: 20, opacity: 0, duration: 0.7, delay: 0.5 })
+      .from(headingRef.current, { y: 50, opacity: 0, duration: 0.9 }, '-=0.3')
+      .from(subRef.current, { y: 25, opacity: 0, duration: 0.8 }, '-=0.5')
+      .from(ctaRef.current, { y: 15, opacity: 0, duration: 0.6 }, '-=0.4')
   }, [])
 
   return (
-    <section className="section" style={{ minHeight: '100vh' }}>
-      <div className="section__inner">
-        <h1 ref={headingRef} style={{ marginBottom: '1.5rem' }}>
-          Your 3D<br />
-          <span style={{ color: '#6366f1' }}>Interactive</span><br />
-          Experience
+    <section className="hero-section">
+      <div className="hero-text">
+        <div ref={badgeRef} className="hero-badge">
+          <span className="badge-dot" />
+          Ecosystem Intelligence
+        </div>
+
+        <h1 ref={headingRef}>
+          Every Tool.<br />
+          <span className="hero-gradient">One Network.</span>
         </h1>
-        <p ref={subRef} style={{ marginBottom: '2.5rem' }}>
-          Scroll down to explore. Hover and click the objects above to interact with them.
+
+        <p ref={subRef}>
+          An interconnected ecosystem where your analytics, integrations,
+          automation, and AI work as a single intelligent system.
         </p>
-        <div ref={ctaRef}>
+
+        <div ref={ctaRef} className="hero-cta">
           <button
+            className="btn-primary"
             onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
-            style={{
-              background: '#6366f1',
-              color: '#fff',
-              border: 'none',
-              padding: '0.9rem 2.2rem',
-              borderRadius: '999px',
-              fontSize: '1rem',
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              transition: 'transform 0.2s, background 0.2s',
-            }}
-            onMouseEnter={e => e.target.style.background = '#818cf8'}
-            onMouseLeave={e => e.target.style.background = '#6366f1'}
           >
-            Scroll to explore
+            Explore the Platform
           </button>
+          <button className="btn-ghost">View Services</button>
         </div>
       </div>
     </section>
