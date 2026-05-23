@@ -133,6 +133,7 @@ const MINI_VERT = `
   uniform float uTime;
   uniform float uRadius;
   uniform float uScale;
+  uniform float uGlowDecay;
   attribute float aSize;
   attribute float aSeed;
   varying float vGlow;
@@ -141,13 +142,13 @@ const MINI_VERT = `
     vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
     float d = distance(worldPos, uMouse);
     float g = 1.0 - smoothstep(0.0, uRadius, d);
-    g = pow(g, 1.5);
+    g = pow(g, 1.5) * uGlowDecay;
 
     float tw = 0.22 * sin(uTime * 1.6 + aSeed * 12.566);
     vGlow = clamp(g + tw * 0.5, 0.0, 1.6);
 
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * (1.0 + vGlow * 5.5) * (uScale / -mv.z);
+    gl_PointSize = aSize * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
 `
@@ -224,6 +225,8 @@ function InteractiveMiniOrbs() {
     return { positions: p, sizes: s, seeds: sd }
   }, [])
 
+  const glowDecay = useRef(0)
+
   const material = useMemo(() => new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -232,8 +235,9 @@ function InteractiveMiniOrbs() {
     uniforms: {
       uMouse:     { value: new THREE.Vector3(1000, 1000, 1000) },
       uTime:      { value: 0 },
-      uRadius:    { value: 0.34 },
+      uRadius:    { value: 0.68 },
       uScale:     { value: size.height / 2 },
+      uGlowDecay: { value: 0 },
       uMap:       { value: tex },
       uColorBase: { value: new THREE.Color('#82c8f0') },
       uColorHot:  { value: new THREE.Color('#ffffff') },
@@ -243,16 +247,17 @@ function InteractiveMiniOrbs() {
     fragmentShader: MINI_FRAG,
   }), [tex, size.height])
 
-  useFrame(({ clock }) => {
-    // Manual ray-vs-sphere using window-level NDC (R3F's own `pointer` is
-    // unreliable here — the .hero-section overlay swallows mouse events
-    // before they reach the canvas).
+  useFrame(({ clock }, delta) => {
     raycaster.setFromCamera(ndc, camera)
     if (raycaster.ray.intersectSphere(sphere, hit)) {
       material.uniforms.uMouse.value.copy(hit)
+      // Snap glow on quickly when cursor enters
+      glowDecay.current = Math.min(1.0, glowDecay.current + delta * 10)
     } else {
-      material.uniforms.uMouse.value.set(1000, 1000, 1000)
+      // Fade out over ~1 second when cursor leaves — keeps orbs glowing briefly
+      glowDecay.current = Math.max(0.0, glowDecay.current - delta * 1.1)
     }
+    material.uniforms.uGlowDecay.value = glowDecay.current
     material.uniforms.uTime.value = clock.getElapsedTime()
     material.uniforms.uScale.value = size.height / 2
   })
