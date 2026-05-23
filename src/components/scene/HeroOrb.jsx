@@ -75,6 +75,26 @@ function sampleArc(arcPts, spacing) {
   return result
 }
 
+// ── Per-icon cardinal points (4 evenly placed on the outer halo ring) ────────
+const ICON_HALO_OUTER = 0.245
+const ICON_CARDINAL_POINTS = ICON_CENTERS.map(c => {
+  const norm = c.clone().normalize()
+  const ref = Math.abs(norm.y) > 0.85 ? new THREE.Vector3(1,0,0) : new THREE.Vector3(0,1,0)
+  const e1 = new THREE.Vector3().crossVectors(norm, ref).normalize()
+  const e2 = new THREE.Vector3().crossVectors(e1, norm).normalize()
+  const four = []
+  for (let k = 0; k < 4; k++) {
+    const phi = k * Math.PI / 2
+    const pt = norm.clone()
+      .multiplyScalar(Math.cos(ICON_HALO_OUTER))
+      .addScaledVector(e1, Math.sin(ICON_HALO_OUTER) * Math.cos(phi))
+      .addScaledVector(e2, Math.sin(ICON_HALO_OUTER) * Math.sin(phi))
+      .normalize()
+    four.push(pt)
+  }
+  return four
+})
+
 // ── Soccer-ball edge positions (the primary grid) ─────────────────────────────
 const FLOW_ARCS = []
 const SOCCER_EDGE_POSITIONS = (() => {
@@ -95,14 +115,23 @@ const SOCCER_EDGE_GLOW = (() => {
   return new Float32Array(pts)
 })()
 
-// Spokes from each of the 8 icons to its 5 pentagon corner vertices
-const SPOKE_POSITIONS = (() => {
+// Cardinal spokes: from each icon's 4 outer-ring junctions OUTWARD to the
+// nearest pentagon corner vertex. Spokes never pass through the icon plate.
+const CARDINAL_SPOKE_POSITIONS = (() => {
   const pts = []
-  ICON_INDICES.forEach(pi => {
-    pentNeighborVerts[pi].forEach(vi => {
-      const arc = greatCircleArc(pentagonCenters[pi], vertices[vi], R * 1.002, 18)
-      FLOW_ARCS.push(arc)
-      sampleArc(arc, 0.028).forEach(p => pts.push(p[0], p[1], p[2]))
+  ICON_INDICES.forEach((pi, idx) => {
+    ICON_CARDINAL_POINTS[idx].forEach(cardinalPt => {
+      // Pick the nearest of this pentagon's 5 corner vertices to the cardinal direction
+      let bestV = null, bestAng = Infinity
+      pentNeighborVerts[pi].forEach(vi => {
+        const ang = cardinalPt.angleTo(vertices[vi])
+        if (ang < bestAng) { bestAng = ang; bestV = vertices[vi] }
+      })
+      if (bestV) {
+        const arc = greatCircleArc(cardinalPt, bestV, R * 1.002, 16)
+        FLOW_ARCS.push(arc)
+        sampleArc(arc, 0.026).forEach(p => pts.push(p[0], p[1], p[2]))
+      }
     })
   })
   return new Float32Array(pts)
@@ -159,7 +188,7 @@ function InteractiveMiniOrbs() {
   const hit = useMemo(() => new THREE.Vector3(), [])
 
   const { positions, sizes, seeds } = useMemo(() => {
-    const count = 2400
+    const count = 5500
     const p = new Float32Array(count * 3)
     const s = new Float32Array(count)
     const sd = new Float32Array(count)
@@ -168,14 +197,14 @@ function InteractiveMiniOrbs() {
       const y = 1 - (i / (count - 1)) * 2
       const rad = Math.sqrt(Math.max(0, 1 - y * y))
       const theta = golden * i * 2.618
-      const r = R * (0.998 + Math.random() * 0.010)
+      const r = R * (0.997 + Math.random() * 0.012)
       p[i * 3]     = Math.cos(theta) * rad * r
       p[i * 3 + 1] = y * r
       p[i * 3 + 2] = Math.sin(theta) * rad * r
-      // Mixed sizes: most small, some larger for variety
-      s[i] = Math.random() < 0.25
-        ? 0.055 + Math.random() * 0.030
-        : 0.022 + Math.random() * 0.022
+      // Mostly medium dots with occasional larger ones for richness
+      s[i] = Math.random() < 0.18
+        ? 0.068 + Math.random() * 0.030
+        : 0.038 + Math.random() * 0.022
       sd[i] = Math.random()
     }
     return { positions: p, sizes: s, seeds: sd }
@@ -189,12 +218,12 @@ function InteractiveMiniOrbs() {
     uniforms: {
       uMouse:     { value: new THREE.Vector3(1000, 1000, 1000) },
       uTime:      { value: 0 },
-      uRadius:    { value: 1.4 },
+      uRadius:    { value: 1.8 },
       uScale:     { value: size.height / 2 },
       uMap:       { value: tex },
-      uColorBase: { value: new THREE.Color('#4090d8') },
+      uColorBase: { value: new THREE.Color('#6cb8f0') },
       uColorHot:  { value: new THREE.Color('#ffffff') },
-      uOpacity:   { value: 0.95 },
+      uOpacity:   { value: 1.0 },
     },
     vertexShader: MINI_VERT,
     fragmentShader: MINI_FRAG,
@@ -268,8 +297,10 @@ function SoccerGridParticles() {
   )
 }
 
-function SpokeParticles() {
-  return <Particles positions={SPOKE_POSITIONS} size={0.070} color="#a0eeff" opacity={0.95} renderOrder={6} />
+// Cardinal spokes: start at cardinal junction dots, extend OUTWARD to the
+// nearest pentagon corner. Icon plate is never crossed.
+function CardinalSpokeParticles() {
+  return <Particles positions={CARDINAL_SPOKE_POSITIONS} size={0.068} color="#a0eeff" opacity={0.96} renderOrder={6} />
 }
 
 // ── Volume depth particles ────────────────────────────────────────────────────
@@ -328,27 +359,14 @@ function NodeHaloRings() {
   )
 }
 
-// ── 4 cardinal connection dots on each icon's outer halo ─────────────────────
+// ── 4 cardinal junction dots on each icon's outer halo ───────────────────────
+// Use the same precomputed cardinal points as the spokes so they line up exactly.
 function IconCardinalDots() {
   const positions = useMemo(() => {
-    const alpha = 0.245
     const r = R * 1.005
     const pts = []
-    ICON_CENTERS.forEach(c => {
-      const norm = c.clone().normalize()
-      const ref = Math.abs(norm.y) > 0.85 ? new THREE.Vector3(1,0,0) : new THREE.Vector3(0,1,0)
-      const e1 = new THREE.Vector3().crossVectors(norm, ref).normalize()
-      const e2 = new THREE.Vector3().crossVectors(e1, norm).normalize()
-      for (let k = 0; k < 4; k++) {
-        const phi = k * Math.PI / 2
-        const pt = norm.clone()
-          .multiplyScalar(Math.cos(alpha))
-          .addScaledVector(e1, Math.sin(alpha) * Math.cos(phi))
-          .addScaledVector(e2, Math.sin(alpha) * Math.sin(phi))
-          .normalize()
-          .multiplyScalar(r)
-        pts.push(pt.x, pt.y, pt.z)
-      }
+    ICON_CARDINAL_POINTS.forEach(four => {
+      four.forEach(pt => pts.push(pt.x * r, pt.y * r, pt.z * r))
     })
     return new Float32Array(pts)
   }, [])
@@ -512,8 +530,8 @@ export default function HeroOrb() {
       {/* Soccer ball grid */}
       <SoccerGridParticles />
 
-      {/* Spokes — wiring each icon into its 5 vertices */}
-      <SpokeParticles />
+      {/* Cardinal spokes — start at icon halo junctions, extend outward (no icon overlap) */}
+      <CardinalSpokeParticles />
 
       {/* Junction dots */}
       <JunctionDots />
