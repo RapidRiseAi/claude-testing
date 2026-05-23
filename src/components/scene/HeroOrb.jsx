@@ -177,7 +177,7 @@ function InteractiveMiniOrbs() {
   const { positions, sizes, seeds } = useMemo(() => {
     // Cube-face subdivision projected onto sphere = uniform square grid pattern.
     // 6 faces × N² points each, all normalized to sphere surface.
-    const N = 27   // 6 × 729 = 4374 points — dense but clearly grid-spaced
+    const N = 38   // 6 × 1444 = 8664 points — denser square grid
     const pts = []
     for (const [axis, sign] of [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]]) {
       for (let i = 0; i < N; i++) {
@@ -199,7 +199,7 @@ function InteractiveMiniOrbs() {
     const s = new Float32Array(count)
     const sd = new Float32Array(count)
     for (let i = 0; i < count; i++) {
-      s[i] = 0.026 + Math.random() * 0.010   // small, uniform dots
+      s[i] = 0.013 + Math.random() * 0.005   // tiny, uniform dots (50% smaller)
       sd[i] = Math.random()
     }
     return { positions: p, sizes: s, seeds: sd }
@@ -286,8 +286,8 @@ function Particles({ positions, size, color, opacity, renderOrder = 4 }) {
 function SoccerGridParticles() {
   return (
     <>
-      <Particles positions={SOCCER_EDGE_POSITIONS} size={0.055} color="#58b8f8" opacity={0.88} renderOrder={4} />
-      <Particles positions={SOCCER_EDGE_GLOW}      size={0.130} color="#1858c0" opacity={0.38} renderOrder={3} />
+      <Particles positions={SOCCER_EDGE_POSITIONS} size={0.066} color="#58b8f8" opacity={0.88} renderOrder={4} />
+      <Particles positions={SOCCER_EDGE_GLOW}      size={0.156} color="#1858c0" opacity={0.38} renderOrder={3} />
     </>
   )
 }
