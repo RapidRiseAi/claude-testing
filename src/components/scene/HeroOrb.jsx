@@ -6,13 +6,10 @@ import {
 } from '../../utils/soccerBall'
 import { createIconTexture, getGlowDotTexture } from '../../utils/iconTextures'
 
-const R = 2.0
+const R = 1.70
 
 const { vertices, edges, hexCenters } = buildSoccerBall()
 
-// ── 8 icon positions = 8 cube vertices normalized to the sphere ───────────────
-// These are the centers of the 8 equal octants of the sphere — the optimal
-// "split into 8 equal areas, one icon per area" arrangement.
 const ICON_CENTERS = (() => {
   const pts = []
   for (const x of [-1, 1])
@@ -22,16 +19,15 @@ const ICON_CENTERS = (() => {
   return pts
 })()
 
-// Nearest 5 soccer-ball grid vertices to each icon — used as spoke endpoints
+// 6 nearest verts so one degenerate tangent gets filtered while still yielding 5 visible spokes
 const ICON_NEAR_VERTS = ICON_CENTERS.map(ic =>
   vertices
     .map((v, i) => ({ i, d: ic.distanceTo(v) }))
     .sort((a, b) => a.d - b.d)
-    .slice(0, 5)
+    .slice(0, 6)
     .map(x => x.i)
 )
 
-// ── Arc sampling ──────────────────────────────────────────────────────────────
 function sampleArc(arcPts, spacing) {
   if (arcPts.length < 2) return arcPts
   const result = [arcPts[0]]
@@ -44,10 +40,8 @@ function sampleArc(arcPts, spacing) {
   return result
 }
 
-// Inner halo ring — angular radius just outside the icon plate (plate ≈ 0.139 rad)
 const ICON_HALO_INNER = 0.150
 
-// ── Soccer-ball edge positions (the primary grid) ─────────────────────────────
 const FLOW_ARCS = []
 const SOCCER_EDGE_POSITIONS = (() => {
   const pts = []
@@ -67,27 +61,19 @@ const SOCCER_EDGE_GLOW = (() => {
   return new Float32Array(pts)
 })()
 
-// Spokes: inner halo ring edge → actual pentagon vertices (5 per icon).
-// Start point sits on the inner halo circle in the direction of each vertex,
-// so every spoke visually radiates outward from the icon plate edge to the real grid.
 const CARDINAL_SPOKE_POSITIONS = (() => {
   const pts = []
   ICON_CENTERS.forEach((c, idx) => {
     const norm = c.clone().normalize()
     const nearVerts = ICON_NEAR_VERTS[idx].map(vi => vertices[vi])
-
     nearVerts.forEach(v => {
-      // Tangent-plane direction from icon center toward this vertex
       const tangent = v.clone().sub(norm.clone().multiplyScalar(v.dot(norm)))
       if (tangent.length() < 1e-6) return
       tangent.normalize()
-
-      // Start: point on inner halo ring in direction of this vertex
       const startPt = norm.clone()
         .multiplyScalar(Math.cos(ICON_HALO_INNER))
         .addScaledVector(tangent, Math.sin(ICON_HALO_INNER))
         .normalize()
-
       const arc = greatCircleArc(startPt, v, R * 1.002, 16)
       FLOW_ARCS.push(arc)
       sampleArc(arc, 0.022).forEach(p => pts.push(p[0], p[1], p[2]))
@@ -96,11 +82,6 @@ const CARDINAL_SPOKE_POSITIONS = (() => {
   return new Float32Array(pts)
 })()
 
-// ── INTERACTIVE MINI ORB SHADER ───────────────────────────────────────────────
-// ── INTERACTIVE MINI ORB SHADER ───────────────────────────────────────────────
-// Trail buffer: each slot is vec4(x, y, z, age). Shader takes the max glow
-// contribution from any slot, weighted by (1 - age/lifetime) — so the
-// cursor's recent path fades over ~1 second rather than disappearing instantly.
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
 
@@ -117,19 +98,39 @@ const MINI_VERT = `
   void main() {
     vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
     float maxG = 0.0;
+    float windProx = 0.0;
+    vec3 windWorldDir = vec3(0.0);
+
     for (int i = 0; i < ${TRAIL_LEN}; i++) {
       vec4 t = uTrail[i];
       float ageFactor = max(0.0, 1.0 - (t.w / uTrailLifetime));
       float d = distance(worldPos, t.xyz);
       float g = (1.0 - smoothstep(0.0, uRadius, d)) * ageFactor;
       maxG = max(maxG, g);
+      float wp = (1.0 - smoothstep(0.0, uRadius * 0.55, d)) * ageFactor;
+      if (wp > windProx && d > 0.001) {
+        windProx = wp;
+        windWorldDir = (worldPos - t.xyz) / d;
+      }
     }
-    float g = pow(maxG, 1.5);
 
+    float g = pow(maxG, 1.5);
     float tw = 0.22 * sin(uTime * 1.6 + aSeed * 12.566);
     vGlow = clamp(g + tw * 0.5, 0.0, 1.6);
 
-    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    // Convert wind dir from world to local space via transposed rotation (model is rotation-only)
+    vec3 windLocalDir = vec3(
+      dot(windWorldDir, vec3(modelMatrix[0][0], modelMatrix[1][0], modelMatrix[2][0])),
+      dot(windWorldDir, vec3(modelMatrix[0][1], modelMatrix[1][1], modelMatrix[2][1])),
+      dot(windWorldDir, vec3(modelMatrix[0][2], modelMatrix[1][2], modelMatrix[2][2]))
+    );
+
+    // Project onto tangent plane of sphere so displacement stays on surface
+    vec3 localNorm = normalize(position);
+    vec3 tangentWind = windLocalDir - localNorm * dot(windLocalDir, localNorm);
+    vec3 displacedPos = position + tangentWind * windProx * 0.30;
+
+    vec4 mv = modelViewMatrix * vec4(displacedPos, 1.0);
     gl_PointSize = aSize * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
@@ -156,8 +157,6 @@ function InteractiveMiniOrbs() {
   const raycaster = useMemo(() => new THREE.Raycaster(), [])
   const sphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(), R), [])
   const hit = useMemo(() => new THREE.Vector3(), [])
-  // Cursor NDC, written by a window-level listener so it works even when DOM
-  // overlays (e.g. .hero-section with pointer-events:auto) sit on top of the canvas.
   const ndc = useMemo(() => new THREE.Vector2(2, 2), [])
 
   useEffect(() => {
@@ -177,9 +176,7 @@ function InteractiveMiniOrbs() {
   }, [gl, ndc])
 
   const { positions, sizes, seeds } = useMemo(() => {
-    // Cube-face subdivision projected onto sphere = uniform square grid pattern.
-    // 6 faces × N² points each, all normalized to sphere surface.
-    const N = 54   // 6 × 2916 = 17496 points — very dense square grid
+    const N = 54
     const pts = []
     for (const [axis, sign] of [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]]) {
       for (let i = 0; i < N; i++) {
@@ -201,14 +198,12 @@ function InteractiveMiniOrbs() {
     const s = new Float32Array(count)
     const sd = new Float32Array(count)
     for (let i = 0; i < count; i++) {
-      s[i] = 0.013 + Math.random() * 0.005   // tiny, uniform dots (50% smaller)
+      s[i] = 0.013 + Math.random() * 0.005
       sd[i] = Math.random()
     }
     return { positions: p, sizes: s, seeds: sd }
   }, [])
 
-  // Trail buffer of recent cursor positions. Each Vector4: xyz = world position,
-  // w = age in seconds (initialized "expired" so nothing glows at startup).
   const trail = useMemo(() => Array.from({ length: TRAIL_LEN },
     () => new THREE.Vector4(1000, 1000, 1000, TRAIL_LIFETIME + 1)
   ), [])
@@ -222,11 +217,11 @@ function InteractiveMiniOrbs() {
       uTrail:         { value: trail },
       uTrailLifetime: { value: TRAIL_LIFETIME },
       uTime:          { value: 0 },
-      uRadius:        { value: 0.68 },
+      uRadius:        { value: 0.58 },
       uScale:         { value: size.height / 2 },
       uMap:           { value: tex },
       uColorBase:     { value: new THREE.Color('#82c8f0') },
-      uColorHot:      { value: new THREE.Color('#ffffff') },
+      uColorHot:      { value: new THREE.Color('#58b8f8') },
       uOpacity:       { value: 1.0 },
     },
     vertexShader: MINI_VERT,
@@ -234,13 +229,9 @@ function InteractiveMiniOrbs() {
   }), [tex, size.height, trail])
 
   useFrame(({ clock }, delta) => {
-    // Age every existing trail entry
     for (let i = 0; i < TRAIL_LEN; i++) {
       trail[i].w = Math.min(trail[i].w + delta, TRAIL_LIFETIME + 1)
     }
-
-    // If the cursor hits the sphere, drop a fresh trail point into the slot
-    // with the highest age — overwriting the oldest sample.
     raycaster.setFromCamera(ndc, camera)
     if (raycaster.ray.intersectSphere(sphere, hit)) {
       let oldestIdx = 0, oldestAge = -1
@@ -249,7 +240,6 @@ function InteractiveMiniOrbs() {
       }
       trail[oldestIdx].set(hit.x, hit.y, hit.z, 0)
     }
-
     material.uniforms.uTime.value = clock.getElapsedTime()
     material.uniforms.uScale.value = size.height / 2
   })
@@ -269,7 +259,6 @@ function InteractiveMiniOrbs() {
   )
 }
 
-// ── Invisible depth occluder ──────────────────────────────────────────────────
 function DepthOccluder() {
   const mat = useMemo(() => {
     const m = new THREE.MeshBasicMaterial({ side: THREE.FrontSide })
@@ -284,7 +273,6 @@ function DepthOccluder() {
   )
 }
 
-// ── Reusable particle cloud ───────────────────────────────────────────────────
 function Particles({ positions, size, color, opacity, renderOrder = 4 }) {
   const tex = getGlowDotTexture()
   const count = positions.length / 3
@@ -300,7 +288,6 @@ function Particles({ positions, size, color, opacity, renderOrder = 4 }) {
   )
 }
 
-// ── Soccer ball grid ─────────────────────────────────────────────────────────
 function SoccerGridParticles() {
   return (
     <>
@@ -310,12 +297,10 @@ function SoccerGridParticles() {
   )
 }
 
-// Spokes from inner halo ring edge outward to the 5 surrounding grid vertices
 function CardinalSpokeParticles() {
   return <Particles positions={CARDINAL_SPOKE_POSITIONS} size={0.068} color="#a0eeff" opacity={0.96} renderOrder={6} />
 }
 
-// ── Volume depth particles ────────────────────────────────────────────────────
 function VolumeField() {
   const arr = useMemo(() => {
     const count = 320
@@ -333,7 +318,6 @@ function VolumeField() {
   return <Particles positions={arr} size={0.014} color="#183060" opacity={0.45} renderOrder={1} />
 }
 
-// ── Junction dots: vertices + hex centers + 8 icon hubs ──────────────────────
 function JunctionDots() {
   const { vertexArr, hexArr, pentArr } = useMemo(() => {
     const vArr = new Float32Array(vertices.length * 3)
@@ -353,7 +337,6 @@ function JunctionDots() {
   )
 }
 
-// ── Single halo ring hugging the icon plate edge ──────────────────────────────
 function NodeHaloRings() {
   const inner = useMemo(() => {
     const iPts = []
@@ -365,7 +348,6 @@ function NodeHaloRings() {
   return <Particles positions={inner} size={0.040} color="#a8e8ff" opacity={0.92} renderOrder={8} />
 }
 
-// ── Dense animated hub clusters ──────────────────────────────────────────────
 function NodeClusterParticles() {
   const tex = getGlowDotTexture()
   const { positions, count } = useMemo(() => {
@@ -408,7 +390,6 @@ function NodeClusterParticles() {
   )
 }
 
-// ── Pulsating breathing rings ─────────────────────────────────────────────────
 function PulsatingRings() {
   const tex = getGlowDotTexture()
   const { positions, count } = useMemo(() => {
@@ -434,7 +415,6 @@ function PulsatingRings() {
   )
 }
 
-// ── Animated flow particles ───────────────────────────────────────────────────
 const NUM_FLOW = 300
 
 function FlowParticles() {
@@ -483,18 +463,24 @@ function FlowParticles() {
   )
 }
 
-// ── Icon planes ──────────────────────────────────────────────────────────────
+// Build icon quaternion using a consistent up-vector so icons don't appear rolled/tilted
+function makeIconQuaternion(center) {
+  const forward = center.clone().normalize()
+  let worldUp = new THREE.Vector3(0, 1, 0)
+  if (Math.abs(forward.dot(worldUp)) > 0.9) worldUp.set(1, 0, 0)
+  const right = new THREE.Vector3().crossVectors(worldUp, forward).normalize()
+  const up = new THREE.Vector3().crossVectors(forward, right).normalize()
+  const m = new THREE.Matrix4().makeBasis(right, up, forward)
+  return new THREE.Quaternion().setFromRotationMatrix(m)
+}
+
 function IconPlane({ center, texIndex }) {
   const tex = useMemo(() => createIconTexture(texIndex), [texIndex])
   const position = useMemo(() => center.clone().multiplyScalar(R * 1.006), [center])
-  const quaternion = useMemo(() => {
-    const q = new THREE.Quaternion()
-    q.setFromUnitVectors(new THREE.Vector3(0, 0, 1), center.clone().normalize())
-    return q
-  }, [center])
+  const quaternion = useMemo(() => makeIconQuaternion(center), [center])
   return (
     <mesh position={position.toArray()} quaternion={quaternion.toArray()} renderOrder={8}>
-      <planeGeometry args={[0.86, 0.86]} />
+      <planeGeometry args={[0.73, 0.73]} />
       <meshBasicMaterial map={tex} transparent alphaTest={0.01}
         depthTest={true} depthWrite={false} side={THREE.FrontSide}
         blending={THREE.NormalBlending} />
@@ -502,47 +488,55 @@ function IconPlane({ center, texIndex }) {
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
 export default function HeroOrb() {
   const groupRef = useRef()
+  const isDragging = useRef(false)
+  const lastPointer = useRef({ x: 0, y: 0 })
+
+  useEffect(() => {
+    const onDown = (e) => {
+      isDragging.current = true
+      lastPointer.current = { x: e.clientX, y: e.clientY }
+    }
+    const onMove = (e) => {
+      if (!isDragging.current || !groupRef.current) return
+      const dx = e.clientX - lastPointer.current.x
+      const dy = e.clientY - lastPointer.current.y
+      lastPointer.current = { x: e.clientX, y: e.clientY }
+      groupRef.current.rotation.y += dx * 0.008
+      groupRef.current.rotation.x += dy * 0.008
+    }
+    const onUp = () => { isDragging.current = false }
+    window.addEventListener('pointerdown', onDown)
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    return () => {
+      window.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+    }
+  }, [])
 
   useFrame((_, delta) => {
-    if (groupRef.current) groupRef.current.rotation.y += delta * 0.044
+    if (groupRef.current && !isDragging.current) {
+      groupRef.current.rotation.y += delta * 0.044
+    }
   })
 
   return (
     <group ref={groupRef}>
       <DepthOccluder />
-
       <VolumeField />
-
-      {/* Interactive mini orbs — square grid, cursor-reactive */}
       <InteractiveMiniOrbs />
-
-      {/* Soccer ball grid */}
       <SoccerGridParticles />
-
-      {/* Spokes from icon halo ring to surrounding grid vertices */}
       <CardinalSpokeParticles />
-
-      {/* Junction dots */}
       <JunctionDots />
-
-      {/* Single halo ring tight against each icon */}
       <NodeHaloRings />
-
-      {/* Hub clusters */}
       <NodeClusterParticles />
-
-      {/* Animated flow */}
       <FlowParticles />
-
-      {/* 8 icons at 4 antipodal pentagon pairs */}
       {ICON_CENTERS.map((c, i) => (
         <IconPlane key={i} center={c} texIndex={i} />
       ))}
-
-      {/* Breathing rings */}
       <PulsatingRings />
     </group>
   )

@@ -40,7 +40,7 @@ function FaintBackdropDots() {
 export default function Scene() {
   return (
     <Canvas
-      camera={{ position: [0, 0.15, 7.4], fov: 42 }}
+      camera={{ position: [-1.8, 0.15, 7.4], fov: 42 }}
       gl={{
         antialias: true,
         alpha: false,
