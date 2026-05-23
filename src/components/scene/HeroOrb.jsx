@@ -147,7 +147,7 @@ const MINI_VERT = `
     vGlow = clamp(g + tw * 0.5, 0.0, 1.6);
 
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
-    gl_PointSize = aSize * (1.0 + vGlow * 2.8) * (uScale / -mv.z);
+    gl_PointSize = aSize * (1.0 + vGlow * 5.5) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
 `
@@ -177,7 +177,7 @@ function InteractiveMiniOrbs() {
   const { positions, sizes, seeds } = useMemo(() => {
     // Cube-face subdivision projected onto sphere = uniform square grid pattern.
     // 6 faces × N² points each, all normalized to sphere surface.
-    const N = 38   // 6 × 1444 = 8664 points — denser square grid
+    const N = 54   // 6 × 2916 = 17496 points — very dense square grid
     const pts = []
     for (const [axis, sign] of [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]]) {
       for (let i = 0; i < N; i++) {
@@ -213,7 +213,7 @@ function InteractiveMiniOrbs() {
     uniforms: {
       uMouse:     { value: new THREE.Vector3(1000, 1000, 1000) },
       uTime:      { value: 0 },
-      uRadius:    { value: 1.8 },
+      uRadius:    { value: 0.16 },
       uScale:     { value: size.height / 2 },
       uMap:       { value: tex },
       uColorBase: { value: new THREE.Color('#82c8f0') },
