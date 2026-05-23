@@ -167,9 +167,12 @@ const MINI_FRAG = `
   }
 `
 
-function InteractiveMiniOrbs({ mousePt }) {
+function InteractiveMiniOrbs() {
   const tex = getGlowDotTexture()
-  const { size } = useThree()
+  const { camera, size, pointer } = useThree()
+  const raycaster = useMemo(() => new THREE.Raycaster(), [])
+  const sphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(), R), [])
+  const hit = useMemo(() => new THREE.Vector3(), [])
 
   const { positions, sizes, seeds } = useMemo(() => {
     // Cube-face subdivision projected onto sphere = uniform square grid pattern.
@@ -210,7 +213,7 @@ function InteractiveMiniOrbs({ mousePt }) {
     uniforms: {
       uMouse:     { value: new THREE.Vector3(1000, 1000, 1000) },
       uTime:      { value: 0 },
-      uRadius:    { value: 0.16 },
+      uRadius:    { value: 0.34 },
       uScale:     { value: size.height / 2 },
       uMap:       { value: tex },
       uColorBase: { value: new THREE.Color('#82c8f0') },
@@ -222,7 +225,15 @@ function InteractiveMiniOrbs({ mousePt }) {
   }), [tex, size.height])
 
   useFrame(({ clock }) => {
-    material.uniforms.uMouse.value.copy(mousePt.current)
+    // Manual ray-vs-sphere — bypasses R3F event system entirely. Works even
+    // while the orb group rotates because both the hit point and the orbs'
+    // world positions are in world space.
+    raycaster.setFromCamera(pointer, camera)
+    if (raycaster.ray.intersectSphere(sphere, hit)) {
+      material.uniforms.uMouse.value.copy(hit)
+    } else {
+      material.uniforms.uMouse.value.set(1000, 1000, 1000)
+    }
     material.uniforms.uTime.value = clock.getElapsedTime()
     material.uniforms.uScale.value = size.height / 2
   })
@@ -478,30 +489,19 @@ function IconPlane({ center, texIndex }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function HeroOrb() {
   const groupRef = useRef()
-  const mousePt = useRef(new THREE.Vector3(1000, 1000, 1000))
 
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y += delta * 0.044
   })
 
   return (
-    <>
-      {/* Transparent sphere at world origin — captures exact cursor hit point via R3F events */}
-      <mesh
-        onPointerMove={e => { e.stopPropagation(); mousePt.current.copy(e.point) }}
-        onPointerLeave={() => mousePt.current.set(1000, 1000, 1000)}
-      >
-        <sphereGeometry args={[R, 48, 48]} />
-        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-      </mesh>
-
     <group ref={groupRef}>
       <DepthOccluder />
 
       <VolumeField />
 
-      {/* Interactive mini orbs — square grid, cursor-reactive via world-space pointer events */}
-      <InteractiveMiniOrbs mousePt={mousePt} />
+      {/* Interactive mini orbs — square grid, cursor-reactive */}
+      <InteractiveMiniOrbs />
 
       {/* Soccer ball grid */}
       <SoccerGridParticles />
@@ -529,6 +529,5 @@ export default function HeroOrb() {
       {/* Breathing rings */}
       <PulsatingRings />
     </group>
-    </>
   )
 }
