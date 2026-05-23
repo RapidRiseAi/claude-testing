@@ -243,13 +243,15 @@ const MINI_FRAG = `
   uniform vec3 uColorBase;
   uniform vec3 uColorHot;
   uniform float uOpacity;
+  uniform float uMorph;
   varying float vGlow;
 
   void main() {
     vec4 tex = texture2D(uMap, gl_PointCoord);
     if (tex.a < 0.01) discard;
     vec3 col = mix(uColorBase, uColorHot, vGlow);
-    float a = tex.a * uOpacity * (1.0 + vGlow * 1.4);
+    float opMult = mix(0.8, 1.0, uMorph);
+    float a = tex.a * uOpacity * opMult * (1.0 + vGlow * 1.4);
     gl_FragColor = vec4(col * (1.0 + vGlow * 1.0), a);
   }
 `
@@ -536,7 +538,7 @@ function SoccerGridParticles() {
   return (
     <>
       <MorphParticles posSphere={SOCCER_EDGE_POSITIONS} posCube={SOCCER_EDGE_POSITIONS_CUBE}
-        size={0.079} color="#2e88d8" opacity={0.88} renderOrder={4} />
+        size={0.095} color="#1d6cb8" opacity={0.88} renderOrder={4} />
       <MorphParticles posSphere={SOCCER_EDGE_GLOW} posCube={SOCCER_EDGE_GLOW_CUBE}
         size={0.156} color="#1858c0" opacity={0.38} renderOrder={3} />
     </>
