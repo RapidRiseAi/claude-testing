@@ -234,8 +234,7 @@ const MINI_VERT = `
     vec3 displacedPos = basePos + pushDir * windProx * strengthMult;
 
     vec4 mv = modelViewMatrix * vec4(displacedPos, 1.0);
-    float sizeMult = mix(1.0, 2.0, uMorph);
-    gl_PointSize = aSize * sizeMult * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
+    gl_PointSize = aSize * 2.0 * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
 `
