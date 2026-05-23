@@ -87,6 +87,54 @@ const CARDINAL_SPOKE_POSITIONS = (() => {
   return new Float32Array(pts)
 })()
 
+// ── Cube edge / corner data (used at the end of the morph) ───────────────────
+const CUBE_CORNERS_LOCAL = (() => {
+  const out = []
+  for (const x of [-R, R])
+    for (const y of [-R, R])
+      for (const z of [-R, R])
+        out.push([x, y, z])
+  return out
+})()
+
+const CUBE_EDGE_PAIRS = (() => {
+  const pairs = []
+  for (let i = 0; i < 8; i++) {
+    for (let j = i + 1; j < 8; j++) {
+      const a = CUBE_CORNERS_LOCAL[i], b = CUBE_CORNERS_LOCAL[j]
+      const diffs = (a[0] !== b[0]) + (a[1] !== b[1]) + (a[2] !== b[2])
+      if (diffs === 1) pairs.push([a, b])
+    }
+  }
+  return pairs
+})()
+
+const CUBE_EDGE_POSITIONS = (() => {
+  const pts = []
+  const spacing = 0.030
+  CUBE_EDGE_PAIRS.forEach(([a, b]) => {
+    const len = Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
+    const steps = Math.ceil(len / spacing)
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps
+      pts.push(
+        a[0] + (b[0] - a[0]) * t,
+        a[1] + (b[1] - a[1]) * t,
+        a[2] + (b[2] - a[2]) * t,
+      )
+    }
+  })
+  return new Float32Array(pts)
+})()
+
+const CUBE_CORNER_POSITIONS = (() => {
+  const arr = new Float32Array(CUBE_CORNERS_LOCAL.length * 3)
+  CUBE_CORNERS_LOCAL.forEach((c, i) => {
+    arr[i * 3] = c[0]; arr[i * 3 + 1] = c[1]; arr[i * 3 + 2] = c[2]
+  })
+  return arr
+})()
+
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
 
@@ -109,9 +157,6 @@ const MINI_VERT = `
     vec3 basePos = mix(position, aPosCube, uMorph);
     vec3 worldPos = (modelMatrix * vec4(basePos, 1.0)).xyz;
 
-    // Glow + wind fade out as the morph progresses
-    float interactive = 1.0 - uMorph;
-
     // Glow: max age-weighted contribution across the full trail buffer
     float maxG = 0.0;
     for (int i = 0; i < ${TRAIL_LEN}; i++) {
@@ -121,14 +166,13 @@ const MINI_VERT = `
       float g = (1.0 - smoothstep(0.0, uRadius, d)) * ageFactor;
       maxG = max(maxG, g);
     }
-    maxG *= interactive;
     float g = pow(maxG, 1.5);
     float tw = 0.22 * sin(uTime * 1.6 + aSeed * 12.566);
-    vGlow = clamp(g + tw * 0.5 * interactive, 0.0, 1.6);
+    vGlow = clamp(g + tw * 0.5, 0.0, 1.6);
 
     // Wind: each orb has a unique seed-based push direction
     float cd = distance(worldPos, uCursorWorld);
-    float windProx = (1.0 - smoothstep(0.0, uRadius * 0.7, cd)) * uCursorActive * interactive;
+    float windProx = (1.0 - smoothstep(0.0, uRadius * 0.7, cd)) * uCursorActive;
 
     vec3 localNorm = normalize(basePos);
     vec3 tangentRef = abs(localNorm.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
@@ -245,16 +289,19 @@ function InteractiveMiniOrbs() {
   }), [tex, size.height, trail])
 
   useFrame(({ clock }, delta) => {
-    // Drive the morph from scroll progress
-    material.uniforms.uMorph.value = scrollState.progress
+    const p = scrollState.progress
+    const scale = 1.0 + (END_SCALE - 1.0) * p
+    const cx = ORB_X + (END_X - ORB_X) * p
+    // Bounding sphere tracks the group's world transform; radius grows toward
+    // the cube's corner distance (√3) so hover still hits the corners.
+    sphere.center.x = cx
+    sphere.radius = R * scale * (1.0 + 0.73 * p)
+
+    // Drive the morph + scale-aware glow radius
+    material.uniforms.uMorph.value = p
     material.uniforms.uTime.value = clock.getElapsedTime()
     material.uniforms.uScale.value = size.height / 2
-
-    // Once the user starts scrolling we stop interactive cursor processing
-    if (scrollState.progress > 0.05) {
-      material.uniforms.uCursorActive.value = 0.0
-      return
-    }
+    material.uniforms.uRadius.value = 0.58 * scale
 
     for (let i = 0; i < TRAIL_LEN; i++) {
       trail[i].w = Math.min(trail[i].w + delta, TRAIL_LIFETIME + 1)
@@ -549,6 +596,60 @@ function IconPlane({ center, texIndex }) {
   )
 }
 
+// Cube edge particles + corner dots — fade in as the morph progresses.
+// Same blue palette as the soccer grid so the styling carries over.
+function CubeGridParticles() {
+  const tex = getGlowDotTexture()
+  const matRef = useRef()
+  const matGlowRef = useRef()
+  useFrame(() => {
+    const t = Math.min(1, Math.max(0, (scrollState.progress - 0.25) / 0.45))
+    if (matRef.current)     matRef.current.opacity     = 0.92 * t
+    if (matGlowRef.current) matGlowRef.current.opacity = 0.40 * t
+  })
+  const count = CUBE_EDGE_POSITIONS.length / 3
+  return (
+    <>
+      <points renderOrder={4}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={count} array={CUBE_EDGE_POSITIONS} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial ref={matRef} size={0.066} map={tex} color="#58b8f8" sizeAttenuation
+          transparent opacity={0} blending={THREE.AdditiveBlending}
+          depthWrite={false} depthTest={false} alphaTest={0.01} />
+      </points>
+      <points renderOrder={3}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={count} array={CUBE_EDGE_POSITIONS} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial ref={matGlowRef} size={0.156} map={tex} color="#1858c0" sizeAttenuation
+          transparent opacity={0} blending={THREE.AdditiveBlending}
+          depthWrite={false} depthTest={false} alphaTest={0.01} />
+      </points>
+    </>
+  )
+}
+
+function CubeCornerDots() {
+  const tex = getGlowDotTexture()
+  const matRef = useRef()
+  useFrame(() => {
+    if (!matRef.current) return
+    const t = Math.min(1, Math.max(0, (scrollState.progress - 0.3) / 0.45))
+    matRef.current.opacity = 0.95 * t
+  })
+  return (
+    <points renderOrder={9}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={8} array={CUBE_CORNER_POSITIONS} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial ref={matRef} size={0.22} map={tex} color="#d8f0ff" sizeAttenuation
+        transparent opacity={0} blending={THREE.AdditiveBlending}
+        depthWrite={false} depthTest={false} alphaTest={0.01} />
+    </points>
+  )
+}
+
 export default function HeroOrb() {
   const { gl, camera } = useThree()
   const groupRef = useRef()
@@ -573,8 +674,12 @@ export default function HeroOrb() {
   useEffect(() => {
     const canvas = gl.domElement
     const onDown = (e) => {
-      // Drag only while the orb is in its initial sphere state
-      if (scrollState.progress > 0.05) return
+      // Update the drag sphere to the orb's current world transform so the
+      // cube remains grabbable on the left side too
+      const p = scrollState.progress
+      const scale = 1.0 + (END_SCALE - 1.0) * p
+      dragSphere.center.x = ORB_X + (END_X - ORB_X) * p
+      dragSphere.radius = R * scale * (1.0 + 0.73 * p) * 1.05
       const rect = canvas.getBoundingClientRect()
       tmpNdc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1
       tmpNdc.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1
@@ -653,6 +758,8 @@ export default function HeroOrb() {
       <NodeHaloRings />
       <NodeClusterParticles />
       <FlowParticles />
+      <CubeGridParticles />
+      <CubeCornerDots />
       {ICON_CENTERS.map((c, i) => (
         <IconPlane key={i} center={c} texIndex={i} />
       ))}
