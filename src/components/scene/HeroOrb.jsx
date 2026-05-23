@@ -167,12 +167,9 @@ const MINI_FRAG = `
   }
 `
 
-function InteractiveMiniOrbs() {
+function InteractiveMiniOrbs({ mousePt }) {
   const tex = getGlowDotTexture()
-  const { camera, size, pointer } = useThree()
-  const ray = useMemo(() => new THREE.Raycaster(), [])
-  const sphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(), R), [])
-  const hit = useMemo(() => new THREE.Vector3(), [])
+  const { size } = useThree()
 
   const { positions, sizes, seeds } = useMemo(() => {
     // Cube-face subdivision projected onto sphere = uniform square grid pattern.
@@ -225,13 +222,7 @@ function InteractiveMiniOrbs() {
   }), [tex, size.height])
 
   useFrame(({ clock }) => {
-    ray.setFromCamera(pointer, camera)
-    const intersected = ray.ray.intersectSphere(sphere, hit)
-    if (intersected) {
-      material.uniforms.uMouse.value.copy(hit)
-    } else {
-      material.uniforms.uMouse.value.set(1000, 1000, 1000)
-    }
+    material.uniforms.uMouse.value.copy(mousePt.current)
     material.uniforms.uTime.value = clock.getElapsedTime()
     material.uniforms.uScale.value = size.height / 2
   })
@@ -487,19 +478,30 @@ function IconPlane({ center, texIndex }) {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function HeroOrb() {
   const groupRef = useRef()
+  const mousePt = useRef(new THREE.Vector3(1000, 1000, 1000))
 
   useFrame((_, delta) => {
     if (groupRef.current) groupRef.current.rotation.y += delta * 0.044
   })
 
   return (
+    <>
+      {/* Transparent sphere at world origin — captures exact cursor hit point via R3F events */}
+      <mesh
+        onPointerMove={e => { e.stopPropagation(); mousePt.current.copy(e.point) }}
+        onPointerLeave={() => mousePt.current.set(1000, 1000, 1000)}
+      >
+        <sphereGeometry args={[R, 48, 48]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
     <group ref={groupRef}>
       <DepthOccluder />
 
       <VolumeField />
 
-      {/* Interactive mini orbs — pure random uniform sphere, cursor-reactive */}
-      <InteractiveMiniOrbs />
+      {/* Interactive mini orbs — square grid, cursor-reactive via world-space pointer events */}
+      <InteractiveMiniOrbs mousePt={mousePt} />
 
       {/* Soccer ball grid */}
       <SoccerGridParticles />
@@ -527,5 +529,6 @@ export default function HeroOrb() {
       {/* Breathing rings */}
       <PulsatingRings />
     </group>
+    </>
   )
 }
