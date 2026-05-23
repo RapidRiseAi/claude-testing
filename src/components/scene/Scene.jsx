@@ -49,7 +49,7 @@ export default function Scene() {
       }}
       dpr={[1, 2]}
     >
-      <color attach="background" args={['#000000']} />
+      <color attach="background" args={['#00040e']} />
       <FaintBackdropDots />
       <Suspense fallback={null}>
         <HeroOrb />
