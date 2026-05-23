@@ -291,9 +291,9 @@ export function createIconTexture(index) {
   ctx.save()
   ctx.translate(iconX, iconY)
   ctx.scale(scale, scale)
-  ctx.strokeStyle = '#cceeff'
-  ctx.fillStyle = '#cceeff'
-  ctx.lineWidth = 1.3 / scale
+  ctx.strokeStyle = '#dff4ff'
+  ctx.fillStyle = '#dff4ff'
+  ctx.lineWidth = 2.0 / scale
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
   if (index < DRAW.length) DRAW[index](ctx)
