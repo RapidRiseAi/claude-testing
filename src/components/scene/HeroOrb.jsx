@@ -175,27 +175,31 @@ function InteractiveMiniOrbs() {
   const hit = useMemo(() => new THREE.Vector3(), [])
 
   const { positions, sizes, seeds } = useMemo(() => {
-    const count = 11000
-    const p = new Float32Array(count * 3)
+    // Cube-face subdivision projected onto sphere = uniform square grid pattern.
+    // 6 faces × N² points each, all normalized to sphere surface.
+    const N = 27   // 6 × 729 = 4374 points — dense but clearly grid-spaced
+    const pts = []
+    for (const [axis, sign] of [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]]) {
+      for (let i = 0; i < N; i++) {
+        for (let j = 0; j < N; j++) {
+          const u = (i + 0.5) / N * 2 - 1
+          const v = (j + 0.5) / N * 2 - 1
+          let x, y, z
+          if (axis === 0)      { x = sign; y = u; z = v }
+          else if (axis === 1) { x = u; y = sign; z = v }
+          else                 { x = u; y = v; z = sign }
+          const len = Math.sqrt(x*x + y*y + z*z)
+          const r = R * (0.998 + Math.random() * 0.005)
+          pts.push(x/len*r, y/len*r, z/len*r)
+        }
+      }
+    }
+    const count = pts.length / 3
+    const p = new Float32Array(pts)
     const s = new Float32Array(count)
     const sd = new Float32Array(count)
-
-    // Pure random uniform sphere (cube-rejection) — no Fibonacci spiral artifacts
     for (let i = 0; i < count; i++) {
-      let x, y, z, n
-      do {
-        x = Math.random() * 2 - 1
-        y = Math.random() * 2 - 1
-        z = Math.random() * 2 - 1
-        n = Math.sqrt(x*x + y*y + z*z)
-      } while (n > 1 || n < 0.0001)
-      const r = R * (0.997 + Math.random() * 0.012)
-      p[i * 3]     = x / n * r
-      p[i * 3 + 1] = y / n * r
-      p[i * 3 + 2] = z / n * r
-      s[i] = Math.random() < 0.20
-        ? 0.085 + Math.random() * 0.040
-        : 0.050 + Math.random() * 0.028
+      s[i] = 0.026 + Math.random() * 0.010   // small, uniform dots
       sd[i] = Math.random()
     }
     return { positions: p, sizes: s, seeds: sd }
