@@ -92,41 +92,39 @@ const MINI_VERT = `
   uniform float uTime;
   uniform float uRadius;
   uniform float uScale;
+  uniform vec3 uCursorWorld;
+  uniform float uCursorActive;
   attribute float aSize;
   attribute float aSeed;
   varying float vGlow;
 
   void main() {
     vec3 worldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-    float maxG = 0.0;
-    float windProx = 0.0;
-    vec3 windWorldDir = vec3(0.0);
 
+    // Glow: max age-weighted contribution across the full trail buffer
+    float maxG = 0.0;
     for (int i = 0; i < ${TRAIL_LEN}; i++) {
       vec4 t = uTrail[i];
       float ageFactor = max(0.0, 1.0 - (t.w / uTrailLifetime));
       float d = distance(worldPos, t.xyz);
       float g = (1.0 - smoothstep(0.0, uRadius, d)) * ageFactor;
       maxG = max(maxG, g);
-      float wp = (1.0 - smoothstep(0.0, uRadius * 0.55, d)) * ageFactor;
-      if (wp > windProx && d > 0.001) {
-        windProx = wp;
-        windWorldDir = (worldPos - t.xyz) / d;
-      }
     }
-
     float g = pow(maxG, 1.5);
     float tw = 0.22 * sin(uTime * 1.6 + aSeed * 12.566);
     vGlow = clamp(g + tw * 0.5, 0.0, 1.6);
 
-    // Convert wind dir from world to local space via transposed rotation (model is rotation-only)
+    // Wind: derived ONLY from the current cursor world position (stable, no looping)
+    float cd = distance(worldPos, uCursorWorld);
+    float windProx = (1.0 - smoothstep(0.0, uRadius * 0.7, cd)) * uCursorActive;
+    vec3 windWorldDir = cd > 0.001 ? (worldPos - uCursorWorld) / cd : vec3(0.0);
+
     vec3 windLocalDir = vec3(
       dot(windWorldDir, vec3(modelMatrix[0][0], modelMatrix[1][0], modelMatrix[2][0])),
       dot(windWorldDir, vec3(modelMatrix[0][1], modelMatrix[1][1], modelMatrix[2][1])),
       dot(windWorldDir, vec3(modelMatrix[0][2], modelMatrix[1][2], modelMatrix[2][2]))
     );
 
-    // Project onto tangent plane of sphere so displacement stays on surface
     vec3 localNorm = normalize(position);
     vec3 tangentWind = windLocalDir - localNorm * dot(windLocalDir, localNorm);
     vec3 displacedPos = position + tangentWind * windProx * 0.30;
@@ -224,6 +222,8 @@ function InteractiveMiniOrbs() {
       uColorBase:     { value: new THREE.Color('#82c8f0') },
       uColorHot:      { value: new THREE.Color('#58b8f8') },
       uOpacity:       { value: 1.0 },
+      uCursorWorld:   { value: new THREE.Vector3() },
+      uCursorActive:  { value: 0.0 },
     },
     vertexShader: MINI_VERT,
     fragmentShader: MINI_FRAG,
@@ -240,6 +240,10 @@ function InteractiveMiniOrbs() {
         if (trail[i].w > oldestAge) { oldestAge = trail[i].w; oldestIdx = i }
       }
       trail[oldestIdx].set(hit.x, hit.y, hit.z, 0)
+      material.uniforms.uCursorWorld.value.copy(hit)
+      material.uniforms.uCursorActive.value = 1.0
+    } else {
+      material.uniforms.uCursorActive.value = 0.0
     }
     material.uniforms.uTime.value = clock.getElapsedTime()
     material.uniforms.uScale.value = size.height / 2
@@ -490,16 +494,31 @@ function IconPlane({ center, texIndex }) {
 }
 
 export default function HeroOrb() {
+  const { gl, camera } = useThree()
   const groupRef = useRef()
   const isDragging = useRef(false)
   const snappingBack = useRef(false)
   const lastPointer = useRef({ x: 0, y: 0 })
+  const dragRaycaster = useMemo(() => new THREE.Raycaster(), [])
+  // Slightly larger than R so the grab feels forgiving at the edges
+  const dragSphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(ORB_X, 0, 0), R * 1.05), [])
+  const tmpNdc = useMemo(() => new THREE.Vector2(), [])
 
   useEffect(() => {
+    const canvas = gl.domElement
     const onDown = (e) => {
+      const rect = canvas.getBoundingClientRect()
+      tmpNdc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1
+      tmpNdc.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1
+      dragRaycaster.setFromCamera(tmpNdc, camera)
+      // Only start drag when the click was actually on the orb sphere
+      if (!dragRaycaster.ray.intersectsSphere(dragSphere)) return
+      e.preventDefault()
       isDragging.current = true
       snappingBack.current = false
       lastPointer.current = { x: e.clientX, y: e.clientY }
+      document.body.style.userSelect = 'none'
+      canvas.style.cursor = 'grabbing'
     }
     const onMove = (e) => {
       if (!isDragging.current || !groupRef.current) return
@@ -513,6 +532,8 @@ export default function HeroOrb() {
       if (isDragging.current) {
         isDragging.current = false
         snappingBack.current = true
+        document.body.style.userSelect = ''
+        canvas.style.cursor = ''
       }
     }
     window.addEventListener('pointerdown', onDown)
@@ -523,7 +544,7 @@ export default function HeroOrb() {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
     }
-  }, [])
+  }, [gl, camera, dragRaycaster, dragSphere, tmpNdc])
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
