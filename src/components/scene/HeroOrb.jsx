@@ -169,6 +169,25 @@ const JUNCTION_VERTEX_CUBE       = computeCubeTargets(JUNCTION_VERTEX_POSITIONS,
 const JUNCTION_HEX_CUBE          = computeCubeTargets(JUNCTION_HEX_POSITIONS,    'corner')
 const JUNCTION_PENT_CUBE         = computeCubeTargets(JUNCTION_PENT_POSITIONS,   'corner')
 
+// Dense fill for all 12 cube edges — guarantees solid edge coverage at morph=1
+const CUBE_EDGE_FILL_DATA = (() => {
+  const SAMPLES = 48
+  const sphPts = []
+  const cubePts = []
+  for (const [a, b] of CUBE_EDGE_PAIRS) {
+    for (let k = 0; k < SAMPLES; k++) {
+      const t = (k + 0.5) / SAMPLES
+      const cx = a[0] + (b[0] - a[0]) * t
+      const cy = a[1] + (b[1] - a[1]) * t
+      const cz = a[2] + (b[2] - a[2]) * t
+      cubePts.push(cx, cy, cz)
+      const len = Math.sqrt(cx*cx + cy*cy + cz*cz)
+      sphPts.push(cx/len*R, cy/len*R, cz/len*R)
+    }
+  }
+  return { sphere: new Float32Array(sphPts), cube: new Float32Array(cubePts) }
+})()
+
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
 
@@ -215,7 +234,8 @@ const MINI_VERT = `
     vec3 displacedPos = basePos + pushDir * windProx * strengthMult;
 
     vec4 mv = modelViewMatrix * vec4(displacedPos, 1.0);
-    gl_PointSize = aSize * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
+    float sizeMult = mix(1.0, 2.0, uMorph);
+    gl_PointSize = aSize * sizeMult * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
 `
@@ -481,6 +501,18 @@ function SoccerGridParticles() {
   )
 }
 
+// Dense edge fill — ensures all 12 cube edges are fully solid at morph=1
+function CubeEdgeFill() {
+  return (
+    <>
+      <MorphParticles posSphere={CUBE_EDGE_FILL_DATA.sphere} posCube={CUBE_EDGE_FILL_DATA.cube}
+        size={0.072} color="#58b8f8" opacity={0.92} renderOrder={5} />
+      <MorphParticles posSphere={CUBE_EDGE_FILL_DATA.sphere} posCube={CUBE_EDGE_FILL_DATA.cube}
+        size={0.18} color="#1060d0" opacity={0.32} renderOrder={3} />
+    </>
+  )
+}
+
 // Spokes morph onto nearest cube edges (they collapse toward each icon's corner)
 function CardinalSpokeParticles() {
   return (
@@ -511,11 +543,11 @@ function JunctionDots() {
   return (
     <>
       <MorphParticles posSphere={JUNCTION_VERTEX_POSITIONS} posCube={JUNCTION_VERTEX_CUBE}
-        size={0.18} color="#d8f0ff" opacity={0.92} renderOrder={7} />
+        size={0.12} color="#d8f0ff" opacity={0.60} renderOrder={7} />
       <MorphParticles posSphere={JUNCTION_HEX_POSITIONS} posCube={JUNCTION_HEX_CUBE}
-        size={0.10} color="#90d0ff" opacity={0.78} renderOrder={6} />
+        size={0.08} color="#90d0ff" opacity={0.55} renderOrder={6} />
       <MorphParticles posSphere={JUNCTION_PENT_POSITIONS} posCube={JUNCTION_PENT_CUBE}
-        size={0.32} color="#ffffff" opacity={0.95} renderOrder={9} />
+        size={0.16} color="#c8e8ff" opacity={0.55} renderOrder={9} />
     </>
   )
 }
@@ -815,6 +847,7 @@ export default function HeroOrb() {
       <VolumeField />
       <InteractiveMiniOrbs />
       <SoccerGridParticles />
+      <CubeEdgeFill />
       <CardinalSpokeParticles />
       <JunctionDots />
       <NodeHaloRings />
