@@ -1,213 +1,299 @@
 import * as THREE from 'three'
 
+// ── Icon draw functions: 24-unit SVG coordinate space, ctx translated to (0,0) ─
+// Thin crisp icy-white line icons — no fills except small accents
 const DRAW = [
-  // 0 Analytics
+  // 0 Dashboard / Analytics
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Browser window
+    ctx.strokeRect(2, 3, 20, 16)
+    ctx.beginPath(); ctx.moveTo(2, 7); ctx.lineTo(22, 7); ctx.stroke()
+    // Three chart bars inside
     ctx.fillStyle = ctx.strokeStyle
-    ctx.fillRect(3, 14, 4, 7); ctx.fillRect(10, 9, 4, 12); ctx.fillRect(17, 5, 4, 16)
-    ctx.beginPath(); ctx.moveTo(2, 21); ctx.lineTo(22, 21)
-    ctx.moveTo(2, 3); ctx.lineTo(2, 21); ctx.stroke()
+    ctx.fillRect(5, 11, 2.5, 5); ctx.fillRect(9, 9, 2.5, 7); ctx.fillRect(13, 13, 2.5, 3)
+    // Tiny sparkline
+    ctx.beginPath(); ctx.moveTo(17, 14); ctx.lineTo(18.5, 12); ctx.lineTo(20, 13.5); ctx.stroke()
+    // Traffic lights
+    ctx.beginPath(); ctx.arc(4.5, 5, 0.8, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(7, 5, 0.8, 0, Math.PI * 2); ctx.fill()
   },
-  // 1 IoT / Chip
+  // 1 IoT / Connected Chip
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
     ctx.strokeRect(7, 7, 10, 10)
-    for (const y of [9, 12, 15]) {
+    // Pins
+    for (const y of [9.5, 12, 14.5]) {
       ctx.beginPath(); ctx.moveTo(3, y); ctx.lineTo(7, y); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(17, y); ctx.lineTo(21, y); ctx.stroke()
     }
-    for (const x of [9, 12, 15]) {
+    for (const x of [9.5, 12, 14.5]) {
       ctx.beginPath(); ctx.moveTo(x, 3); ctx.lineTo(x, 7); ctx.stroke()
       ctx.beginPath(); ctx.moveTo(x, 17); ctx.lineTo(x, 21); ctx.stroke()
     }
+    // Wifi signal in center
+    ctx.beginPath(); ctx.arc(12, 12, 1.2, 0, Math.PI * 2); ctx.fillStyle = ctx.strokeStyle; ctx.fill()
+    ctx.beginPath(); ctx.arc(12, 12, 2.8, -Math.PI * 0.75, -Math.PI * 0.25); ctx.stroke()
+    ctx.beginPath(); ctx.arc(12, 12, 4.2, -Math.PI * 0.75, -Math.PI * 0.25); ctx.stroke()
+  },
+  // 2 Client Portal / User Card
+  ctx => {
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Card shape
+    ctx.beginPath()
+    ctx.roundRect ? ctx.roundRect(2, 4, 20, 16, 2) : ctx.strokeRect(2, 4, 20, 16)
+    ctx.stroke()
+    // Avatar circle
+    ctx.beginPath(); ctx.arc(8, 11, 3.5, 0, Math.PI * 2); ctx.stroke()
+    // Head
+    ctx.beginPath(); ctx.arc(8, 9.5, 1.5, 0, Math.PI * 2); ctx.stroke()
+    // Info lines
+    ctx.beginPath()
+    ctx.moveTo(13.5, 9); ctx.lineTo(20, 9)
+    ctx.moveTo(13.5, 12); ctx.lineTo(19, 12)
+    ctx.moveTo(13.5, 15); ctx.lineTo(17, 15)
+    ctx.stroke()
+    // Secure badge
     ctx.fillStyle = ctx.strokeStyle
-    ctx.beginPath(); ctx.arc(12, 12, 1.4, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(19, 7, 1.2, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.moveTo(19, 5.8); ctx.lineTo(20.2, 6.5); ctx.lineTo(20.2, 7.5); ctx.lineTo(19, 8.2); ctx.lineTo(17.8, 7.5); ctx.lineTo(17.8, 6.5); ctx.closePath(); ctx.stroke()
   },
-  // 2 Identity
+  // 3 Integrations / Connected Modules
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
-    ctx.strokeRect(2, 5, 20, 14)
-    ctx.beginPath(); ctx.arc(8, 12, 2.5, 0, Math.PI * 2); ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(13, 9.5); ctx.lineTo(20, 9.5)
-    ctx.moveTo(13, 13); ctx.lineTo(18, 13)
-    ctx.moveTo(13, 16); ctx.lineTo(16, 16)
-    ctx.stroke()
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Central hub
+    ctx.beginPath(); ctx.arc(12, 12, 2.5, 0, Math.PI * 2); ctx.stroke()
+    // Four satellite nodes
+    for (const [x, y] of [[4, 4],[20, 4],[4, 20],[20, 20]]) {
+      ctx.strokeRect(x - 2, y - 2, 4, 4)
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(12, 12); ctx.stroke()
+    }
+    // Small dots on connection lines
+    ctx.fillStyle = ctx.strokeStyle
+    for (const [x, y] of [[4, 4],[20, 4],[4, 20],[20, 20]]) {
+      const mx = (x + 12) / 2, my = (y + 12) / 2
+      ctx.beginPath(); ctx.arc(mx, my, 0.8, 0, Math.PI * 2); ctx.fill()
+    }
   },
-  // 3 Integrations
+  // 4 Automated Workflows
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
-    for (const [x, y] of [[3,3],[17,3],[3,17],[17,17]]) ctx.strokeRect(x, y, 4, 4)
-    ctx.beginPath(); ctx.arc(12, 12, 2, 0, Math.PI * 2); ctx.stroke()
-    ctx.beginPath()
-    for (const [x, y] of [[3,3],[17,3],[3,17],[17,17]])
-      { ctx.moveTo(x + 2, y + 2); ctx.lineTo(12, 12) }
-    ctx.stroke()
-  },
-  // 4 Automation (gear)
-  ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 6
-    ctx.beginPath(); ctx.arc(12, 12, 7, 0, Math.PI * 2); ctx.stroke()
-    ctx.beginPath(); ctx.arc(12, 12, 3, 0, Math.PI * 2); ctx.stroke()
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Gear outer
+    ctx.beginPath(); ctx.arc(12, 12, 6.5, 0, Math.PI * 2); ctx.stroke()
+    // Gear center
+    ctx.beginPath(); ctx.arc(12, 12, 2.8, 0, Math.PI * 2); ctx.stroke()
+    // Gear teeth
     for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
       ctx.beginPath()
-      ctx.moveTo(12 + Math.cos(a) * 4.5, 12 + Math.sin(a) * 4.5)
-      ctx.lineTo(12 + Math.cos(a) * 9.5, 12 + Math.sin(a) * 9.5)
+      ctx.moveTo(12 + Math.cos(a) * 4.2, 12 + Math.sin(a) * 4.2)
+      ctx.lineTo(12 + Math.cos(a) * 8.8, 12 + Math.sin(a) * 8.8)
       ctx.stroke()
     }
+    // Flow arrow through center
+    ctx.beginPath(); ctx.moveTo(9, 12); ctx.lineTo(15, 12); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(13.2, 10.2); ctx.lineTo(15, 12); ctx.lineTo(13.2, 13.8); ctx.stroke()
   },
-  // 5 Code
+  // 5 Custom Software / Code
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Code brackets
+    ctx.lineWidth = ctx.lineWidth * 1.1
     ctx.beginPath()
-    ctx.moveTo(15, 18); ctx.lineTo(21, 12); ctx.lineTo(15, 6); ctx.stroke()
+    ctx.moveTo(14, 19); ctx.lineTo(21, 12); ctx.lineTo(14, 5); ctx.stroke()
     ctx.beginPath()
-    ctx.moveTo(9, 6); ctx.lineTo(3, 12); ctx.lineTo(9, 18); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(14, 4); ctx.lineTo(10, 20); ctx.stroke()
+    ctx.moveTo(10, 5); ctx.lineTo(3, 12); ctx.lineTo(10, 19); ctx.stroke()
+    // Slash
+    ctx.beginPath(); ctx.moveTo(14.5, 3.5); ctx.lineTo(9.5, 20.5); ctx.stroke()
   },
-  // 6 Web Platform
+  // 6 Custom Website / Browser
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
-    ctx.strokeRect(2, 3, 20, 15)
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Browser frame
+    ctx.strokeRect(2, 2.5, 20, 17)
+    // Address bar
     ctx.beginPath(); ctx.moveTo(2, 7); ctx.lineTo(22, 7); ctx.stroke()
+    // Nav dots
     ctx.fillStyle = ctx.strokeStyle
-    ctx.beginPath(); ctx.arc(5.5, 5, 1, 0, Math.PI * 2); ctx.fill()
-    ctx.beginPath(); ctx.arc(9, 5, 1, 0, Math.PI * 2); ctx.fill()
-    ctx.beginPath(); ctx.arc(12, 13, 3, 0, Math.PI * 2); ctx.stroke()
-    for (let a = 0; a < Math.PI * 2; a += Math.PI / 3) {
-      ctx.beginPath()
-      ctx.moveTo(12 + Math.cos(a) * 4, 13 + Math.sin(a) * 4)
-      ctx.lineTo(12 + Math.cos(a) * 5.5, 13 + Math.sin(a) * 5.5); ctx.stroke()
+    for (const x of [5, 8.5]) {
+      ctx.beginPath(); ctx.arc(x, 4.75, 1, 0, Math.PI * 2); ctx.fill()
     }
-    ctx.beginPath(); ctx.moveTo(8, 21); ctx.lineTo(16, 21)
-    ctx.moveTo(12, 18); ctx.lineTo(12, 21); ctx.stroke()
-  },
-  // 7 AI Assistant
-  ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 6
-    ctx.strokeRect(3, 8, 18, 11)
+    // Responsive layout lines inside
     ctx.beginPath()
-    ctx.moveTo(8, 8); ctx.lineTo(8, 5); ctx.lineTo(16, 5); ctx.lineTo(16, 8); ctx.stroke()
+    ctx.moveTo(5, 10); ctx.lineTo(19, 10)
+    ctx.moveTo(5, 13); ctx.lineTo(16, 13)
+    ctx.moveTo(5, 16); ctx.lineTo(14, 16)
+    ctx.stroke()
+    // Cursor
+    ctx.beginPath(); ctx.moveTo(18, 11.5); ctx.lineTo(18, 17); ctx.lineTo(20, 15); ctx.lineTo(21, 17.5); ctx.lineTo(22, 17); ctx.lineTo(20.5, 14.5); ctx.lineTo(23, 12.5); ctx.closePath(); ctx.stroke()
+  },
+  // 7 AI Communication / Chatbot
+  ctx => {
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Robot head
+    ctx.strokeRect(4, 7, 16, 11)
+    // Antenna
+    ctx.beginPath(); ctx.moveTo(12, 7); ctx.lineTo(12, 4); ctx.stroke()
     ctx.fillStyle = ctx.strokeStyle
-    ctx.beginPath(); ctx.arc(9, 13, 1.5, 0, Math.PI * 2); ctx.fill()
-    ctx.beginPath(); ctx.arc(15, 13, 1.5, 0, Math.PI * 2); ctx.fill()
-    ctx.beginPath(); ctx.moveTo(9, 17); ctx.quadraticCurveTo(12, 19.5, 15, 17); ctx.stroke()
-    ctx.beginPath(); ctx.moveTo(12, 5); ctx.lineTo(12, 3); ctx.stroke()
-    ctx.beginPath(); ctx.arc(12, 2.5, 1, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(12, 3.2, 1.2, 0, Math.PI * 2); ctx.fill()
+    // Eyes with glow dots
+    ctx.beginPath(); ctx.arc(9, 11.5, 1.8, 0, Math.PI * 2); ctx.stroke()
+    ctx.beginPath(); ctx.arc(15, 11.5, 1.8, 0, Math.PI * 2); ctx.stroke()
+    ctx.beginPath(); ctx.arc(9, 11.5, 0.7, 0, Math.PI * 2); ctx.fill()
+    ctx.beginPath(); ctx.arc(15, 11.5, 0.7, 0, Math.PI * 2); ctx.fill()
+    // Smile
+    ctx.beginPath(); ctx.arc(12, 14, 3, 0.2, Math.PI - 0.2); ctx.stroke()
+    // Chat bubble tail
+    ctx.beginPath(); ctx.moveTo(8, 18); ctx.lineTo(6, 21); ctx.lineTo(11, 18); ctx.stroke()
   },
   // 8 Database
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
-    for (const y of [5, 12, 19]) {
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    for (const y of [5.5, 12, 18.5]) {
       ctx.beginPath(); ctx.ellipse(12, y, 8, 2.5, 0, 0, Math.PI * 2); ctx.stroke()
     }
     ctx.beginPath()
-    ctx.moveTo(4, 5); ctx.lineTo(4, 19)
-    ctx.moveTo(20, 5); ctx.lineTo(20, 19); ctx.stroke()
+    ctx.moveTo(4, 5.5); ctx.lineTo(4, 18.5)
+    ctx.moveTo(20, 5.5); ctx.lineTo(20, 18.5)
+    ctx.stroke()
+    // Active indicator
+    ctx.fillStyle = ctx.strokeStyle
+    ctx.beginPath(); ctx.arc(16, 12, 1.2, 0, Math.PI * 2); ctx.fill()
   },
-  // 9 Cloud
+  // 9 Cloud Infrastructure
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
     ctx.beginPath()
-    ctx.moveTo(8, 19); ctx.lineTo(5, 19)
-    ctx.arc(5, 15, 4, Math.PI * 0.5, Math.PI * 1.5)
-    ctx.arc(8, 10, 5, Math.PI, Math.PI * 1.85)
-    ctx.arc(14, 8, 6, Math.PI * 1.25, Math.PI * 0.1)
-    ctx.arc(18, 14, 4, -0.4, Math.PI * 0.5)
-    ctx.lineTo(8, 19); ctx.stroke()
+    ctx.moveTo(7.5, 18.5); ctx.lineTo(4.5, 18.5)
+    ctx.arc(4.5, 14.5, 4, Math.PI * 0.5, Math.PI * 1.5)
+    ctx.arc(7.5, 9.5, 5, Math.PI, Math.PI * 1.82)
+    ctx.arc(13.5, 7.5, 6, Math.PI * 1.22, Math.PI * 0.12)
+    ctx.arc(18, 13.5, 4.5, -0.35, Math.PI * 0.5)
+    ctx.lineTo(7.5, 18.5)
+    ctx.stroke()
+    // Data line drops from cloud
+    for (const x of [8, 12, 16]) {
+      ctx.beginPath(); ctx.moveTo(x, 18.5); ctx.lineTo(x, 21.5); ctx.stroke()
+      ctx.fillStyle = ctx.strokeStyle
+      ctx.beginPath(); ctx.arc(x, 22, 0.8, 0, Math.PI * 2); ctx.fill()
+    }
   },
-  // 10 Security
+  // 10 Security Shield
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 6
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 5
     ctx.beginPath()
-    ctx.moveTo(12, 2); ctx.lineTo(20, 6); ctx.lineTo(20, 13)
-    ctx.quadraticCurveTo(20, 20, 12, 23)
-    ctx.quadraticCurveTo(4, 20, 4, 13)
-    ctx.lineTo(4, 6); ctx.closePath(); ctx.stroke()
+    ctx.moveTo(12, 1.5); ctx.lineTo(21, 5.5); ctx.lineTo(21, 13)
+    ctx.quadraticCurveTo(21, 21, 12, 24)
+    ctx.quadraticCurveTo(3, 21, 3, 13)
+    ctx.lineTo(3, 5.5); ctx.closePath(); ctx.stroke()
+    // Checkmark inside
     ctx.beginPath()
-    ctx.moveTo(8.5, 12.5); ctx.lineTo(11, 15.5); ctx.lineTo(15.5, 9.5); ctx.stroke()
+    ctx.moveTo(7.5, 12.5); ctx.lineTo(10.5, 15.5); ctx.lineTo(16.5, 9.5); ctx.stroke()
+    // Padlock detail
+    ctx.beginPath(); ctx.arc(12, 7.5, 2, Math.PI, Math.PI * 2); ctx.stroke()
+    ctx.strokeRect(9.5, 7.5, 5, 4)
   },
-  // 11 Workflow
+  // 11 Workflow / Pipeline
   ctx => {
-    ctx.shadowColor = '#aaf0ff'; ctx.shadowBlur = 5
-    for (const x of [2, 10, 18]) ctx.strokeRect(x, 9, 5, 6)
+    ctx.shadowColor = '#c0f0ff'; ctx.shadowBlur = 4
+    // Three process nodes
+    for (const [x, y] of [[3, 8], [10, 8], [17, 8]]) {
+      ctx.strokeRect(x, y, 5, 7)
+    }
+    // Connections with arrows
     ctx.beginPath()
-    ctx.moveTo(7, 12); ctx.lineTo(10, 12)
-    ctx.moveTo(15, 12); ctx.lineTo(18, 12); ctx.stroke()
+    ctx.moveTo(8, 11.5); ctx.lineTo(10, 11.5)
+    ctx.moveTo(15, 11.5); ctx.lineTo(17, 11.5)
+    ctx.stroke()
+    // Arrowheads
     ctx.beginPath()
-    ctx.moveTo(8.5, 10.5); ctx.lineTo(10, 12); ctx.lineTo(8.5, 13.5); ctx.stroke()
+    ctx.moveTo(9, 10.2); ctx.lineTo(10, 11.5); ctx.lineTo(9, 12.8); ctx.stroke()
     ctx.beginPath()
-    ctx.moveTo(16.5, 10.5); ctx.lineTo(18, 12); ctx.lineTo(16.5, 13.5); ctx.stroke()
+    ctx.moveTo(16, 10.2); ctx.lineTo(17, 11.5); ctx.lineTo(16, 12.8); ctx.stroke()
+    // Second row branching output
+    ctx.beginPath()
+    ctx.moveTo(12.5, 15); ctx.lineTo(12.5, 18)
+    ctx.moveTo(7, 18); ctx.lineTo(18, 18)
+    ctx.moveTo(7, 18); ctx.lineTo(7, 20); ctx.moveTo(12.5, 18); ctx.lineTo(12.5, 20)
+    ctx.moveTo(18, 18); ctx.lineTo(18, 20)
+    ctx.stroke()
+    for (const x of [7, 12.5, 18]) {
+      ctx.fillStyle = ctx.strokeStyle
+      ctx.beginPath(); ctx.arc(x, 20.5, 1, 0, Math.PI * 2); ctx.fill()
+    }
   },
 ]
 
 export const ICON_LABELS = [
-  'Analytics', 'IoT / Chip', 'Identity', 'Integrations',
-  'Automation', 'Code', 'Web Platform', 'AI Assistant',
+  'Dashboard', 'IoT / Chip', 'Client Portal', 'Integrations',
+  'Automation', 'Custom Software', 'Website', 'AI Communication',
   'Database', 'Cloud', 'Security', 'Workflow',
 ]
 
-function makeGlowDotTexture() {
+// ── Shared glow dot texture ────────────────────────────────────────────────────
+function makeGlowDotTex() {
   const S = 64
   const c = document.createElement('canvas'); c.width = c.height = S
   const ctx = c.getContext('2d')
   const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-  g.addColorStop(0,    'rgba(255,255,255,1)')
-  g.addColorStop(0.18, 'rgba(180,235,255,0.95)')
-  g.addColorStop(0.45, 'rgba(60,170,255,0.45)')
-  g.addColorStop(0.75, 'rgba(0,80,200,0.12)')
+  g.addColorStop(0,    'rgba(255,255,255,1.0)')
+  g.addColorStop(0.15, 'rgba(200,240,255,0.95)')
+  g.addColorStop(0.40, 'rgba(80,180,255,0.50)')
+  g.addColorStop(0.70, 'rgba(0,90,220,0.15)')
   g.addColorStop(1,    'rgba(0,0,0,0)')
   ctx.fillStyle = g; ctx.fillRect(0, 0, S, S)
   return new THREE.CanvasTexture(c)
 }
-
-let _glowDotTex = null
+let _glowTex = null
 export function getGlowDotTexture() {
-  if (!_glowDotTex) _glowDotTex = makeGlowDotTexture()
-  return _glowDotTex
+  if (!_glowTex) _glowTex = makeGlowDotTex()
+  return _glowTex
 }
 
-// Icon texture: small dark plate + crisp glowing icon — premium embedded node
+// ── Icon texture: small dark glass plate, large crisp icon, thin single rim ───
 export function createIconTexture(index) {
   const S = 256
   const c = document.createElement('canvas'); c.width = c.height = S
   const ctx = c.getContext('2d')
   ctx.clearRect(0, 0, S, S)
 
-  // Background plate — small, contained, transparent at edges
-  const plateR = 78
-  const bg = ctx.createRadialGradient(128, 128, 0, 128, 128, plateR)
-  bg.addColorStop(0,    'rgba(0,  10, 28, 0.78)')
-  bg.addColorStop(0.55, 'rgba(0,   6, 20, 0.62)')
-  bg.addColorStop(0.85, 'rgba(0,   3, 12, 0.20)')
-  bg.addColorStop(1,    'rgba(0,   0,  6, 0)')
+  const plateR = 92   // icon plate radius in px
+  const cx = 128, cy = 128
+
+  // Dark glass plate — fades to transparent well inside the texture edge
+  const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, plateR)
+  bg.addColorStop(0,    'rgba(0, 14, 38, 0.92)')
+  bg.addColorStop(0.50, 'rgba(0, 10, 26, 0.78)')
+  bg.addColorStop(0.80, 'rgba(0,  5, 16, 0.28)')
+  bg.addColorStop(1,    'rgba(0,  0,  8, 0)')
   ctx.fillStyle = bg
-  ctx.beginPath(); ctx.arc(128, 128, plateR, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(cx, cy, plateR, 0, Math.PI * 2); ctx.fill()
 
-  // Subtle inner glow halo
-  const halo = ctx.createRadialGradient(128, 128, 30, 128, 128, plateR - 4)
-  halo.addColorStop(0,    'rgba(0,  90, 220, 0.10)')
-  halo.addColorStop(1,    'rgba(0,  20,  80, 0)')
+  // Subtle inner glow
+  const halo = ctx.createRadialGradient(cx, cy, 20, cx, cy, plateR - 10)
+  halo.addColorStop(0, 'rgba(0, 70, 180, 0.10)')
+  halo.addColorStop(1, 'rgba(0, 0, 0, 0)')
   ctx.fillStyle = halo
-  ctx.beginPath(); ctx.arc(128, 128, plateR - 4, 0, Math.PI * 2); ctx.fill()
+  ctx.beginPath(); ctx.arc(cx, cy, plateR - 10, 0, Math.PI * 2); ctx.fill()
 
-  // Crisp thin rim
-  ctx.shadowColor = '#7fd8ff'; ctx.shadowBlur = 7
-  ctx.strokeStyle = 'rgba(150, 220, 255, 0.85)'; ctx.lineWidth = 1.6
-  ctx.beginPath(); ctx.arc(128, 128, plateR - 2, 0, Math.PI * 2); ctx.stroke()
+  // Single thin crisp rim — the ONLY circle in the texture
+  ctx.shadowColor = '#5ad0ff'; ctx.shadowBlur = 5
+  ctx.strokeStyle = 'rgba(100, 200, 255, 0.70)'
+  ctx.lineWidth = 1.4
+  ctx.beginPath(); ctx.arc(cx, cy, plateR - 2, 0, Math.PI * 2); ctx.stroke()
   ctx.shadowBlur = 0
 
-  // Icon centered — refined, bright blue-white
-  const iconRadius = plateR - 18
-  const margin = 128 - iconRadius
-  const scale = (iconRadius * 2) / 24
+  // Icon — large, fills most of the plate
+  const iconMargin = 25    // px margin inside plate
+  const iconR = plateR - iconMargin
+  const iconX = cx - iconR, iconY = cy - iconR
+  const scale = (iconR * 2) / 24   // 24-unit SVG → pixel scale
+
   ctx.save()
-  ctx.translate(margin, margin)
+  ctx.translate(iconX, iconY)
   ctx.scale(scale, scale)
-  ctx.strokeStyle = '#cfeeff'
-  ctx.fillStyle = '#cfeeff'
-  ctx.lineWidth = 1.5 / scale
+  ctx.strokeStyle = '#cceeff'
+  ctx.fillStyle = '#cceeff'
+  ctx.lineWidth = 1.3 / scale
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
   if (index < DRAW.length) DRAW[index](ctx)
