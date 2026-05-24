@@ -16,49 +16,64 @@ body {
 
 #canvas-container { position: fixed; inset: 0; z-index: 0; }
 
-/* ── Atmospheric depth — electric blue universe ─────────────────────────── */
+/* ── Atmospheric depth — deep electric blue universe ────────────────────── */
 .hero-atmosphere {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 58% 78% at -4% -2%,  rgba(25, 85, 255, 0.58) 0%, transparent 55%),
-    radial-gradient(ellipse 32% 42% at 8%  12%,  rgba(90, 40, 220, 0.22) 0%, transparent 55%),
-    radial-gradient(ellipse 46% 64% at 0%  52%,  rgba(0, 52, 185, 0.28) 0%, transparent 62%),
-    radial-gradient(ellipse 44% 60% at 96% 52%,  rgba(0, 115, 225, 0.18) 0%, transparent 56%),
-    radial-gradient(ellipse 52% 36% at 50% 50%,  rgba(0, 58, 210, 0.08) 0%, transparent 68%),
-    linear-gradient(to bottom, rgba(0,4,14,0.62) 0%, transparent 20%),
-    linear-gradient(to top,    rgba(0,4,14,0.96) 0%, transparent 30%);
+    /* primary high-intensity electric key from upper-left */
+    radial-gradient(ellipse 60% 80% at -6% -4%,  rgba(40, 100, 255, 0.62) 0%, transparent 56%),
+    /* deep purple rim — adds richness */
+    radial-gradient(ellipse 34% 44% at 10% 14%,  rgba(100, 50, 240, 0.28) 0%, transparent 56%),
+    /* mid-left blue fill for panel area */
+    radial-gradient(ellipse 50% 70% at -2% 55%,  rgba(0, 60, 200, 0.34) 0%, transparent 64%),
+    /* orb backlight — strong glow behind the orb */
+    radial-gradient(ellipse 48% 70% at 96% 50%,  rgba(0, 140, 255, 0.26) 0%, transparent 58%),
+    /* secondary orb halo */
+    radial-gradient(ellipse 28% 40% at 78% 38%,  rgba(30, 110, 255, 0.18) 0%, transparent 60%),
+    /* horizon glow — grounds the scene */
+    radial-gradient(ellipse 70% 24% at 50% 105%, rgba(0, 90, 230, 0.20) 0%, transparent 62%),
+    /* centre bridge bloom */
+    radial-gradient(ellipse 52% 36% at 50% 50%,  rgba(0, 58, 210, 0.10) 0%, transparent 70%),
+    /* top vignette */
+    linear-gradient(to bottom, rgba(0,3,12,0.70) 0%, transparent 22%),
+    /* bottom vignette — deeper, more cinematic */
+    linear-gradient(to top,    rgba(0,3,12,0.98) 0%, rgba(0,4,16,0.40) 18%, transparent 36%),
+    /* base deep gradient — navy to near-black */
+    radial-gradient(ellipse 100% 100% at 50% 40%, #04102e 0%, #020618 60%, #00030d 100%);
 }
 
 .hero-atmosphere::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 36% 68% at -8% -8%,
-    rgba(55, 118, 255, 0.48) 0%,
-    rgba(20, 72, 225, 0.15) 36%,
-    transparent 60%
-  );
+  background:
+    /* breathing key light */
+    radial-gradient(ellipse 38% 70% at -8% -8%, rgba(60, 130, 255, 0.50) 0%, rgba(20, 72, 225, 0.16) 36%, transparent 60%),
+    /* breathing orb backlight */
+    radial-gradient(ellipse 36% 56% at 100% 50%, rgba(30, 130, 255, 0.22) 0%, transparent 60%);
   animation: atmosphere-breathe 10s ease-in-out infinite;
 }
 
 @keyframes atmosphere-breathe {
   0%, 100% { opacity: 0.85; transform: scale(1); }
-  50%      { opacity: 1;    transform: scale(1.04); }
+  50%      { opacity: 1.05; transform: scale(1.04); }
 }
 
-/* sparse editorial guides */
+/* faint perspective grid — adds dimensional floor */
 .hero-atmosphere::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(90deg, rgba(0, 80, 220, 0.04) 1px, transparent 1px);
-  background-size: 88px 100%;
-  -webkit-mask-image: radial-gradient(ellipse 38% 78% at 0% 50%, black 0%, transparent 68%);
-  mask-image:         radial-gradient(ellipse 38% 78% at 0% 50%, black 0%, transparent 68%);
+  background-image:
+    linear-gradient(90deg, rgba(40, 120, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(0deg,  rgba(40, 120, 255, 0.05) 1px, transparent 1px);
+  background-size: 88px 88px, 88px 88px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 100%, black 0%, transparent 65%);
+  mask-image:         radial-gradient(ellipse 80% 50% at 50% 100%, black 0%, transparent 65%);
+  opacity: 0.6;
 }
 
 /* ── Animated star/particle field ───────────────────────────────────────── */
@@ -274,66 +289,82 @@ body {
   line-height: 0.85;
 }
 
-/* ── Hero glass command panel ───────────────────────────────────────────── */
+/* ── Hero glass command panel — true frosted glass ──────────────────────── */
 .hero-panel {
   position: relative;
   z-index: 2;
   width: min(46vw, 660px);
   display: flex;
   flex-direction: column;
-  /* no bottom padding — stats strip goes flush to bottom */
-  padding: 2.6rem 2.8rem 0;
-  background: linear-gradient(
-    150deg,
-    rgba(12, 28, 76, 0.52) 0%,
-    rgba(6, 16, 50, 0.62) 45%,
-    rgba(3, 9, 30, 0.70) 100%
-  );
-  backdrop-filter: blur(24px) saturate(1.6);
-  -webkit-backdrop-filter: blur(24px) saturate(1.6);
-  border: 1px solid rgba(90, 155, 255, 0.22);
-  border-radius: 20px;
+  padding: 2.6rem 2.8rem 2.8rem;
+  background:
+    /* internal light refraction — soft highlight from upper-left */
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(140, 190, 255, 0.18) 0%, transparent 55%),
+    /* secondary soft glow from lower-right edge */
+    radial-gradient(ellipse 70% 50% at 110% 110%, rgba(40, 120, 255, 0.10) 0%, transparent 60%),
+    /* base glass tint — much more transparent for real see-through feel */
+    linear-gradient(150deg,
+      rgba(20, 45, 110, 0.28) 0%,
+      rgba(8, 22, 60, 0.36) 50%,
+      rgba(4, 12, 38, 0.42) 100%);
+  backdrop-filter: blur(30px) saturate(1.7) brightness(1.05);
+  -webkit-backdrop-filter: blur(30px) saturate(1.7) brightness(1.05);
+  border: 1px solid rgba(120, 180, 255, 0.20);
+  border-radius: 22px;
   overflow: hidden;
   box-shadow:
     /* outer atmospheric glow */
-    0 0 80px rgba(0, 60, 220, 0.18),
-    /* deep drop shadow */
-    0 28px 80px rgba(0, 2, 20, 0.65),
-    /* outer subtle double border */
-    0 0 0 1px rgba(30, 100, 255, 0.06),
-    /* ★ left edge bright highlight — key feature of the mockup */
-    inset 3px 0 0 rgba(70, 155, 255, 0.40),
+    0 0 100px rgba(0, 80, 240, 0.22),
+    /* deep drop shadow — floats panel above bg */
+    0 30px 90px rgba(0, 2, 18, 0.70),
+    0 12px 36px rgba(0, 4, 24, 0.50),
+    /* outer subtle bright ring */
+    0 0 0 1px rgba(60, 140, 255, 0.10),
+    /* bright left edge — glass catches light */
+    inset 3px 0 0 rgba(90, 175, 255, 0.50),
+    /* secondary inner left highlight (creates "thickness") */
+    inset 4px 0 8px -4px rgba(120, 200, 255, 0.30),
     /* top inner shine */
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    /* right inset subtle */
-    inset -1px 0 0 rgba(70, 140, 255, 0.08),
-    /* bottom inner edge */
-    inset 0 -1px 0 rgba(70, 140, 255, 0.08);
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.24),
+    /* bottom edge bright line — visible glass bottom */
+    inset 0 -1.5px 0 rgba(90, 170, 255, 0.22),
+    /* right edge subtle */
+    inset -1px 0 0 rgba(70, 140, 255, 0.10);
 }
 
-/* top-edge shine line */
+/* top-edge bright shine — caught light */
 .hero-panel::before {
   content: '';
   position: absolute;
-  top: 0; left: 6%; right: 6%;
+  top: 0; left: 5%; right: 5%;
   height: 1px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.60) 50%,
+    rgba(255, 255, 255, 0.75) 50%,
     transparent 100%);
   pointer-events: none;
   z-index: 3;
+  filter: blur(0.4px);
 }
 
-/* diagonal gloss sheen — makes it feel like real glass */
+/* diagonal gloss sheen + lower reflection — proper glass */
 .hero-panel::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(125deg,
-    rgba(255,255,255,0.055) 0%,
-    transparent 40%,
-    transparent 100%);
+  background:
+    /* upper diagonal sheen */
+    linear-gradient(125deg,
+      rgba(255,255,255,0.08) 0%,
+      rgba(255,255,255,0.02) 35%,
+      transparent 55%,
+      transparent 100%),
+    /* lower reflection band */
+    linear-gradient(180deg,
+      transparent 0%,
+      transparent 70%,
+      rgba(60, 130, 255, 0.06) 88%,
+      rgba(100, 170, 255, 0.10) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -472,26 +503,72 @@ body {
   box-shadow: 0 0 18px rgba(0, 140, 255, 0.22);
 }
 
-/* ── Stats strip — inside panel, flush at bottom ────────────────────────── */
+/* ── Stats glass strip — sits beneath the orb on the right ──────────────── */
 .hero-stats {
-  position: relative;
+  position: absolute;
+  right: 7vw;
+  bottom: 3.5rem;
   z-index: 2;
-  /* negative margins = edge-to-edge inside panel (matches 2.8rem panel padding) */
-  margin: 2rem -2.8rem 0;
+  width: min(46vw, 620px);
   display: flex;
   align-items: stretch;
-  background: rgba(2, 7, 24, 0.58);
-  border-top: 1px solid rgba(70, 140, 255, 0.20);
-  /* top shine on the stats strip */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background:
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(140, 190, 255, 0.16) 0%, transparent 55%),
+    linear-gradient(150deg,
+      rgba(20, 45, 110, 0.28) 0%,
+      rgba(8, 22, 60, 0.36) 50%,
+      rgba(4, 12, 38, 0.42) 100%);
+  backdrop-filter: blur(26px) saturate(1.7) brightness(1.04);
+  -webkit-backdrop-filter: blur(26px) saturate(1.7) brightness(1.04);
+  border: 1px solid rgba(120, 180, 255, 0.20);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    0 0 80px rgba(0, 80, 240, 0.18),
+    0 24px 64px rgba(0, 2, 18, 0.60),
+    0 0 0 1px rgba(60, 140, 255, 0.10),
+    inset 3px 0 0 rgba(90, 175, 255, 0.45),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1.5px 0 rgba(90, 170, 255, 0.20),
+    inset -1px 0 0 rgba(70, 140, 255, 0.10);
+}
+
+/* top-edge shine */
+.hero-stats::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 5%; right: 5%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.70) 50%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: 3;
+  filter: blur(0.4px);
+}
+
+/* diagonal gloss */
+.hero-stats::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg,
+    rgba(255,255,255,0.07) 0%,
+    rgba(255,255,255,0.02) 35%,
+    transparent 55%,
+    transparent 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .stat {
   position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.92rem;
-  padding: 1.1rem 1.7rem;
+  padding: 1.1rem 1.6rem;
   flex: 1;
 }
 
@@ -555,39 +632,6 @@ body {
   letter-spacing: 0.01em;
   white-space: nowrap;
   line-height: 1.3;
-}
-
-/* ── Circuit connection lines — panel → orb ─────────────────────────────── */
-.hero-connect {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 3;
-  overflow: visible;
-}
-
-.conn-path {
-  stroke-dasharray: 8 5;
-  animation: conn-flow 2.4s linear infinite;
-}
-.conn-path--d1 { animation-delay: -0.55s; }
-.conn-path--d2 { animation-delay: -1.20s; }
-.conn-path--d3 { animation-delay: -1.80s; }
-
-@keyframes conn-flow { to { stroke-dashoffset: -13; } }
-
-.conn-dot {
-  animation: conn-dot-pulse 2.4s ease-in-out infinite;
-}
-.conn-dot--d1 { animation-delay: -0.55s; }
-.conn-dot--d2 { animation-delay: -1.20s; }
-.conn-dot--d3 { animation-delay: -1.80s; }
-
-@keyframes conn-dot-pulse {
-  0%, 100% { opacity: 0.90; }
-  50%      { opacity: 0.30; }
 }
 
 /* ── Loading screen ─────────────────────────────────────────────────────── */
