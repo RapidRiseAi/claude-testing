@@ -7,8 +7,8 @@ import {
 import { createIconTexture, getGlowDotTexture } from '../../utils/iconTextures'
 
 const R = 1.70
-const ORB_X = 2.2
-const ORB_Y = 0.45
+const ORB_X = 2.45
+const ORB_Y = 0.18
 const END_X = -1.5
 const END_SCALE = 0.55
 
