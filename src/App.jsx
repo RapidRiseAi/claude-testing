@@ -1,16 +1,28 @@
+import { useState, useCallback } from 'react'
 import Scene from './components/scene/Scene'
+import Navbar from './components/ui/Navbar'
 import HeroSection from './components/ui/HeroSection'
 import ScrollSection from './components/ui/ScrollSection'
+import LoadingScreen from './components/ui/LoadingScreen'
 
 export default function App() {
+  const [loaded, setLoaded] = useState(false)
+  const handleDone = useCallback(() => setLoaded(true), [])
+
   return (
     <>
+      <LoadingScreen onDone={handleDone} />
+
+      <Navbar loaded={loaded} />
+
+      <div className="hero-atmosphere" />
+
       <div id="canvas-container">
         <Scene />
       </div>
 
       <div id="scroll-content">
-        <HeroSection />
+        <HeroSection loaded={loaded} />
         <ScrollSection
           index={0}
           title="Unified Intelligence"
