@@ -3,7 +3,7 @@
 html { scroll-behavior: smooth; }
 
 body {
-  background: #00040e;
+  background: #000208;
   color: #e6f0ff;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-feature-settings: 'ss01', 'cv11';
@@ -16,45 +16,40 @@ body {
 
 #canvas-container { position: fixed; inset: 0; z-index: 0; }
 
-/* ── Atmospheric depth — deep electric blue universe ────────────────────── */
+/* ── Atmospheric depth — true black with electric tech-blue lighting ────── */
 .hero-atmosphere {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
+  /* fully transparent base — canvas/orb shows through */
   background:
-    /* primary high-intensity electric key from upper-left */
-    radial-gradient(ellipse 60% 80% at -6% -4%,  rgba(40, 100, 255, 0.62) 0%, transparent 56%),
-    /* deep purple rim — adds richness */
-    radial-gradient(ellipse 34% 44% at 10% 14%,  rgba(100, 50, 240, 0.28) 0%, transparent 56%),
+    /* primary high-intensity electric tech-blue key from upper-left */
+    radial-gradient(ellipse 58% 78% at -6% -4%,  rgba(0, 130, 255, 0.55) 0%, transparent 56%),
+    /* secondary cyan rim — pure futuristic tech tone */
+    radial-gradient(ellipse 34% 44% at 10% 14%,  rgba(0, 180, 255, 0.22) 0%, transparent 56%),
     /* mid-left blue fill for panel area */
-    radial-gradient(ellipse 50% 70% at -2% 55%,  rgba(0, 60, 200, 0.34) 0%, transparent 64%),
-    /* orb backlight — strong glow behind the orb */
-    radial-gradient(ellipse 48% 70% at 96% 50%,  rgba(0, 140, 255, 0.26) 0%, transparent 58%),
-    /* secondary orb halo */
-    radial-gradient(ellipse 28% 40% at 78% 38%,  rgba(30, 110, 255, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 48% 68% at -2% 55%,  rgba(0, 90, 220, 0.28) 0%, transparent 62%),
+    /* centre bridge bloom — connects text to orb */
+    radial-gradient(ellipse 52% 36% at 50% 50%,  rgba(0, 100, 230, 0.06) 0%, transparent 70%),
     /* horizon glow — grounds the scene */
-    radial-gradient(ellipse 70% 24% at 50% 105%, rgba(0, 90, 230, 0.20) 0%, transparent 62%),
-    /* centre bridge bloom */
-    radial-gradient(ellipse 52% 36% at 50% 50%,  rgba(0, 58, 210, 0.10) 0%, transparent 70%),
-    /* top vignette */
-    linear-gradient(to bottom, rgba(0,3,12,0.70) 0%, transparent 22%),
-    /* bottom vignette — deeper, more cinematic */
-    linear-gradient(to top,    rgba(0,3,12,0.98) 0%, rgba(0,4,16,0.40) 18%, transparent 36%),
-    /* base deep gradient — navy to near-black */
-    radial-gradient(ellipse 100% 100% at 50% 40%, #04102e 0%, #020618 60%, #00030d 100%);
+    radial-gradient(ellipse 70% 22% at 50% 108%, rgba(0, 140, 255, 0.18) 0%, transparent 62%),
+    /* top vignette → toward pure black */
+    linear-gradient(to bottom, rgba(0,1,4,0.65) 0%, transparent 22%),
+    /* bottom vignette → toward pure black */
+    linear-gradient(to top,    rgba(0,1,4,0.85) 0%, rgba(0,2,8,0.30) 16%, transparent 32%);
 }
 
 .hero-atmosphere::before {
   content: '';
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background:
-    /* breathing key light */
-    radial-gradient(ellipse 38% 70% at -8% -8%, rgba(60, 130, 255, 0.50) 0%, rgba(20, 72, 225, 0.16) 36%, transparent 60%),
-    /* breathing orb backlight */
-    radial-gradient(ellipse 36% 56% at 100% 50%, rgba(30, 130, 255, 0.22) 0%, transparent 60%);
+    /* breathing tech-blue key light */
+    radial-gradient(ellipse 38% 70% at -8% -8%, rgba(0, 150, 255, 0.46) 0%, rgba(0, 90, 240, 0.14) 36%, transparent 60%);
   animation: atmosphere-breathe 10s ease-in-out infinite;
+  mix-blend-mode: screen;
 }
 
 @keyframes atmosphere-breathe {
