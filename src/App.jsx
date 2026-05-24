@@ -16,6 +16,8 @@ export default function App() {
       <Navbar loaded={loaded} />
 
       <div className="hero-atmosphere" />
+      <div className="hero-stars" aria-hidden="true" />
+      <div className="hero-noise" aria-hidden="true" />
 
       <div id="canvas-container">
         <Scene />

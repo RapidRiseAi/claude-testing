@@ -61,7 +61,6 @@ export default function HeroSection({ loaded }) {
     <section className="hero-section">
 
       <div className="hero-ghost" aria-hidden="true">RR</div>
-      <div className="hero-glass-panel" aria-hidden="true" />
 
       <div className="hero-text">
 
