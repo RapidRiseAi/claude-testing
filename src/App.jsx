@@ -1,33 +1,44 @@
-import { useEffect, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import Scene from './components/scene/Scene'
+import Navbar from './components/ui/Navbar'
 import HeroSection from './components/ui/HeroSection'
 import ScrollSection from './components/ui/ScrollSection'
+import LoadingScreen from './components/ui/LoadingScreen'
 
 export default function App() {
+  const [loaded, setLoaded] = useState(false)
+  const handleDone = useCallback(() => setLoaded(true), [])
+
   return (
     <>
-      {/* Fixed 3D canvas — always in background */}
+      <LoadingScreen onDone={handleDone} />
+
+      <Navbar loaded={loaded} />
+
+      <div className="hero-atmosphere" />
+      <div className="hero-stars" aria-hidden="true" />
+      <div className="hero-noise" aria-hidden="true" />
+
       <div id="canvas-container">
         <Scene />
       </div>
 
-      {/* Scrollable content layers on top */}
       <div id="scroll-content">
-        <HeroSection />
+        <HeroSection loaded={loaded} />
         <ScrollSection
           index={0}
-          title="Interact"
-          body="Hover and click the objects above to trigger animations."
+          title="Unified Intelligence"
+          body="Every service in your stack communicates through a shared network — analytics inform automation, integrations feed AI, everything is connected."
         />
         <ScrollSection
           index={1}
-          title="Explore"
-          body="The environment reacts as you scroll through the page."
+          title="Real-Time Automation"
+          body="Triggers, workflows, and intelligent agents respond to your data as it moves, removing the friction between insight and action."
         />
         <ScrollSection
           index={2}
-          title="Build"
-          body="This scaffold is ready — start adding your own 3D objects and sections."
+          title="Built to Scale"
+          body="The ecosystem grows with you. Add new tools, services, and integrations without breaking what's already working."
         />
       </div>
     </>

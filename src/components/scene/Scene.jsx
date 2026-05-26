@@ -1,37 +1,59 @@
 import { Canvas } from '@react-three/fiber'
-import { Suspense } from 'react'
-import { PerformanceMonitor } from '@react-three/drei'
-import Lights from './Lights'
-import BackgroundEnvironment from './BackgroundEnvironment'
-import FloatingObject from '../objects/FloatingObject'
-import { useScrollProgress } from '../../hooks/useScrollProgress'
+import { Suspense, useMemo } from 'react'
+import * as THREE from 'three'
+import HeroOrb from './HeroOrb'
 
-function SceneContents() {
-  const scrollProgress = useScrollProgress()
+function FaintBackdropDots() {
+  const positions = useMemo(() => {
+    const count = 160
+    const arr = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+      arr[i * 3]     = (Math.random() - 0.5) * 38
+      arr[i * 3 + 1] = (Math.random() - 0.5) * 38
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 16 - 12
+    }
+    return arr
+  }, [])
 
   return (
-    <>
-      <Lights />
-      <BackgroundEnvironment scrollProgress={scrollProgress} />
-      <FloatingObject scrollProgress={scrollProgress} position={[0, 0, 0]} />
-      <FloatingObject scrollProgress={scrollProgress} position={[-3, 1, -2]} scale={0.6} color="#a855f7" delay={0.3} />
-      <FloatingObject scrollProgress={scrollProgress} position={[3, -1, -1]} scale={0.8} color="#06b6d4" delay={0.6} />
-    </>
+    <points>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={positions.length / 3}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        size={0.012}
+        color="#0a1a30"
+        sizeAttenuation
+        transparent
+        opacity={0.45}
+        depthWrite={false}
+      />
+    </points>
   )
 }
 
 export default function Scene() {
   return (
     <Canvas
-      camera={{ position: [0, 0, 6], fov: 60 }}
-      gl={{ antialias: true, alpha: false }}
+      camera={{ position: [0, 0.15, 7.4], fov: 42 }}
+      gl={{
+        antialias: true,
+        alpha: false,
+        toneMapping: THREE.NoToneMapping,
+        powerPreference: 'high-performance',
+      }}
       dpr={[1, 2]}
     >
-      <PerformanceMonitor>
-        <Suspense fallback={null}>
-          <SceneContents />
-        </Suspense>
-      </PerformanceMonitor>
+      <color attach="background" args={['#00040e']} />
+      <FaintBackdropDots />
+      <Suspense fallback={null}>
+        <HeroOrb />
+      </Suspense>
     </Canvas>
   )
 }
