@@ -91,6 +91,15 @@ export default function HeroSection({ loaded }) {
   return (
     <section className="hero-section" ref={sectionRef}>
 
+      {/* ── Directional lighting — source above orb, beams go downward ── */}
+      <div className="hero-lights" aria-hidden="true">
+        <div className="hero-beam hero-beam--1" />
+        <div className="hero-beam hero-beam--2" />
+        <div className="hero-beam hero-beam--3" />
+      </div>
+      {/* ── Bottom fade — light dissolves before hero edge ───────── */}
+      <div className="hero-bottom-fade" aria-hidden="true" />
+
       {/* ── Left content block — exits LEFT on scroll ───────────── */}
       <motion.div className="hero-left-content" style={{ x: mainExitX }}>
 
