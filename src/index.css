@@ -1,9 +1,10 @@
 /* ── Reset ──────────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+/* scroll-behavior disabled — custom RAF handles all scrolling */
+html { scroll-behavior: auto; }
 
 body {
-  background: #000208;
+  background: #000104;
   color: #e6f0ff;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-feature-settings: 'ss01', 'cv11';
@@ -301,10 +302,10 @@ body {
 /* ── Hero section ───────────────────────────────────────────────────────── */
 .hero-section {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   align-items: center;
-  padding: 110px 7vw 80px;
+  padding: 90px 7vw 36px;
   overflow: hidden;
 }
 
@@ -318,10 +319,10 @@ body {
 .hero-panel {
   position: relative;
   z-index: 2;
-  width: min(46vw, 660px);
+  width: min(46vw, 600px);
   display: flex;
   flex-direction: column;
-  padding: 2.6rem 2.8rem 2.8rem;
+  padding: 1.8rem 2.4rem 2.0rem;
   background:
     radial-gradient(ellipse 80% 60% at 15% -10%, rgba(80, 150, 255, 0.10) 0%, transparent 55%),
     radial-gradient(ellipse 70% 50% at 110% 110%, rgba(20, 80, 220, 0.07) 0%, transparent 60%),
@@ -434,7 +435,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: rgba(80, 165, 255, 0.88);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.1rem;
 }
 
 .eyebrow-rule {
@@ -454,10 +455,10 @@ body {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  font-size: clamp(3.1rem, 5.0vw, 5.6rem);
-  line-height: 1.02;
-  letter-spacing: -0.048em;
-  margin-bottom: 1.6rem;
+  font-size: clamp(2.1rem, 3.3vw, 3.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.040em;
+  margin-bottom: 1.0rem;
 }
 
 /* overflow hidden — clips the sliding line reveal */
@@ -478,29 +479,17 @@ body {
   text-shadow: 0 0 50px rgba(120, 190, 255, 0.12), 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
-/* glowing blue accent — no background-clip to avoid rendering artifacts */
+/* clean blue accent — no text-shadow (overflow:hidden on h1-clip would box it) */
 .h1-accent {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
-  color: #1f9aff;
-  animation: accent-glow 4s ease-in-out infinite;
+  color: #2590ff;
+  animation: accent-color 6s ease-in-out infinite;
 }
 
-@keyframes accent-glow {
-  0%, 100% {
-    color: #1f9aff;
-    text-shadow:
-      0 0 24px rgba(0, 148, 255, 0.65),
-      0 0 50px rgba(0, 110, 255, 0.32),
-      0 0 90px rgba(0, 80, 240, 0.14);
-  }
-  50% {
-    color: #42c8ff;
-    text-shadow:
-      0 0 32px rgba(0, 200, 255, 0.85),
-      0 0 70px rgba(0, 165, 255, 0.50),
-      0 0 110px rgba(0, 120, 255, 0.22);
-  }
+@keyframes accent-color {
+  0%, 100% { color: #2080ff; }
+  50%       { color: #38b0ff; }
 }
 
 /* ── Sub copy ────────────────────────────────────────────────────────────── */
@@ -513,7 +502,7 @@ body {
   max-width: 46ch;
   padding-left: 1rem;
   border-left: 1.5px solid rgba(28, 125, 240, 0.32);
-  margin-bottom: 2rem;
+  margin-bottom: 1.4rem;
 }
 
 /* ── CTAs ────────────────────────────────────────────────────────────────── */

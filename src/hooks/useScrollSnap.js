@@ -1,11 +1,36 @@
 import { useEffect, useRef } from 'react'
 
+/* Ease in-out cubic — slow start, fast middle, slow finish */
+const easeInOutCubic = (t) =>
+  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+
+const DURATION = 2000 // ms
+
 export default function useScrollSnap() {
   const lockRef = useRef(false)
+  const rafRef  = useRef(null)
 
   useEffect(() => {
     const getSections = () =>
       Array.from(document.querySelectorAll('#scroll-content section'))
+
+    const scrollTo = (target) => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      const start     = window.scrollY
+      const distance  = target - start
+      const startTime = performance.now()
+
+      const step = (now) => {
+        const progress = Math.min((now - startTime) / DURATION, 1)
+        window.scrollTo(0, start + distance * easeInOutCubic(progress))
+        if (progress < 1) {
+          rafRef.current = requestAnimationFrame(step)
+        } else {
+          lockRef.current = false
+        }
+      }
+      rafRef.current = requestAnimationFrame(step)
+    }
 
     const snapTo = (direction) => {
       if (lockRef.current) return
@@ -13,13 +38,11 @@ export default function useScrollSnap() {
       if (!sections.length) return
 
       const scrollY = window.scrollY
-      const vh = window.innerHeight
+      const vh      = window.innerHeight
 
       let currentIndex = 0
       for (let i = 0; i < sections.length; i++) {
-        if (scrollY >= sections[i].offsetTop - vh * 0.3) {
-          currentIndex = i
-        }
+        if (scrollY >= sections[i].offsetTop - vh * 0.3) currentIndex = i
       }
 
       const targetIndex =
@@ -30,8 +53,7 @@ export default function useScrollSnap() {
       if (targetIndex === currentIndex) return
 
       lockRef.current = true
-      window.scrollTo({ top: sections[targetIndex].offsetTop, behavior: 'smooth' })
-      setTimeout(() => { lockRef.current = false }, 1050)
+      scrollTo(sections[targetIndex].offsetTop)
     }
 
     const onWheel = (e) => {
@@ -41,7 +63,7 @@ export default function useScrollSnap() {
 
     let touchStartY = 0
     const onTouchStart = (e) => { touchStartY = e.touches[0].clientY }
-    const onTouchEnd = (e) => {
+    const onTouchEnd   = (e) => {
       const delta = touchStartY - e.changedTouches[0].clientY
       if (Math.abs(delta) > 40) snapTo(delta)
     }
@@ -61,6 +83,7 @@ export default function useScrollSnap() {
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchend',   onTouchEnd)
       window.removeEventListener('keydown',    onKeyDown)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
   }, [])
 }

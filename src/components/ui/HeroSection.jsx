@@ -128,8 +128,8 @@ export default function HeroSection({ loaded }) {
     target: sectionRef,
     offset: ['start start', 'end start'],
   })
-  const panelExitX = useTransform(scrollYProgress, [0, 0.55], ['0vw', '-140vw'])
-  const statsExitX = useTransform(scrollYProgress, [0, 0.55], ['0vw',  '140vw'])
+  const panelExitX = useTransform(scrollYProgress, [0, 1], ['0vw', '-115vw'])
+  const statsExitX = useTransform(scrollYProgress, [0, 1], ['0vw',  '115vw'])
 
   /* Panel 3-D tilt on mouse */
   const mX  = useMotionValue(0)
