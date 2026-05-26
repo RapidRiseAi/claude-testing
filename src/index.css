@@ -284,7 +284,13 @@ body {
   line-height: 0.85;
 }
 
-/* ── Hero glass command panel — true frosted glass ──────────────────────── */
+/* perspective container — enables 3-D tilt on the panel */
+.panel-perspective-wrap {
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+}
+
+/* ── Glass command panel ────────────────────────────────────────────────── */
 .hero-panel {
   position: relative;
   z-index: 2;
@@ -293,11 +299,8 @@ body {
   flex-direction: column;
   padding: 2.6rem 2.8rem 2.8rem;
   background:
-    /* internal light refraction — soft highlight from upper-left */
     radial-gradient(ellipse 80% 60% at 15% -10%, rgba(140, 190, 255, 0.18) 0%, transparent 55%),
-    /* secondary soft glow from lower-right edge */
     radial-gradient(ellipse 70% 50% at 110% 110%, rgba(40, 120, 255, 0.10) 0%, transparent 60%),
-    /* base glass tint — much more transparent for real see-through feel */
     linear-gradient(150deg,
       rgba(20, 45, 110, 0.28) 0%,
       rgba(8, 22, 60, 0.36) 50%,
@@ -307,67 +310,101 @@ body {
   border: 1px solid rgba(120, 180, 255, 0.20);
   border-radius: 22px;
   overflow: hidden;
+  transform-style: flat;
   box-shadow:
-    /* outer atmospheric glow */
     0 0 100px rgba(0, 80, 240, 0.22),
-    /* deep drop shadow — floats panel above bg */
     0 30px 90px rgba(0, 2, 18, 0.70),
     0 12px 36px rgba(0, 4, 24, 0.50),
-    /* outer subtle bright ring */
     0 0 0 1px rgba(60, 140, 255, 0.10),
-    /* bright left edge — glass catches light */
     inset 3px 0 0 rgba(90, 175, 255, 0.50),
-    /* secondary inner left highlight (creates "thickness") */
     inset 4px 0 8px -4px rgba(120, 200, 255, 0.30),
-    /* top inner shine */
     inset 0 1.5px 0 rgba(255, 255, 255, 0.24),
-    /* bottom edge bright line — visible glass bottom */
     inset 0 -1.5px 0 rgba(90, 170, 255, 0.22),
-    /* right edge subtle */
     inset -1px 0 0 rgba(70, 140, 255, 0.10);
+  /* subtle animated border-glow pulse */
+  animation: panel-glow-pulse 5s ease-in-out infinite;
 }
 
-/* top-edge bright shine — caught light */
+@keyframes panel-glow-pulse {
+  0%, 100% { box-shadow:
+    0 0 100px rgba(0, 80, 240, 0.22), 0 30px 90px rgba(0, 2, 18, 0.70),
+    0 12px 36px rgba(0, 4, 24, 0.50), 0 0 0 1px rgba(60, 140, 255, 0.10),
+    inset 3px 0 0 rgba(90, 175, 255, 0.50), inset 4px 0 8px -4px rgba(120, 200, 255, 0.30),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.24), inset 0 -1.5px 0 rgba(90, 170, 255, 0.22),
+    inset -1px 0 0 rgba(70, 140, 255, 0.10); }
+  50%       { box-shadow:
+    0 0 140px rgba(0, 110, 255, 0.34), 0 30px 90px rgba(0, 2, 18, 0.70),
+    0 12px 36px rgba(0, 4, 24, 0.50), 0 0 0 1px rgba(80, 170, 255, 0.18),
+    inset 3px 0 0 rgba(110, 195, 255, 0.65), inset 4px 0 8px -4px rgba(140, 210, 255, 0.38),
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.30), inset 0 -1.5px 0 rgba(110, 190, 255, 0.30),
+    inset -1px 0 0 rgba(80, 160, 255, 0.16); }
+}
+
+/* top-edge caught-light highlight */
 .hero-panel::before {
   content: '';
   position: absolute;
   top: 0; left: 5%; right: 5%;
   height: 1px;
   background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.75) 50%,
-    transparent 100%);
+    transparent 0%, rgba(255,255,255,0.75) 50%, transparent 100%);
   pointer-events: none;
   z-index: 3;
   filter: blur(0.4px);
 }
 
-/* diagonal gloss sheen + lower reflection — proper glass */
+/* diagonal gloss + lower reflection */
 .hero-panel::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    /* upper diagonal sheen */
     linear-gradient(125deg,
-      rgba(255,255,255,0.08) 0%,
-      rgba(255,255,255,0.02) 35%,
-      transparent 55%,
-      transparent 100%),
-    /* lower reflection band */
+      rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 35%,
+      transparent 55%, transparent 100%),
     linear-gradient(180deg,
-      transparent 0%,
-      transparent 70%,
-      rgba(60, 130, 255, 0.06) 88%,
-      rgba(100, 170, 255, 0.10) 100%);
+      transparent 70%, rgba(60, 130, 255, 0.06) 88%, rgba(100, 170, 255, 0.10) 100%);
   pointer-events: none;
   z-index: 1;
 }
 
-/* ── Eyebrow ────────────────────────────────────────────────────────────── */
+/* ── Periodic shimmer light sweep ───────────────────────────────────────── */
+.panel-shimmer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: linear-gradient(
+    108deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.11) 48%,
+    rgba(200, 230, 255, 0.07) 52%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  background-position: -220% 0;
+  animation: shimmer-sweep 8s ease-in-out 2.2s infinite;
+  opacity: 0;
+}
+.panel-shimmer--stats {
+  animation-delay: 2.8s;
+}
+
+@keyframes shimmer-sweep {
+  0%   { background-position: -220% 0; opacity: 0; }
+  8%   { opacity: 1; }
+  50%  { background-position: 220% 0; opacity: 1; }
+  62%  { opacity: 0; }
+  100% { background-position: -220% 0; opacity: 0; }
+}
+
+/* ── Eyebrow ─────────────────────────────────────────────────────────────── */
 .hero-eyebrow {
   position: relative;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
   font-size: 0.67rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -376,7 +413,18 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* ── Headline ───────────────────────────────────────────────────────────── */
+.eyebrow-rule {
+  display: block;
+  width: 28px;
+  height: 1.5px;
+  background: linear-gradient(90deg, #2090ff, #00d4ff);
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(0, 170, 255, 0.55);
+  transform-origin: left center;
+}
+
+/* ── Headline clip-reveal ───────────────────────────────────────────────── */
 .hero-h1 {
   position: relative;
   z-index: 2;
@@ -388,6 +436,15 @@ body {
   margin-bottom: 1.6rem;
 }
 
+/* overflow hidden — clips the sliding line reveal */
+.h1-clip {
+  display: block;
+  overflow: hidden;
+  /* small padding so descenders don't clip */
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+
 .h1-line { display: block; }
 
 .h1-bold {
@@ -396,20 +453,26 @@ body {
   color: #ffffff;
 }
 
-/* electric blue gradient — payoff line */
+/* animated flowing gradient — the blue "Built for Growth" line */
 .h1-accent {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
-  background: linear-gradient(115deg, #1a8aff 0%, #00cfff 55%, #7eecff 100%);
+  background: linear-gradient(115deg, #1a8aff 0%, #00cfff 45%, #7eecff 70%, #1a8aff 100%);
+  background-size: 200% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter:
-    drop-shadow(0 0 26px rgba(0, 175, 255, 0.46))
-    drop-shadow(0 0 54px rgba(0, 120, 255, 0.18));
+  animation: gradient-flow 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 28px rgba(0, 175, 255, 0.46));
 }
 
-/* ── Sub copy ───────────────────────────────────────────────────────────── */
+@keyframes gradient-flow {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Sub copy ────────────────────────────────────────────────────────────── */
 .hero-sub {
   position: relative;
   z-index: 2;
@@ -422,45 +485,49 @@ body {
   margin-bottom: 2rem;
 }
 
-/* ── CTAs ───────────────────────────────────────────────────────────────── */
-.hero-cta {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 1.4rem;
-  flex-wrap: wrap;
-  margin-bottom: 0;
-}
+/* ── CTAs ────────────────────────────────────────────────────────────────── */
+.hero-cta { position: relative; z-index: 2; }
 
 .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.62rem;
-  background: linear-gradient(135deg, #0d5fcc 0%, #178cee 100%);
+  background: linear-gradient(135deg, #0d5fcc 0%, #178cee 55%, #0d80e8 100%);
+  background-size: 200% auto;
   color: #ffffff;
   border: 1px solid rgba(100, 182, 255, 0.22);
-  padding: 0.84rem 1.9rem;
+  padding: 0.88rem 2rem;
   border-radius: 999px;
-  font-size: 0.88rem;
+  font-size: 0.90rem;
   font-weight: 600;
   letter-spacing: 0.004em;
   cursor: pointer;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.20),
-    0 0 34px rgba(0, 112, 232, 0.44),
-    0 6px 24px rgba(0, 55, 165, 0.30);
-  transition: box-shadow 0.25s, transform 0.2s;
+    0 0 38px rgba(0, 120, 240, 0.50),
+    0 6px 24px rgba(0, 55, 165, 0.32);
+  transition: background-position 0.5s ease, box-shadow 0.3s ease;
+  animation: btn-glow-pulse 3.5s ease-in-out infinite;
+  will-change: transform;
 }
 .btn-primary:hover {
+  background-position: right center;
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,0.30),
-    0 0 54px rgba(0, 162, 255, 0.64),
-    0 8px 32px rgba(0, 80, 200, 0.40);
-  transform: translateY(-2px);
+    0 0 60px rgba(0, 162, 255, 0.70),
+    0 8px 32px rgba(0, 80, 200, 0.44);
 }
-.btn-arrow { flex-shrink: 0; transition: transform 0.22s ease; }
-.btn-primary:hover .btn-arrow { transform: translateX(4px); }
+
+@keyframes btn-glow-pulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.20), 0 0 38px rgba(0,120,240,0.50), 0 6px 24px rgba(0,55,165,0.32); }
+  50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 0 55px rgba(0,160,255,0.65), 0 8px 30px rgba(0,80,200,0.40); }
+}
+
+.btn-arrow {
+  flex-shrink: 0;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-primary:hover .btn-arrow { transform: translateX(5px); }
 
 .btn-ghost {
   display: inline-flex;
@@ -565,7 +632,11 @@ body {
   gap: 0.92rem;
   padding: 1.1rem 1.6rem;
   flex: 1;
+  /* subtle hover lift on each stat cell */
+  transition: background 0.22s;
+  border-radius: 0;
 }
+.stat:hover { background: rgba(60, 130, 255, 0.06); }
 
 .stat-divider {
   position: absolute;
