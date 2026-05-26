@@ -18,6 +18,8 @@ export default function App() {
 
       <Navbar loaded={loaded} />
 
+      <div className="corner-glow" aria-hidden="true" />
+
       <div id="canvas-container">
         <Scene />
       </div>
