@@ -16,28 +16,31 @@ body {
 
 #canvas-container { position: fixed; inset: 0; z-index: 0; }
 
-/* ── Atmospheric depth — true black with electric tech-blue lighting ────── */
+/* ── Atmospheric depth — deep black with electric tech-blue accents ─────── */
 .hero-atmosphere {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* fully transparent base — canvas/orb shows through */
   background:
-    /* primary high-intensity electric tech-blue key from upper-left */
-    radial-gradient(ellipse 58% 78% at -6% -4%,  rgba(0, 130, 255, 0.55) 0%, transparent 56%),
-    /* secondary cyan rim — pure futuristic tech tone */
-    radial-gradient(ellipse 34% 44% at 10% 14%,  rgba(0, 180, 255, 0.22) 0%, transparent 56%),
-    /* mid-left blue fill for panel area */
-    radial-gradient(ellipse 48% 68% at -2% 55%,  rgba(0, 90, 220, 0.28) 0%, transparent 62%),
-    /* centre bridge bloom — connects text to orb */
-    radial-gradient(ellipse 52% 36% at 50% 50%,  rgba(0, 100, 230, 0.06) 0%, transparent 70%),
-    /* horizon glow — grounds the scene */
-    radial-gradient(ellipse 70% 22% at 50% 108%, rgba(0, 140, 255, 0.18) 0%, transparent 62%),
-    /* top vignette → toward pure black */
-    linear-gradient(to bottom, rgba(0,1,4,0.65) 0%, transparent 22%),
-    /* bottom vignette → toward pure black */
-    linear-gradient(to top,    rgba(0,1,4,0.85) 0%, rgba(0,2,8,0.30) 16%, transparent 32%);
+    /* electric tech-blue key from upper-left */
+    radial-gradient(ellipse 58% 78% at -6% -4%,  rgba(0, 120, 255, 0.42) 0%, transparent 56%),
+    /* secondary cyan rim */
+    radial-gradient(ellipse 34% 44% at 10% 14%,  rgba(0, 170, 255, 0.16) 0%, transparent 56%),
+    /* mid-left fill */
+    radial-gradient(ellipse 48% 68% at -2% 55%,  rgba(0, 70, 200, 0.18) 0%, transparent 62%),
+    /* centre bridge bloom */
+    radial-gradient(ellipse 52% 36% at 50% 50%,  rgba(0, 80, 210, 0.04) 0%, transparent 70%),
+    /* horizon glow */
+    radial-gradient(ellipse 70% 22% at 50% 108%, rgba(0, 100, 220, 0.12) 0%, transparent 62%),
+    /* diagonal light beam 1 */
+    linear-gradient(128deg, transparent 28%, rgba(0,110,255,0.03) 40%, rgba(0,150,255,0.06) 46%, rgba(0,110,255,0.03) 52%, transparent 64%),
+    /* diagonal light beam 2 */
+    linear-gradient(112deg, transparent 52%, rgba(0,80,220,0.025) 63%, rgba(0,120,255,0.045) 68%, rgba(0,80,220,0.025) 73%, transparent 85%),
+    /* heavy top vignette */
+    linear-gradient(to bottom, rgba(0,0,2,0.90) 0%, rgba(0,0,4,0.30) 18%, transparent 32%),
+    /* heavy bottom vignette */
+    linear-gradient(to top,    rgba(0,0,3,0.95) 0%, rgba(0,1,8,0.55) 14%, transparent 30%);
 }
 
 .hero-atmosphere::before {
@@ -57,18 +60,55 @@ body {
   50%      { opacity: 1.05; transform: scale(1.04); }
 }
 
-/* faint perspective grid — adds dimensional floor */
+/* scanline texture overlay */
 .hero-atmosphere::after {
   content: '';
   position: absolute;
   inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(0, 60, 180, 0.018) 3px,
+    rgba(0, 60, 180, 0.018) 4px
+  );
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ── Perspective floor grid ──────────────────────────────────────────────── */
+.bg-floor-grid {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 58vh;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
+  mask-image:         linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 40%, transparent 75%);
+}
+
+.bg-floor-grid::after {
+  content: '';
+  position: absolute;
+  bottom: -5%;
+  left: -60%;
+  right: -60%;
+  height: 100%;
   background-image:
-    linear-gradient(90deg, rgba(40, 120, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(0deg,  rgba(40, 120, 255, 0.05) 1px, transparent 1px);
-  background-size: 88px 88px, 88px 88px;
-  -webkit-mask-image: radial-gradient(ellipse 80% 50% at 50% 100%, black 0%, transparent 65%);
-  mask-image:         radial-gradient(ellipse 80% 50% at 50% 100%, black 0%, transparent 65%);
-  opacity: 0.6;
+    linear-gradient(90deg, rgba(18, 85, 255, 0.18) 1px, transparent 1px),
+    linear-gradient(0deg,  rgba(18, 85, 255, 0.12) 1px, transparent 1px);
+  background-size: 72px 72px;
+  transform: perspective(550px) rotateX(68deg);
+  transform-origin: 50% 100%;
+  animation: grid-pulse 6s ease-in-out infinite;
+}
+
+@keyframes grid-pulse {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 0.85; }
 }
 
 /* ── Animated star/particle field ───────────────────────────────────────── */
@@ -268,22 +308,6 @@ body {
   overflow: hidden;
 }
 
-/* very subtle "RR" ghost watermark */
-.hero-ghost {
-  position: absolute;
-  top: 50%;
-  left: -3%;
-  transform: translateY(-50%);
-  font-size: clamp(14rem, 24vw, 30rem);
-  font-weight: 800;
-  letter-spacing: -0.08em;
-  color: rgba(200, 225, 255, 0.015);
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-  line-height: 0.85;
-}
-
 /* perspective container — enables 3-D tilt on the panel */
 .panel-perspective-wrap {
   perspective: 1100px;
@@ -299,14 +323,14 @@ body {
   flex-direction: column;
   padding: 2.6rem 2.8rem 2.8rem;
   background:
-    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(140, 190, 255, 0.18) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 110% 110%, rgba(40, 120, 255, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(80, 150, 255, 0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 110% 110%, rgba(20, 80, 220, 0.07) 0%, transparent 60%),
     linear-gradient(150deg,
-      rgba(20, 45, 110, 0.28) 0%,
-      rgba(8, 22, 60, 0.36) 50%,
-      rgba(4, 12, 38, 0.42) 100%);
-  backdrop-filter: blur(30px) saturate(1.7) brightness(1.05);
-  -webkit-backdrop-filter: blur(30px) saturate(1.7) brightness(1.05);
+      rgba(6, 14, 44, 0.82) 0%,
+      rgba(3, 8, 28, 0.90) 50%,
+      rgba(1, 4, 16, 0.94) 100%);
+  backdrop-filter: blur(32px) saturate(1.6) brightness(0.95);
+  -webkit-backdrop-filter: blur(32px) saturate(1.6) brightness(0.95);
   border: 1px solid rgba(120, 180, 255, 0.20);
   border-radius: 22px;
   overflow: hidden;
@@ -430,9 +454,9 @@ body {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  font-size: clamp(2.9rem, 4.6vw, 5.0rem);
+  font-size: clamp(3.1rem, 5.0vw, 5.6rem);
   line-height: 1.02;
-  letter-spacing: -0.046em;
+  letter-spacing: -0.048em;
   margin-bottom: 1.6rem;
 }
 
@@ -451,25 +475,32 @@ body {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
   color: #ffffff;
+  text-shadow: 0 0 50px rgba(120, 190, 255, 0.12), 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
-/* animated flowing gradient — the blue "Built for Growth" line */
+/* glowing blue accent — no background-clip to avoid rendering artifacts */
 .h1-accent {
   font-family: 'Inter', sans-serif;
   font-weight: 800;
-  background: linear-gradient(115deg, #1a8aff 0%, #00cfff 45%, #7eecff 70%, #1a8aff 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient-flow 5s ease-in-out infinite;
-  filter: drop-shadow(0 0 28px rgba(0, 175, 255, 0.46));
+  color: #1f9aff;
+  animation: accent-glow 4s ease-in-out infinite;
 }
 
-@keyframes gradient-flow {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+@keyframes accent-glow {
+  0%, 100% {
+    color: #1f9aff;
+    text-shadow:
+      0 0 24px rgba(0, 148, 255, 0.65),
+      0 0 50px rgba(0, 110, 255, 0.32),
+      0 0 90px rgba(0, 80, 240, 0.14);
+  }
+  50% {
+    color: #42c8ff;
+    text-shadow:
+      0 0 32px rgba(0, 200, 255, 0.85),
+      0 0 70px rgba(0, 165, 255, 0.50),
+      0 0 110px rgba(0, 120, 255, 0.22);
+  }
 }
 
 /* ── Sub copy ────────────────────────────────────────────────────────────── */
@@ -565,23 +596,28 @@ body {
   box-shadow: 0 0 18px rgba(0, 140, 255, 0.22);
 }
 
-/* ── Stats glass strip — sits beneath the orb on the right ──────────────── */
-.hero-stats {
+/* ── Stats exit wrapper — handles absolute positioning for scroll exit ────── */
+.hero-stats-exit-wrap {
   position: absolute;
   right: 7vw;
   bottom: 3.5rem;
   z-index: 2;
   width: min(46vw, 620px);
+}
+
+/* ── Stats glass strip — sits beneath the orb on the right ──────────────── */
+.hero-stats {
+  width: 100%;
   display: flex;
   align-items: stretch;
   background:
-    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(140, 190, 255, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 15% -10%, rgba(80, 150, 255, 0.09) 0%, transparent 55%),
     linear-gradient(150deg,
-      rgba(20, 45, 110, 0.28) 0%,
-      rgba(8, 22, 60, 0.36) 50%,
-      rgba(4, 12, 38, 0.42) 100%);
-  backdrop-filter: blur(26px) saturate(1.7) brightness(1.04);
-  -webkit-backdrop-filter: blur(26px) saturate(1.7) brightness(1.04);
+      rgba(6, 14, 44, 0.82) 0%,
+      rgba(3, 8, 28, 0.90) 50%,
+      rgba(1, 4, 16, 0.94) 100%);
+  backdrop-filter: blur(28px) saturate(1.6) brightness(0.95);
+  -webkit-backdrop-filter: blur(28px) saturate(1.6) brightness(0.95);
   border: 1px solid rgba(120, 180, 255, 0.20);
   border-radius: 18px;
   overflow: hidden;

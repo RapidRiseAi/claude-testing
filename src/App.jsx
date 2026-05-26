@@ -4,10 +4,13 @@ import Navbar from './components/ui/Navbar'
 import HeroSection from './components/ui/HeroSection'
 import ScrollSection from './components/ui/ScrollSection'
 import LoadingScreen from './components/ui/LoadingScreen'
+import useScrollSnap from './hooks/useScrollSnap'
 
 export default function App() {
   const [loaded, setLoaded] = useState(false)
   const handleDone = useCallback(() => setLoaded(true), [])
+
+  useScrollSnap()
 
   return (
     <>
@@ -18,6 +21,7 @@ export default function App() {
       <div className="hero-atmosphere" />
       <div className="hero-stars" aria-hidden="true" />
       <div className="hero-noise" aria-hidden="true" />
+      <div className="bg-floor-grid" aria-hidden="true" />
 
       <div id="canvas-container">
         <Scene />

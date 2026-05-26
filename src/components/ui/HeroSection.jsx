@@ -4,6 +4,7 @@ import {
   useMotionValue,
   useTransform,
   useSpring,
+  useScroll,
 } from 'framer-motion'
 import { useEffect, useRef, useState, useCallback } from 'react'
 
@@ -58,8 +59,8 @@ const statsV = {
 
 /* ── Data ─────────────────────────────────────────────────────────────── */
 const STATS = [
-  { icon: 'projects',     num: 50,  unit: '+', label: 'Projects Delivered',  sub: 'Web, AI & integrations' },
-  { icon: 'satisfaction', num: 100, unit: '%', label: 'Client Satisfaction',  sub: 'Across all engagements' },
+  { icon: 'projects',     num: 50,  unit: '+',  label: 'Projects Delivered', sub: 'Web, AI & integrations' },
+  { icon: 'satisfaction', num: 100, unit: '%',  label: 'Client Satisfaction', sub: 'Across all engagements' },
   { icon: 'support',      num: 24,  unit: '/7', label: 'Support Available',  sub: 'Round-the-clock assistance' },
 ]
 
@@ -120,6 +121,15 @@ function MagneticButton({ children, className, onClick }) {
 export default function HeroSection({ loaded }) {
   const controls   = useAnimation()
   const panelRef   = useRef()
+  const sectionRef = useRef()
+
+  /* Scroll-driven exit: panel slides left, stats slide right */
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  })
+  const panelExitX = useTransform(scrollYProgress, [0, 0.55], ['0vw', '-140vw'])
+  const statsExitX = useTransform(scrollYProgress, [0, 0.55], ['0vw',  '140vw'])
 
   /* Panel 3-D tilt on mouse */
   const mX  = useMotionValue(0)
@@ -165,132 +175,134 @@ export default function HeroSection({ loaded }) {
   }, [loaded, controls])
 
   return (
-    <section className="hero-section">
+    <section className="hero-section" ref={sectionRef}>
 
-      <div className="hero-ghost" aria-hidden="true">RR</div>
-
-      {/* ── Glass panel with 3-D tilt ─────────────────────────────────── */}
-      <div className="panel-perspective-wrap">
-        <motion.div
-          ref={panelRef}
-          className="hero-panel"
-          variants={panelV}
-          initial="hidden"
-          animate={controls}
-          style={{ rotateX: rX, rotateY: rY }}
-          onMouseMove={onPanelMove}
-          onMouseLeave={onPanelLeave}
-        >
-          {/* sweeping shimmer light */}
-          <div className="panel-shimmer" aria-hidden="true" />
-
-          {/* eyebrow */}
+      {/* ── Glass panel — slides LEFT on scroll ───────────────────────── */}
+      <motion.div style={{ x: panelExitX }}>
+        <div className="panel-perspective-wrap">
           <motion.div
-            className="hero-eyebrow"
-            variants={eyebrowV}
+            ref={panelRef}
+            className="hero-panel"
+            variants={panelV}
             initial="hidden"
             animate={controls}
+            style={{ rotateX: rX, rotateY: rY }}
+            onMouseMove={onPanelMove}
+            onMouseLeave={onPanelLeave}
           >
-            <motion.span
-              className="eyebrow-rule"
-              variants={eyebrowLineV}
+            {/* sweeping shimmer light */}
+            <div className="panel-shimmer" aria-hidden="true" />
+
+            {/* eyebrow */}
+            <motion.div
+              className="hero-eyebrow"
+              variants={eyebrowV}
               initial="hidden"
               animate={controls}
-              aria-hidden="true"
-            />
-            Connected Intelligence. Real Business Impact.
-          </motion.div>
+            >
+              <motion.span
+                className="eyebrow-rule"
+                variants={eyebrowLineV}
+                initial="hidden"
+                animate={controls}
+                aria-hidden="true"
+              />
+              Connected Intelligence. Real Business Impact.
+            </motion.div>
 
-          {/* headline — clip-reveal per line */}
-          <h1 className="hero-h1">
-            {[
-              { text: 'AI, Software, and', cls: 'h1-bold' },
-              { text: 'Connected Systems', cls: 'h1-bold' },
-            ].map(({ text, cls }, i) => (
-              <span key={i} className="h1-clip">
+            {/* headline — clip-reveal per line */}
+            <h1 className="hero-h1">
+              {[
+                { text: 'AI, Software, and', cls: 'h1-bold' },
+                { text: 'Connected Systems', cls: 'h1-bold' },
+              ].map(({ text, cls }, i) => (
+                <span key={i} className="h1-clip">
+                  <motion.span
+                    className={`h1-line ${cls}`}
+                    custom={i}
+                    variants={lineV}
+                    initial="hidden"
+                    animate={controls}
+                  >{text}</motion.span>
+                </span>
+              ))}
+              <span className="h1-clip">
                 <motion.span
-                  className={`h1-line ${cls}`}
-                  custom={i}
+                  className="h1-line h1-accent"
+                  custom={2}
                   variants={lineV}
                   initial="hidden"
                   animate={controls}
-                >{text}</motion.span>
+                >Built for Growth</motion.span>
               </span>
-            ))}
-            <span className="h1-clip">
-              <motion.span
-                className="h1-line h1-accent"
-                custom={2}
-                variants={lineV}
-                initial="hidden"
-                animate={controls}
-              >Built for Growth</motion.span>
-            </span>
-          </h1>
+            </h1>
 
-          {/* sub copy */}
-          <motion.p
-            className="hero-sub"
-            variants={subV}
-            initial="hidden"
-            animate={controls}
-          >
-            We build intelligent software, AI systems, and seamless integrations
-            that help modern businesses move faster, operate smarter,
-            and scale without limits.
-          </motion.p>
-
-          {/* CTA */}
-          <motion.div
-            className="hero-cta"
-            variants={ctaV}
-            initial="hidden"
-            animate={controls}
-          >
-            <MagneticButton
-              className="btn-primary"
-              onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+            {/* sub copy */}
+            <motion.p
+              className="hero-sub"
+              variants={subV}
+              initial="hidden"
+              animate={controls}
             >
-              View Our Work
-              <svg className="btn-arrow" width="15" height="15" viewBox="0 0 15 15" fill="none">
-                <path d="M2 7.5h11M8 3l4.5 4.5L8 12" stroke="currentColor"
-                  strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </MagneticButton>
-          </motion.div>
+              We build intelligent software, AI systems, and seamless integrations
+              that help modern businesses move faster, operate smarter,
+              and scale without limits.
+            </motion.p>
 
-        </motion.div>
-      </div>
-
-      {/* ── Stats glass strip — beneath the orb ───────────────────────── */}
-      <motion.div
-        className="hero-stats"
-        variants={statsV}
-        initial="hidden"
-        animate={controls}
-      >
-        {/* shimmer */}
-        <div className="panel-shimmer panel-shimmer--stats" aria-hidden="true" />
-
-        {STATS.map((s, i) => (
-          <div key={i} className="stat">
-            {i > 0 && <div className="stat-divider" aria-hidden="true" />}
+            {/* CTA */}
             <motion.div
-              className="stat-icon-wrap"
-              whileHover={{ scale: 1.15, rotate: 8 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+              className="hero-cta"
+              variants={ctaV}
+              initial="hidden"
+              animate={controls}
             >
-              <StatIcon type={s.icon} />
+              <MagneticButton
+                className="btn-primary"
+                onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
+              >
+                View Our Work
+                <svg className="btn-arrow" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                  <path d="M2 7.5h11M8 3l4.5 4.5L8 12" stroke="currentColor"
+                    strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </MagneticButton>
             </motion.div>
-            <div className="stat-content">
-              <span className="stat-num">
-                {counts[i]}<span className="stat-unit">{s.unit}</span>
-              </span>
-              <span className="stat-label">{s.label}</span>
-              <span className="stat-sub">{s.sub}</span>
+
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* ── Stats glass strip — slides RIGHT on scroll ────────────────── */}
+      <motion.div className="hero-stats-exit-wrap" style={{ x: statsExitX }}>
+        <motion.div
+          className="hero-stats"
+          variants={statsV}
+          initial="hidden"
+          animate={controls}
+        >
+          {/* shimmer */}
+          <div className="panel-shimmer panel-shimmer--stats" aria-hidden="true" />
+
+          {STATS.map((s, i) => (
+            <div key={i} className="stat">
+              {i > 0 && <div className="stat-divider" aria-hidden="true" />}
+              <motion.div
+                className="stat-icon-wrap"
+                whileHover={{ scale: 1.15, rotate: 8 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+              >
+                <StatIcon type={s.icon} />
+              </motion.div>
+              <div className="stat-content">
+                <span className="stat-num">
+                  {counts[i]}<span className="stat-unit">{s.unit}</span>
+                </span>
+                <span className="stat-label">{s.label}</span>
+                <span className="stat-sub">{s.sub}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </motion.div>
       </motion.div>
 
     </section>
