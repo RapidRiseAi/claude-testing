@@ -19,7 +19,7 @@ body {
 
 /* ── Electric blue corner glow ───────────────────────────────────────────── */
 .corner-glow {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 480px;

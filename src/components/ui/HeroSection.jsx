@@ -90,6 +90,7 @@ export default function HeroSection({ loaded }) {
 
   return (
     <section className="hero-section" ref={sectionRef}>
+      <div className="corner-glow" aria-hidden="true" />
 
       {/* ── Left content block — exits LEFT on scroll ───────────── */}
       <motion.div className="hero-left-content" style={{ x: mainExitX }}>
