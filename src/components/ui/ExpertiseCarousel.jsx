@@ -142,11 +142,11 @@ const CARDS = [
 
 /* ── Position → animation props ────────────────────────────────────────────── */
 function getCardAnim(pos) {
-  if (pos === 0)  return { x: 0,   scale: 1.00, opacity: 1.00, rotateY:   0, filter: 'blur(0px)' }
-  if (pos === 1)  return { x: 330, scale: 0.94, opacity: 0.62, rotateY:  -6, filter: 'blur(0.5px)' }
-  if (pos === 2)  return { x: 610, scale: 0.88, opacity: 0.30, rotateY: -10, filter: 'blur(1px)' }
-  if (pos >= 3)   return { x: 900, scale: 0.84, opacity: 0,    rotateY: -14, filter: 'blur(2px)' }
-  /* previous */  return { x: -140, scale: 0.90, opacity: 0,   rotateY:   8, filter: 'blur(2px)' }
+  if (pos === 0)  return { x: 0,   scale: 1.00, opacity: 1.0, rotateY:  0, filter: 'blur(0px)' }
+  if (pos === 1)  return { x: 82,  scale: 0.96, opacity: 1.0, rotateY: -2, filter: 'blur(0px)' }
+  if (pos === 2)  return { x: 154, scale: 0.92, opacity: 0.9, rotateY: -4, filter: 'blur(0px)' }
+  if (pos >= 3)   return { x: 220, scale: 0.88, opacity: 0,   rotateY: -6, filter: 'blur(0px)' }
+  /* previous */  return { x: -60, scale: 0.92, opacity: 0,   rotateY:  4, filter: 'blur(2px)' }
 }
 function getZIndex(pos) {
   if (pos === 0) return 30
@@ -240,10 +240,7 @@ export default function ExpertiseCarousel() {
 
         <div className="expertise-heading-block">
           <p className="expertise-eyebrow">OUR EXPERTISE</p>
-          <h2 className="expertise-h2">Solutions that scale<br />with your vision.</h2>
-          <p className="expertise-sub">
-            Each layer is designed to remove manual work, connect your tools, and create systems that help your business operate with more control.
-          </p>
+          <h2 className="expertise-h2">Solutions that scale with your vision.</h2>
         </div>
 
         <div className="ec-carousel-wrap" role="region" aria-label="Expertise cards">
