@@ -18,9 +18,8 @@ export default function App() {
 
       <Navbar loaded={loaded} />
 
-      <div className="hero-atmosphere" />
-      <div className="hero-noise" aria-hidden="true" />
-      <div className="bg-floor-grid" aria-hidden="true" />
+      <div className="site-lighting" aria-hidden="true" />
+      <div className="bg-floor-grid"  aria-hidden="true" />
 
       <div id="canvas-container">
         <Scene />
