@@ -3,6 +3,7 @@ import Scene from '../components/scene/Scene'
 import Navbar from '../components/ui/Navbar'
 import HeroSection from '../components/ui/HeroSection'
 import ScrollSection from '../components/ui/ScrollSection'
+import ExpertiseCarousel from '../components/ui/ExpertiseCarousel'
 import LoadingScreen from '../components/ui/LoadingScreen'
 import useScrollSnap from '../hooks/useScrollSnap'
 
@@ -24,11 +25,7 @@ export default function HomePage() {
 
       <div id="scroll-content">
         <HeroSection loaded={loaded} />
-        <ScrollSection
-          index={0}
-          title="Unified Intelligence"
-          body="Every service in your stack communicates through a shared network — analytics inform automation, integrations feed AI, everything is connected."
-        />
+        <ExpertiseCarousel />
         <ScrollSection
           index={1}
           title="Real-Time Automation"

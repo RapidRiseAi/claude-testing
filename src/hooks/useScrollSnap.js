@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
+import { tryCarouselAdvance } from '../utils/carouselControl'
 
-/* Ease in-out cubic — slow start, fast middle, slow finish */
 const easeInOutCubic = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
 
-const DURATION = 2000 // ms
+const DURATION   = 2000
+const CARD_LOCK  = 920
 
 export default function useScrollSnap() {
   const lockRef = useRef(false)
@@ -43,6 +44,18 @@ export default function useScrollSnap() {
       let currentIndex = 0
       for (let i = 0; i < sections.length; i++) {
         if (scrollY >= sections[i].offsetTop - vh * 0.3) currentIndex = i
+      }
+
+      // If current section is a carousel, try advancing cards first
+      const currentSection = sections[currentIndex]
+      if (currentSection && currentSection.hasAttribute('data-carousel')) {
+        const consumed = tryCarouselAdvance(direction)
+        if (consumed) {
+          lockRef.current = true
+          setTimeout(() => { lockRef.current = false }, CARD_LOCK)
+          return
+        }
+        // carousel exhausted — fall through to page snap
       }
 
       const targetIndex =
