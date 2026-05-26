@@ -17,9 +17,9 @@ const STATS = [
 ]
 
 const H1_LINES = [
-  { parts: [{ text: 'AI, Software &',        cls: 'h1-regular' }] },
-  { parts: [{ text: 'Connected Systems',     cls: 'h1-italic'  }] },
-  { parts: [{ text: 'Built for Growth',      cls: 'h1-accent'  }] },
+  { parts: [{ text: 'Intelligent Software.', cls: 'h1-line-1' }] },
+  { parts: [{ text: 'Connected Systems.',    cls: 'h1-line-2' }] },
+  { parts: [{ text: 'Built for Growth.',     cls: 'h1-line-3' }] },
 ]
 
 function MagneticButton({ children, className, onClick }) {
@@ -96,7 +96,20 @@ export default function HeroSection({ loaded }) {
 
         {/* Headline */}
         <div className="hero-h1-area">
-          <h1 className="hero-h1">
+          <div>
+            <motion.p
+              className="hero-eyebrow"
+              initial={{ opacity: 0, y: 14 }}
+              animate={controls}
+              variants={{
+                hidden:  { opacity: 0, y: 14 },
+                visible: { opacity: 1, y: 0,
+                  transition: { duration: 0.60, delay: 0.16, ease: EXPO } },
+              }}
+            >
+              Custom Software&nbsp;&bull;&nbsp;AI Systems&nbsp;&bull;&nbsp;Business Automation
+            </motion.p>
+            <h1 className="hero-h1">
             {H1_LINES.map((line, i) => (
               <motion.span
                 key={i}
@@ -114,7 +127,8 @@ export default function HeroSection({ loaded }) {
                 ))}
               </motion.span>
             ))}
-          </h1>
+            </h1>
+          </div>
         </div>
 
         {/* Sub copy + CTA */}
@@ -129,8 +143,7 @@ export default function HeroSection({ loaded }) {
           }}
         >
           <p className="hero-sub">
-            We build intelligent software, AI systems, and seamless integrations<br />
-            that help modern businesses move faster and scale without limits.
+            We build intelligent software, automation, and connected business systems that turn manual processes into scalable digital infrastructure.
           </p>
           <MagneticButton
             className="btn-primary"

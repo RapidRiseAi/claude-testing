@@ -281,42 +281,54 @@ body {
   align-items: center;
 }
 
+/* ── Eyebrow ─────────────────────────────────────────────────────────────── */
+.hero-eyebrow {
+  font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.60rem;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(110, 175, 255, 0.48);
+  margin-bottom: 1.6rem;
+  user-select: none;
+}
+
 /* ── Headline ─────────────────────────────────────────────────────────────── */
 .hero-h1 {
   display: flex;
   flex-direction: column;
-  font-size: clamp(3.4rem, 6.0vw, 7.0rem);
-  line-height: 1.02;
-  letter-spacing: -0.044em;
-  max-width: 52vw;
-  gap: 0.02em;
+  font-size: clamp(2.9rem, 5.0vw, 6.2rem);
+  line-height: 1.06;
+  max-width: 56vw;
+  gap: 0.06em;
 }
 
 .h1-row { display: block; }
 
-.h1-regular {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-weight: 800;
-  color: #ffffff;
-}
-
-.h1-italic {
+.h1-line-1 {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-weight: 700;
-  font-style: italic;
-  color: rgba(200, 222, 255, 0.88);
+  letter-spacing: -0.034em;
+  color: rgba(238, 244, 255, 0.96);
 }
 
-.h1-accent {
+.h1-line-2 {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-weight: 800;
-  color: #2590ff;
-  animation: accent-color 6s ease-in-out infinite;
+  font-weight: 600;
+  letter-spacing: -0.030em;
+  color: rgba(168, 206, 252, 0.58);
 }
 
-@keyframes accent-color {
-  0%, 100% { color: #2080ff; }
-  50%       { color: #38b0ff; }
+.h1-line-3 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.034em;
+  background: linear-gradient(120deg, #82c4ff 0%, #4da6ff 42%, #9d8fff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #5aa8ff;
+  filter: drop-shadow(0 0 32px rgba(90, 160, 255, 0.28));
 }
 
 /* ── Sub copy + CTA ─────────────────────────────────────────────────────────── */
@@ -327,10 +339,10 @@ body {
 }
 
 .hero-sub {
-  font-size: clamp(0.78rem, 1.10vw, 0.88rem);
-  line-height: 1.80;
-  color: rgba(165, 195, 232, 0.38);
-  max-width: 48ch;
+  font-size: clamp(0.88rem, 1.20vw, 1.0rem);
+  line-height: 1.72;
+  color: rgba(218, 231, 249, 0.74);
+  max-width: 52ch;
 }
 
 /* ── Primary CTA button ─────────────────────────────────────────────────────── */
