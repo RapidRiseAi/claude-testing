@@ -17,64 +17,121 @@ body {
 
 #canvas-container { position: fixed; inset: 0; z-index: 0; }
 
-/* ── Site-wide cinematic lighting — single fixed layer for all pages ─────── */
-.site-lighting {
+/* ── Site-wide lighting — rotated beam rectangles from upper-left corner ─── */
+/*
+ * Real light shafts require GEOMETRY, not gradient blobs.
+ * Each .site-beam is a long rectangle rotated around the corner point (0,0).
+ * The background gradient gives it a Gaussian cross-section (bright core,
+ * transparent edges). The mask-image fades it along its length (distance
+ * falloff from source). This is fundamentally different from radial-gradient
+ * blobs — these are actual directional shapes.
+ */
+.site-bg {
   position: fixed;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* Edge vignette + dark top/bottom caps */
-  background:
-    radial-gradient(ellipse 95% 95% at 50% 50%, transparent 35%, rgba(0,0,0,0.88) 100%),
-    linear-gradient(to top,    rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.35) 16%, transparent 30%),
-    linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 16%);
+  overflow: hidden;
 }
 
-/* Angular light shafts — conic-gradient creates real beam angles from a point */
-.site-lighting::before {
+/* Dark caps + right-side darkening — does NOT darken the upper-left source */
+.site-bg::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: conic-gradient(
-    from 0deg at -3% -3%,
-    transparent 0deg,
-    rgba(38, 112, 255, 0.32) 16deg,
-    rgba(62, 155, 255, 0.24) 26deg,
-    rgba(38, 112, 255, 0.32) 36deg,
-    transparent 46deg,
-    rgba(24, 88, 240, 0.18) 52deg,
-    rgba(30, 104, 248, 0.12) 60deg,
-    transparent 70deg,
-    rgba(18, 70, 220, 0.08) 76deg,
-    transparent 88deg,
-    transparent 360deg
+  background:
+    linear-gradient(to left,   rgba(0,0,0,0.55) 0%,  transparent 42%),
+    linear-gradient(to top,    rgba(0,0,0,0.96) 0%,  rgba(0,0,0,0.30) 16%, transparent 30%),
+    linear-gradient(to bottom, rgba(0,0,0,0.50) 0%,  transparent 16%);
+}
+
+/* Bright source hot spot — renders on top of beams, anchors the light origin */
+.site-bg::after {
+  content: '';
+  position: absolute;
+  top: -210px;
+  left: -210px;
+  width: 720px;
+  height: 720px;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(200, 235, 255, 0.95) 0%,
+    rgba(120, 192, 255, 0.72) 14%,
+    rgba(65,  152, 255, 0.40) 34%,
+    rgba(30,  105, 242, 0.16) 54%,
+    transparent 72%
   );
-  /* Fade beams by distance from corner — simulates realistic light falloff */
-  -webkit-mask-image: radial-gradient(ellipse 86% 82% at -3% -3%,
-    black 0%, rgba(0,0,0,0.82) 25%, rgba(0,0,0,0.42) 52%, transparent 78%);
-  mask-image: radial-gradient(ellipse 86% 82% at -3% -3%,
-    black 0%, rgba(0,0,0,0.82) 25%, rgba(0,0,0,0.42) 52%, transparent 78%);
 }
 
-/* Bright source hot spot at corner + subtle scanline texture */
-.site-lighting::after {
-  content: '';
+/* Shared beam shape — long rectangle, rotates around the corner point */
+.site-beam {
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle 340px at -2% -3%,
-      rgba(160, 215, 255, 0.72) 0%,
-      rgba(95, 172, 255, 0.48) 14%,
-      rgba(55, 135, 255, 0.26) 36%,
-      transparent 60%
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 3px,
-      rgba(0, 20, 100, 0.007) 3px,
-      rgba(0, 20, 100, 0.007) 4px
-    );
+  top: 0;
+  left: 0;
+  width: 195vw;
+  transform-origin: 0px 0px;
+  /* Length-wise falloff: full brightness near source, transparent at far end */
+  -webkit-mask-image: linear-gradient(to right,
+    rgba(0,0,0,0.95) 0%,
+    rgba(0,0,0,0.80) 15%,
+    rgba(0,0,0,0.50) 40%,
+    rgba(0,0,0,0.18) 64%,
+    transparent 84%
+  );
+  mask-image: linear-gradient(to right,
+    rgba(0,0,0,0.95) 0%,
+    rgba(0,0,0,0.80) 15%,
+    rgba(0,0,0,0.50) 40%,
+    rgba(0,0,0,0.18) 64%,
+    transparent 84%
+  );
+}
+
+/* Beam 1 — main shaft, broadest, 32° from horizontal */
+.site-beam--1 {
+  height: 330px;
+  transform: rotate(32deg);
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(42,  122, 255, 0.16) 18%,
+    rgba(60,  155, 255, 0.40) 42%,
+    rgba(68,  165, 255, 0.50) 50%,
+    rgba(60,  155, 255, 0.40) 58%,
+    rgba(42,  122, 255, 0.16) 82%,
+    transparent 100%
+  );
+  filter: blur(10px);
+}
+
+/* Beam 2 — secondary, 47° */
+.site-beam--2 {
+  height: 250px;
+  transform: rotate(47deg);
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(30,  102, 245, 0.11) 20%,
+    rgba(46,  128, 252, 0.30) 44%,
+    rgba(52,  136, 255, 0.36) 50%,
+    rgba(46,  128, 252, 0.30) 56%,
+    rgba(30,  102, 245, 0.11) 80%,
+    transparent 100%
+  );
+  filter: blur(8px);
+}
+
+/* Beam 3 — tertiary accent, 63° */
+.site-beam--3 {
+  height: 180px;
+  transform: rotate(63deg);
+  background: linear-gradient(to bottom,
+    transparent 0%,
+    rgba(22,  84,  228, 0.08) 22%,
+    rgba(34,  108, 240, 0.21) 44%,
+    rgba(38,  114, 244, 0.26) 50%,
+    rgba(34,  108, 240, 0.21) 56%,
+    rgba(22,  84,  228, 0.08) 78%,
+    transparent 100%
+  );
+  filter: blur(6px);
 }
 
 /* ── Perspective floor grid ──────────────────────────────────────────────── */

@@ -18,8 +18,12 @@ export default function App() {
 
       <Navbar loaded={loaded} />
 
-      <div className="site-lighting" aria-hidden="true" />
-      <div className="bg-floor-grid"  aria-hidden="true" />
+      <div className="site-bg" aria-hidden="true">
+        <div className="site-beam site-beam--1" />
+        <div className="site-beam site-beam--2" />
+        <div className="site-beam site-beam--3" />
+      </div>
+      <div className="bg-floor-grid" aria-hidden="true" />
 
       <div id="canvas-container">
         <Scene />
