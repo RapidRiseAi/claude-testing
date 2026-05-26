@@ -18,9 +18,9 @@ function RRMark() {
   )
 }
 
-function ServicesDropdown({ onStartClose }) {
+function ServicesDropdown() {
   return (
-    <div className="nav-dropdown" onMouseLeave={onStartClose}>
+    <div className="nav-dropdown">
       <div className="nav-dropdown-col">
         <div className="nav-dropdown-heading">Fixed Price Products</div>
         {FIXED_PRICE.map(s => (
@@ -42,10 +42,8 @@ function ServicesDropdown({ onStartClose }) {
 }
 
 export default function Navbar({ loaded }) {
-  const navRef   = useRef()
-  const closeRef = useRef()
-  const [scrolled,  setScrolled]  = useState(false)
-  const [showDrop,  setShowDrop]  = useState(false)
+  const navRef  = useRef()
+  const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     if (!loaded) return
@@ -62,9 +60,6 @@ export default function Navbar({ loaded }) {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const openDrop   = () => { clearTimeout(closeRef.current); setShowDrop(true) }
-  const startClose = () => { closeRef.current = setTimeout(() => setShowDrop(false), 160) }
-
   return (
     <nav ref={navRef} className={`navbar${scrolled ? ' navbar--scrolled' : ''}`} style={{ opacity: 0 }}>
       <div className="navbar-inner">
@@ -75,19 +70,15 @@ export default function Navbar({ loaded }) {
         </Link>
 
         <div className="navbar-links">
-          {/* Services & Pricing — has dropdown */}
-          <div
-            className="navbar-link-wrap"
-            onMouseEnter={openDrop}
-            onMouseLeave={startClose}
-          >
-            <Link to="/services" className="navbar-link navbar-link--drop" onClick={() => setShowDrop(false)}>
+          {/* Services & Pricing — CSS :hover drives the dropdown */}
+          <div className="navbar-link-wrap">
+            <Link to="/services" className="navbar-link navbar-link--drop">
               Services &amp; Pricing
-              <svg className={`nav-chevron${showDrop ? ' nav-chevron--open' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <svg className="nav-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none">
                 <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </Link>
-            {showDrop && <ServicesDropdown onStartClose={startClose} />}
+            <ServicesDropdown />
           </div>
 
           <Link to="/proof"  className="navbar-link">Proof</Link>
