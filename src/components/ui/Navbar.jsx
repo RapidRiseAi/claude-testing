@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
-
-const NAV_LINKS = ['Services', 'Work', 'About', 'Contact']
+import { FIXED_PRICE, CUSTOM_SERVICES } from '../../data/services'
 
 function RRMark() {
   return (
@@ -18,9 +18,44 @@ function RRMark() {
   )
 }
 
+function ServicesDropdown({ onClose }) {
+  return (
+    <div className="nav-dropdown" onMouseLeave={onClose}>
+      <div className="nav-dropdown-col">
+        <div className="nav-dropdown-heading">Fixed Price Products</div>
+        {FIXED_PRICE.map(s => (
+          <Link
+            key={s.slug}
+            to={`/services/${s.slug}`}
+            className="nav-dropdown-item"
+            onClick={onClose}
+          >
+            {s.name}
+          </Link>
+        ))}
+      </div>
+      <div className="nav-dropdown-col">
+        <div className="nav-dropdown-heading">Custom Services</div>
+        {CUSTOM_SERVICES.map(s => (
+          <Link
+            key={s.slug}
+            to={`/services/${s.slug}`}
+            className="nav-dropdown-item"
+            onClick={onClose}
+          >
+            {s.name}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Navbar({ loaded }) {
-  const navRef = useRef()
-  const [scrolled, setScrolled] = useState(false)
+  const navRef    = useRef()
+  const closeRef  = useRef()
+  const [scrolled, setScrolled]   = useState(false)
+  const [showDrop, setShowDrop]   = useState(false)
 
   useEffect(() => {
     if (!loaded) return
@@ -37,24 +72,46 @@ export default function Navbar({ loaded }) {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
+  const openDrop  = () => { clearTimeout(closeRef.current); setShowDrop(true) }
+  const startClose = () => { closeRef.current = setTimeout(() => setShowDrop(false), 130) }
+
   return (
     <nav ref={navRef} className={`navbar${scrolled ? ' navbar--scrolled' : ''}`} style={{ opacity: 0 }}>
       <div className="navbar-inner">
-        <div className="navbar-brand">
+
+        <Link to="/" className="navbar-brand">
           <RRMark />
           <span className="navbar-logo">Rapid Rise AI</span>
-        </div>
+        </Link>
+
         <div className="navbar-links">
-          {NAV_LINKS.map(l => (
-            <a key={l} href="#" className="navbar-link">{l}</a>
-          ))}
+          {/* Services — has dropdown */}
+          <div
+            className="navbar-link-wrap"
+            onMouseEnter={openDrop}
+            onMouseLeave={startClose}
+          >
+            <Link to="/services" className="navbar-link navbar-link--drop" onClick={() => setShowDrop(false)}>
+              Services
+              <svg className={`nav-chevron${showDrop ? ' nav-chevron--open' : ''}`} width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </Link>
+            {showDrop && <ServicesDropdown onClose={() => setShowDrop(false)} />}
+          </div>
+
+          <Link to="/pricing" className="navbar-link">Pricing</Link>
+          <Link to="/proof"   className="navbar-link">Proof</Link>
+          <Link to="/about"   className="navbar-link">About</Link>
         </div>
+
         <button className="navbar-cta-btn">
           Request a Quote
           <svg className="navbar-cta-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
             <path d="M1 6h10M7 2l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
+
       </div>
     </nav>
   )

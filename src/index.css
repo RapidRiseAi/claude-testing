@@ -119,6 +119,7 @@ body {
   align-items: center;
   gap: 0.7rem;
   user-select: none;
+  text-decoration: none;
 }
 
 .navbar-rr-mark { display: block; flex-shrink: 0; }
@@ -523,4 +524,332 @@ h2 {
   .hero-stats { gap: 1.0rem; flex-wrap: wrap; }
   .stat-sep { display: none; }
   .stat-num { font-size: clamp(1.6rem, 6vw, 2.2rem); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NAVBAR DROPDOWN
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.navbar-link-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-link--drop {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.nav-chevron {
+  opacity: 0.6;
+  transition: transform 0.22s ease, opacity 0.22s;
+  flex-shrink: 0;
+}
+.nav-chevron--open {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 18px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(6, 11, 28, 0.94);
+  backdrop-filter: blur(32px) saturate(1.7);
+  -webkit-backdrop-filter: blur(32px) saturate(1.7);
+  border: 1px solid rgba(120, 180, 255, 0.13);
+  border-radius: 18px;
+  padding: 28px 28px 24px;
+  min-width: 580px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+  box-shadow:
+    0 0 0 1px rgba(20, 80, 200, 0.05),
+    0 32px 80px rgba(0, 0, 0, 0.75),
+    0 0 48px rgba(0, 50, 180, 0.10);
+  z-index: 50;
+  animation: dropIn 0.18s cubic-bezier(0.16, 1, 0.30, 1) both;
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.nav-dropdown-col { display: flex; flex-direction: column; }
+
+.nav-dropdown-heading {
+  font-size: 0.67rem;
+  font-weight: 600;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: rgba(103, 156, 220, 0.50);
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.08);
+}
+
+.nav-dropdown-item {
+  display: block;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: rgba(200, 218, 248, 0.68);
+  font-size: 0.865rem;
+  font-weight: 450;
+  letter-spacing: -0.008em;
+  text-decoration: none;
+  transition: background 0.14s, color 0.14s;
+  line-height: 1.3;
+}
+.nav-dropdown-item:hover {
+  background: rgba(47, 100, 240, 0.12);
+  color: #fff;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INNER PAGE ROOT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.page-root {
+  min-height: 100vh;
+  background: #000;
+  color: #e6f0ff;
+  padding-top: 92px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SERVICES PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.services-hero {
+  padding: 72px 8vw 56px;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.07);
+}
+
+.services-hero-eyebrow {
+  font-size: 0.70rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(103, 156, 220, 0.60);
+  margin-bottom: 1.2rem;
+}
+
+.services-hero-h1 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(2.8rem, 5vw, 5.4rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+  background: linear-gradient(175deg, #F5F8FC 0%, #E8EEF8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #F5F8FC;
+  margin-bottom: 1.6rem;
+}
+
+.services-hero-sub {
+  font-size: clamp(1rem, 1.1vw, 1.14rem);
+  color: rgba(200, 215, 240, 0.60);
+  max-width: 580px;
+  line-height: 1.70;
+}
+
+.services-section {
+  padding: 60px 8vw;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.05);
+}
+.services-section:last-child { border-bottom: none; }
+
+.services-section-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: rgba(103, 156, 220, 0.55);
+  margin-bottom: 28px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.08);
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(256px, 1fr));
+  gap: 14px;
+}
+
+.service-card {
+  padding: 26px 24px 24px;
+  border-radius: 14px;
+  border: 1px solid rgba(120, 180, 255, 0.10);
+  background: rgba(12, 20, 48, 0.40);
+  text-decoration: none;
+  display: block;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.service-card:hover {
+  border-color: rgba(60, 130, 255, 0.28);
+  background: rgba(20, 40, 90, 0.40);
+  transform: translateY(-2px);
+}
+
+.service-card-badge {
+  display: inline-block;
+  font-size: 0.63rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(88, 182, 255, 0.70);
+  background: rgba(47, 148, 255, 0.08);
+  border: 1px solid rgba(47, 148, 255, 0.16);
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-bottom: 14px;
+}
+
+.service-card-name {
+  font-size: 1.0rem;
+  font-weight: 700;
+  letter-spacing: -0.022em;
+  color: #dce8f8;
+  margin-bottom: 8px;
+}
+
+.service-card-tagline {
+  font-size: 0.84rem;
+  color: rgba(170, 195, 232, 0.52);
+  line-height: 1.55;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SERVICE DETAIL PAGE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.service-detail-hero {
+  padding: 64px 8vw 56px;
+  max-width: 920px;
+  border-bottom: 1px solid rgba(120, 180, 255, 0.07);
+}
+
+.service-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(103, 156, 220, 0.65);
+  text-decoration: none;
+  margin-bottom: 40px;
+  transition: color 0.15s;
+}
+.service-detail-back:hover { color: #58B6FF; }
+
+.service-detail-badge {
+  display: inline-block;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(88, 182, 255, 0.80);
+  background: rgba(47, 148, 255, 0.09);
+  border: 1px solid rgba(47, 148, 255, 0.20);
+  border-radius: 20px;
+  padding: 4px 12px;
+  margin-bottom: 22px;
+}
+
+.service-detail-h1 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(2.4rem, 4.2vw, 5.0rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+  background: linear-gradient(175deg, #F5F8FC 0%, #E8EEF8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #F5F8FC;
+  margin-bottom: 1.4rem;
+}
+
+.service-detail-tagline {
+  font-size: clamp(1.05rem, 1.3vw, 1.25rem);
+  font-weight: 475;
+  color: rgba(200, 218, 248, 0.72);
+  max-width: 580px;
+  line-height: 1.65;
+  margin-bottom: 1.2rem;
+}
+
+.service-detail-desc {
+  font-size: 1rem;
+  color: rgba(170, 192, 228, 0.55);
+  max-width: 540px;
+  line-height: 1.75;
+}
+
+.service-coming-soon {
+  margin: 56px 8vw 80px;
+  padding: 48px;
+  border-radius: 16px;
+  border: 1px solid rgba(120, 180, 255, 0.09);
+  background: rgba(8, 14, 36, 0.50);
+  text-align: center;
+}
+.service-coming-soon h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.030em;
+  color: rgba(210, 225, 248, 0.75);
+  margin-bottom: 10px;
+}
+.service-coming-soon p {
+  font-size: 0.88rem;
+  color: rgba(150, 175, 215, 0.45);
+  line-height: 1.65;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLACEHOLDER PAGES (Pricing / Proof / About)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.placeholder-page {
+  min-height: calc(100vh - 92px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 18px;
+  text-align: center;
+  padding: 40px 8vw;
+}
+
+.placeholder-page h1 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(2.8rem, 5vw, 5.4rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 0.96;
+  background: linear-gradient(175deg, #F5F8FC 0%, #E8EEF8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #F5F8FC;
+}
+
+.placeholder-page p {
+  font-size: 1rem;
+  color: rgba(170, 192, 228, 0.55);
+  max-width: 420px;
+  line-height: 1.70;
 }
