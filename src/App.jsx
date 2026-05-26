@@ -18,8 +18,6 @@ export default function App() {
 
       <Navbar loaded={loaded} />
 
-      <div className="bg-floor-grid" aria-hidden="true" />
-
       <div id="canvas-container">
         <Scene />
       </div>
