@@ -1002,8 +1002,27 @@ h2 {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 3rem 0 3rem 0;
+  padding: 3rem 0 3rem clamp(55px, 5.5vw, 90px);
   overflow: visible;
+  position: relative;
+}
+
+/* Left shadow — pure black flush with left column, fades right.
+   Cards exiting left disappear behind it. Spans full column height. */
+.expertise-right::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: clamp(55px, 5.5vw, 90px);
+  background: linear-gradient(to right,
+    #000000 0%,
+    #000000 35%,
+    rgba(0, 0, 0, 0.88) 62%,
+    transparent 100%);
+  z-index: 100;
+  pointer-events: none;
 }
 
 /* ── Section heading ──────────────────────────────────────────────────────── */
@@ -1039,26 +1058,14 @@ h2 {
   width: 100%;
 }
 
-/* Left-edge shadow — exiting cards disappear behind this */
-.ec-left-shadow {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: clamp(55px, 5.5vw, 90px);
-  background: linear-gradient(to right,
-    rgba(0, 0, 0, 0.97) 0%,
-    rgba(0, 0, 0, 0.65) 45%,
-    transparent 100%);
-  z-index: 50;
-  pointer-events: none;
-}
 
 /* ── Individual card ──────────────────────────────────────────────────────── */
 .expertise-card {
   position: absolute;
   top: 0;
   left: 0;
-  /* Responsive: guarantees exactly 5% of card-3 visible at any desktop width */
-  width: calc((57vw - 28px) / 2.05);
+  /* Responsive: guarantees exactly 5% of card-3 visible (right col 57vw − shadow 5.5vw = 51.5vw) */
+  width: calc((51.5vw - 28px) / 2.05);
   height: clamp(450px, 58vh, 594px);
   border-radius: 20px;
   background: #050810;
@@ -1362,6 +1369,7 @@ h2 {
     padding: 0 6vw 0 6vw;
     min-height: unset;
   }
+  .expertise-right::before { content: none; }
   .expertise-h2 { white-space: normal; }
   .ec-carousel-wrap { height: clamp(430px, 56vh, 560px); }
   .expertise-card {

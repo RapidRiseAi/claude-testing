@@ -104,15 +104,16 @@ const CARDS = [
 ]
 
 /* ── Responsive card offset ─────────────────────────────────────────────────── */
-// Card width CSS = calc((57vw - 28px) / 2.05)
-// CARD_OFFSET = cardWidth + 14px gap = (57vw - 28px) / 2.05 + 14
-// This guarantees exactly 5% of card-3 is visible at any viewport width.
+// Card width CSS = calc((51.5vw - 28px) / 2.05)  [right col 57vw − shadow 5.5vw = 51.5vw]
+// CARD_OFFSET = cardWidth + 14px gap
+// This guarantees exactly 5% of card-3 visible after the shadow margin.
 function computeOffset() {
-  return (window.innerWidth * 0.57 - 28) / 2.05 + 14
+  const shadow = Math.max(55, Math.min(window.innerWidth * 0.055, 90))
+  return (window.innerWidth * 0.57 - shadow - 28) / 2.05 + 14
 }
 
 /* ── Animation ──────────────────────────────────────────────────────────────── */
-const SLIDE_TRANS = { duration: 0.92, ease: [0.22, 1, 0.36, 1] }
+const SLIDE_TRANS = { duration: 1.35, ease: [0.22, 1, 0.36, 1] }
 const RISE        = (delay = 0) => ({ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay })
 const FADE        = (delay = 0) => ({ duration: 0.40, ease: 'easeOut', delay })
 
@@ -249,8 +250,6 @@ export default function ExpertiseCarousel() {
         </div>
 
         <div className="ec-carousel-wrap" role="region" aria-label="Expertise cards">
-          {/* Left-edge shadow — exiting cards disappear behind this */}
-          <div className="ec-left-shadow" aria-hidden="true" />
 
           {CARDS.map((card, i) => {
             const pos       = i - activeCard
