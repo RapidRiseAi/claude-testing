@@ -1220,9 +1220,9 @@ h2 {
 }
 
 .ec-icon-box {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
   background: rgba(47, 148, 255, 0.10);
   border: 1px solid rgba(82, 160, 255, 0.18);
   display: flex;
@@ -1230,7 +1230,7 @@ h2 {
   justify-content: center;
   color: #2EA8FF;
   flex-shrink: 0;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .ec-title {

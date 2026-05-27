@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from 'react'
+import { useRef, useMemo, useEffect, useState } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import {
@@ -834,10 +834,21 @@ export default function HeroOrb() {
   const dragInvMat = useMemo(() => new THREE.Matrix4(), [])
   const tmpNdc = useMemo(() => new THREE.Vector2(), [])
 
+  // Once heavy elements are fully invisible (p > 0.80) we unmount them so
+  // their useFrame callbacks and GPU draw calls stop entirely.
+  const [showHeavy, setShowHeavy] = useState(true)
+  const heavyRef = useRef(true)
+
   useEffect(() => {
     const onScroll = () => {
       const max = window.innerHeight
       scrollState.progress = Math.min(1, Math.max(0, window.scrollY / max))
+      // Unmount the expensive sphere elements once they're invisible.
+      // They fade out between p=0 and p=0.78, so there's no visual jump.
+      if (heavyRef.current && scrollState.progress > 0.80) {
+        heavyRef.current = false
+        setShowHeavy(false)
+      }
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
@@ -921,18 +932,17 @@ export default function HeroOrb() {
   return (
     <group ref={groupRef} position={[ORB_X, ORB_Y, 0]}>
       <DepthOccluder />
-      <InteractiveMiniOrbs groupRef={groupRef} />
-      <SoccerGridParticles />
-      {/* CubeEdgeFill removed — sphere dissolves into CarouselOverlay icon shapes */}
-      <CardinalSpokeParticles />
-      <JunctionDots />
-      <NodeHaloRings />
-      <NodeClusterParticles />
-      <FlowParticles />
-      {ICON_CENTERS.map((c, i) => (
+      {showHeavy && <InteractiveMiniOrbs groupRef={groupRef} />}
+      {showHeavy && <SoccerGridParticles />}
+      {showHeavy && <CardinalSpokeParticles />}
+      {showHeavy && <JunctionDots />}
+      {showHeavy && <NodeHaloRings />}
+      {showHeavy && <NodeClusterParticles />}
+      {showHeavy && <FlowParticles />}
+      {showHeavy && ICON_CENTERS.map((c, i) => (
         <IconPlane key={i} center={c} texIndex={i} />
       ))}
-      <PulsatingRings />
+      {showHeavy && <PulsatingRings />}
     </group>
   )
 }
