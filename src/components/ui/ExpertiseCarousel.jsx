@@ -2,50 +2,51 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { registerCarousel } from '../../utils/carouselControl'
+import { carouselState } from '../../utils/carouselState'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const GlobeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
     <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
   </svg>
 )
 const CodeIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
   </svg>
 )
 const SmartphoneIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <rect x="5" y="2" width="14" height="20" rx="2"/>
     <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none"/>
   </svg>
 )
 const ZapIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
   </svg>
 )
 const SparklesIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M5.64 18.36l2.12-2.12M16.24 7.76l2.12-2.12"/>
     <circle cx="12" cy="12" r="4"/>
   </svg>
 )
 const NetworkIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="4" r="2"/><circle cx="4" cy="20" r="2"/><circle cx="20" cy="20" r="2"/>
     <path d="M12 6v4M12 10l-6.5 8M12 10l6.5 8M5 20h14"/>
   </svg>
 )
 const TrendingUpIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
     <polyline points="16 7 22 7 22 13"/>
   </svg>
 )
 const ArrowIcon = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M7 17L17 7"/><path d="M7 7h10v10"/>
   </svg>
 )
@@ -55,84 +56,124 @@ const CARDS = [
   {
     number: '01', category: 'DIGITAL PRESENCE', icon: GlobeIcon,
     title: 'Websites and SEO',
-    intro: 'High-performance websites and SEO systems designed to attract, engage, and convert.',
-    capabilities: ['Custom websites and landing pages', 'Technical SEO and on-page optimization', 'Content structure and keyword targeting', 'Quote, booking, and enquiry flows'],
+    intro: 'Build trust, get found, and turn attention into qualified enquiries.',
+    whatWeBuild: [
+      'Premium business websites',
+      'Landing pages and conversion flows',
+      'Technical SEO and on-page structure',
+      'Quote, booking, and enquiry systems',
+    ],
+    businessValue: 'Turn your website into a sales asset that supports trust, search visibility, paid ads, and long-term growth.',
     route: '/services/website-development',
   },
   {
     number: '02', category: 'BUSINESS SYSTEMS', icon: CodeIcon,
     title: 'Custom Software',
-    intro: 'Purpose-built software designed around the way your business actually works.',
-    capabilities: ['Internal dashboards and admin panels', 'Client portals and staff tools', 'Quote, booking, and workflow systems', 'Document, reporting, and approval flows'],
+    intro: 'Build tools around your actual business process instead of forcing your process into generic software.',
+    whatWeBuild: [
+      'Internal dashboards and admin panels',
+      'Client portals and staff tools',
+      'Quote, booking, and approval systems',
+      'Reporting, documents, and workflow control',
+    ],
+    businessValue: 'Centralise your operations, reduce spreadsheet dependency, and create a system your competitors cannot easily copy.',
     route: '/services/software-development',
   },
   {
     number: '03', category: 'DIGITAL PRODUCTS', icon: SmartphoneIcon,
     title: 'App Development',
-    intro: 'Mobile-ready tools that give customers, staff, or partners a better way to interact.',
-    capabilities: ['Customer portals and profile systems', 'Staff apps and mobile dashboards', 'Status tracking and upload flows', 'Booking, service, and request systems'],
+    intro: 'Give customers, staff, or partners a better way to interact with your business.',
+    whatWeBuild: [
+      'Customer portals and profile systems',
+      'Staff apps and mobile dashboards',
+      'Upload flows and status tracking',
+      'Booking, service, and request tools',
+    ],
+    businessValue: 'Improve user experience, reduce repeated communication, and turn your service into a stronger digital product.',
     route: '/services/web-app-development',
   },
   {
     number: '04', category: 'OPERATIONS', icon: ZapIcon,
     title: 'Workflow Automation',
-    intro: 'Smart automations that move information between people, tools, and customers.',
-    capabilities: ['Lead routing and follow-up automation', 'Email, WhatsApp, and form workflows', 'Google Workspace automation', 'Notifications, reminders, and task triggers'],
+    intro: 'Move information between people, tools, and customers without constant manual effort.',
+    whatWeBuild: [
+      'Lead routing and follow-up automation',
+      'Email, WhatsApp, and form workflows',
+      'Google Workspace automation',
+      'Notifications, reminders, and task triggers',
+    ],
+    businessValue: 'Respond faster, reduce human error, prevent missed tasks, and free your team from repetitive admin.',
     route: '/services/automated-workflow',
   },
   {
     number: '05', category: 'INTELLIGENT SYSTEMS', icon: SparklesIcon,
     title: 'AI Implementation',
-    intro: 'AI assistants and agents that help your business answer, create, and act faster.',
-    capabilities: ['AI chat assistants and support bots', 'Internal staff assistants', 'Knowledge base and document search', 'AI reply, reporting, and content support'],
+    intro: 'Turn AI from a tool your team opens manually into a working layer inside your business.',
+    whatWeBuild: [
+      'AI chat assistants and support bots',
+      'Internal staff assistants',
+      'Knowledge base and document search',
+      'AI reply, reporting, and content support',
+    ],
+    businessValue: 'Give customers faster answers, help staff work smarter, and turn business knowledge into a usable assistant.',
     route: '/services/ai-implementation',
   },
   {
     number: '06', category: 'CONNECTED INFRASTRUCTURE', icon: NetworkIcon,
     title: 'Connected Ecosystems',
-    intro: 'A unified operating layer where your tools, data, and workflows work together.',
-    capabilities: ['API and tool integrations', 'Shared data flows and central dashboards', 'CRM-style workflows', 'AI-supported operations'],
+    intro: 'Connect your tools, data, workflows, AI, and dashboards into one smarter operating layer.',
+    whatWeBuild: [
+      'API and tool integrations',
+      'Shared data flows and central dashboards',
+      'CRM-style workflows',
+      'AI-supported operations',
+    ],
+    businessValue: 'Create one source of truth, break down silos, and scale without adding unnecessary complexity.',
     route: '/services/ecosystems',
   },
   {
     number: '07', category: 'GROWTH INFRASTRUCTURE', icon: TrendingUpIcon,
-    title: 'Marketing Infrastructure',
-    intro: 'Systems that help your business attract, capture, track, and manage demand.',
-    capabilities: ['Campaign landing pages', 'Lead capture funnels', 'SEO content systems', 'Marketing dashboards and follow-up flows'],
+    title: 'Managed Marketing Services',
+    intro: 'Access marketing execution through Rapid Rise AI’s managed specialist delivery team.',
+    whatWeBuild: [
+      'Campaign landing pages',
+      'SEO content systems',
+      'Social content and creative support',
+      'Lead capture and follow-up flows',
+    ],
+    businessValue: 'Get the marketing support your business needs without building a full in-house team, while keeping delivery connected to your website, leads, and systems.',
     route: '/services/marketing-seo',
   },
 ]
 
 /* ── Responsive card offset ─────────────────────────────────────────────────── */
-// Card width CSS = calc((51.5vw - 28px) / 2.05)  [right col 57vw − shadow 5.5vw = 51.5vw]
-// CARD_OFFSET = cardWidth + 14px gap
-// This guarantees exactly 5% of card-3 visible after the shadow margin.
 function computeOffset() {
   const shadow = Math.max(55, Math.min(window.innerWidth * 0.055, 90))
   return (window.innerWidth * 0.57 - shadow - 28) / 2.05 + 14
 }
 
-/* ── Animation ──────────────────────────────────────────────────────────────── */
+/* ── Animation helpers ──────────────────────────────────────────────────────── */
 const SLIDE_TRANS = { duration: 1.65, ease: [0.22, 1, 0.36, 1] }
-const RISE        = (delay = 0) => ({ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay })
-const FADE        = (delay = 0) => ({ duration: 0.40, ease: 'easeOut', delay })
+const RISE        = (delay = 0) => ({ duration: 0.60, ease: [0.16, 1, 0.3, 1], delay })
+const FADE        = (delay = 0) => ({ duration: 0.38, ease: 'easeOut', delay })
 
 function getCardAnim(pos, offset) {
-  // Exiting cards shrink + fade — "swallowed by left shadow"
-  if (pos <= -1) return { x: -offset,       opacity: 0,    scale: 0.86 }
-  if (pos === 0) return { x: 0,             opacity: 1,    scale: 1.00 }
-  if (pos === 1) return { x: offset,        opacity: 1,    scale: 0.97 }
-  if (pos === 2) return { x: offset * 2,    opacity: 0.55, scale: 0.94 }
-  return               { x: offset * 3,    opacity: 0,    scale: 0.91 }
+  if (pos <= -1) return { x: -offset,    opacity: 0,    scale: 0.86 }
+  if (pos === 0) return { x: 0,          opacity: 1,    scale: 1.00 }
+  if (pos === 1) return { x: offset,     opacity: 1,    scale: 0.96 }
+  if (pos === 2) return { x: offset * 2, opacity: 0.45, scale: 0.92 }
+  return               { x: offset * 3, opacity: 0,    scale: 0.89 }
 }
 
-/* ── Active card ────────────────────────────────────────────────────────────── */
+/* ── Active card content ────────────────────────────────────────────────────── */
 function ActiveContent({ card, onNavigate }) {
   const Icon = card.icon
   return (
     <div className="ec-inner ec-inner--active">
+
+      {/* Top metadata row */}
       <motion.div className="ec-toprow"
-        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={FADE(0.22)}>
+        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={FADE(0.20)}>
         <div className="ec-meta">
           <span className="ec-number">{card.number}</span>
           <span className="ec-category">{card.category}</span>
@@ -142,54 +183,63 @@ function ActiveContent({ card, onNavigate }) {
         </button>
       </motion.div>
 
+      {/* Icon tile */}
       <motion.div className="ec-icon-box" aria-hidden="true"
-        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={FADE(0.26)}>
+        initial={{ opacity: 0, scale: 0.72 }} animate={{ opacity: 1, scale: 1 }} transition={FADE(0.24)}>
         <Icon />
       </motion.div>
 
-      {/* Title rises from the bottom (where it lived as preview-title) */}
+      {/* Title rises from where it lived as preview-title */}
       <motion.h3 className="ec-title"
-        initial={{ opacity: 0, y: 90 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.06)}>
+        initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.05)}>
         {card.title}
       </motion.h3>
 
-      {/* Intro pulled up behind the rising title */}
+      {/* Intro */}
       <motion.p className="ec-intro"
-        initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.16)}>
+        initial={{ opacity: 0, y: 52 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.14)}>
         {card.intro}
       </motion.p>
 
-      {/* Divider sweeps in from left */}
+      {/* Divider sweeps from left */}
       <motion.div className="ec-divider" aria-hidden="true"
         initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }}
         style={{ originX: 0 }}
-        transition={{ duration: 0.45, ease: 'easeOut', delay: 0.28 }} />
+        transition={{ duration: 0.42, ease: 'easeOut', delay: 0.26 }} />
 
-      {/* Capabilities stagger in */}
+      {/* What We Build + Business Value — inside the flexible cap-block */}
       <motion.div className="ec-cap-block"
-        initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.32)}>
-        <p className="ec-cap-label">Capabilities</p>
+        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.30)}>
+
+        <p className="ec-section-label">What We Build</p>
         <ul className="ec-bullets">
-          {card.capabilities.map((item, i) => (
+          {card.whatWeBuild.map((item, i) => (
             <motion.li key={i}
-              initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.38, ease: 'easeOut', delay: 0.36 + i * 0.055 }}>
+              initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.34, ease: 'easeOut', delay: 0.34 + i * 0.048 }}>
               {item}
             </motion.li>
           ))}
         </ul>
+
+        <div className="ec-value-block">
+          <p className="ec-section-label">Business Value</p>
+          <p className="ec-value-text">{card.businessValue}</p>
+        </div>
+
       </motion.div>
     </div>
   )
 }
 
-/* ── Preview card ───────────────────────────────────────────────────────────── */
+/* ── Preview (inactive) card content ───────────────────────────────────────── */
 function PreviewContent({ card, onNavigate }) {
   return (
     <div className="ec-inner ec-inner--preview">
-      {/* Electric blue orb glow — bottom-right corner */}
+      {/* Bottom-right glow */}
       <div className="ec-preview-glow" aria-hidden="true" />
 
+      {/* Number + arrow */}
       <motion.div className="ec-toprow"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.05)}>
         <span className="ec-preview-num">{card.number}</span>
@@ -200,13 +250,19 @@ function PreviewContent({ card, onNavigate }) {
         </button>
       </motion.div>
 
-      {/* Dot texture — masked to bottom-right corner */}
-      <motion.div className="ec-preview-dots" aria-hidden="true"
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.10)} />
+      {/* Category label */}
+      <motion.p className="ec-preview-category"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.09)}>
+        {card.category}
+      </motion.p>
 
-      {/* Title rises from below */}
+      {/* Dot texture — masked to bottom-right */}
+      <motion.div className="ec-preview-dots" aria-hidden="true"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.12)} />
+
+      {/* Title at bottom */}
       <motion.div className="ec-preview-footer"
-        initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.08)}>
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.08)}>
         <h3 className="ec-preview-title">{card.title}</h3>
       </motion.div>
     </div>
@@ -220,10 +276,12 @@ export default function ExpertiseCarousel() {
   const activeCardRef = useRef(0)
   const navigate = useNavigate()
 
-  /* keep ref in sync */
-  useEffect(() => { activeCardRef.current = activeCard }, [activeCard])
+  /* keep ref + shared 3-D carousel state in sync */
+  useEffect(() => {
+    activeCardRef.current    = activeCard
+    carouselState.activeCard = activeCard
+  }, [activeCard])
 
-  /* update offset on resize */
   useEffect(() => {
     const onResize = () => setCardOffset(computeOffset())
     window.addEventListener('resize', onResize)
@@ -246,11 +304,11 @@ export default function ExpertiseCarousel() {
       <div className="expertise-right">
         <div className="expertise-heading-block">
           <p className="expertise-eyebrow">OUR EXPERTISE</p>
-          <h2 className="expertise-h2">Solutions that scale with your vision.</h2>
+          <h2 className="expertise-h2">The systems behind<br />modern growth.</h2>
+          <p className="expertise-sub">We design the digital layers that connect your website, workflows, data, AI, and operations into one smarter business stack.</p>
         </div>
 
         <div className="ec-carousel-wrap" role="region" aria-label="Expertise cards">
-
           {CARDS.map((card, i) => {
             const pos       = i - activeCard
             const isActive  = pos === 0
@@ -277,12 +335,12 @@ export default function ExpertiseCarousel() {
                 <AnimatePresence mode="wait" initial={false}>
                   {isActive ? (
                     <motion.div key={`a-${card.number}`} className="ec-content-layer"
-                      exit={{ opacity: 0, transition: { duration: 0.18 } }}>
+                      exit={{ opacity: 0, transition: { duration: 0.16 } }}>
                       <ActiveContent card={card} onNavigate={() => navigate(card.route)} />
                     </motion.div>
                   ) : (
                     <motion.div key={`p-${card.number}`} className="ec-content-layer"
-                      exit={{ opacity: 0, transition: { duration: 0.14 } }}>
+                      exit={{ opacity: 0, transition: { duration: 0.12 } }}>
                       <PreviewContent card={card} onNavigate={() => navigate(card.route)} />
                     </motion.div>
                   )}

@@ -2,6 +2,7 @@ import { Canvas } from '@react-three/fiber'
 import { Suspense, useMemo } from 'react'
 import * as THREE from 'three'
 import HeroOrb from './HeroOrb'
+import CarouselOverlay from './CarouselOverlay'
 
 function FaintBackdropDots() {
   const positions = useMemo(() => {
@@ -53,6 +54,7 @@ export default function Scene() {
       <FaintBackdropDots />
       <Suspense fallback={null}>
         <HeroOrb />
+        <CarouselOverlay />
       </Suspense>
     </Canvas>
   )
