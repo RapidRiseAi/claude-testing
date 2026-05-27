@@ -103,33 +103,35 @@ const CARDS = [
   },
 ]
 
-/* ── Animation constants ────────────────────────────────────────────────────── */
-const CARD_OFFSET  = 402   // 390px card + 12px gap
-const SLIDE_TRANS  = { duration: 0.88, ease: [0.16, 1, 0.3, 1] }
-const RISE         = (delay = 0) => ({ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay })
-const FADE         = (delay = 0) => ({ duration: 0.40, ease: 'easeOut', delay })
-
-function getCardAnim(pos) {
-  if (pos < 0)   return { x: -CARD_OFFSET,      opacity: 0 }
-  if (pos === 0) return { x: 0,                  opacity: 1 }
-  if (pos === 1) return { x: CARD_OFFSET,        opacity: 1 }
-  if (pos === 2) return { x: CARD_OFFSET * 2,    opacity: 0.55 }
-  return               { x: CARD_OFFSET * 3,    opacity: 0 }
+/* ── Responsive card offset ─────────────────────────────────────────────────── */
+// Card width CSS = calc((57vw - 28px) / 2.05)
+// CARD_OFFSET = cardWidth + 14px gap = (57vw - 28px) / 2.05 + 14
+// This guarantees exactly 5% of card-3 is visible at any viewport width.
+function computeOffset() {
+  return (window.innerWidth * 0.57 - 28) / 2.05 + 14
 }
 
-/* ── Active card — full reveal with staggered rise ──────────────────────────── */
+/* ── Animation ──────────────────────────────────────────────────────────────── */
+const SLIDE_TRANS = { duration: 0.92, ease: [0.22, 1, 0.36, 1] }
+const RISE        = (delay = 0) => ({ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay })
+const FADE        = (delay = 0) => ({ duration: 0.40, ease: 'easeOut', delay })
+
+function getCardAnim(pos, offset) {
+  // Exiting cards shrink + fade — "swallowed by left shadow"
+  if (pos <= -1) return { x: -offset,       opacity: 0,    scale: 0.86 }
+  if (pos === 0) return { x: 0,             opacity: 1,    scale: 1.00 }
+  if (pos === 1) return { x: offset,        opacity: 1,    scale: 0.97 }
+  if (pos === 2) return { x: offset * 2,    opacity: 0.55, scale: 0.94 }
+  return               { x: offset * 3,    opacity: 0,    scale: 0.91 }
+}
+
+/* ── Active card ────────────────────────────────────────────────────────────── */
 function ActiveContent({ card, onNavigate }) {
   const Icon = card.icon
   return (
     <div className="ec-inner ec-inner--active">
-
-      {/* Header row — fades down from above */}
-      <motion.div
-        className="ec-toprow"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={FADE(0.22)}
-      >
+      <motion.div className="ec-toprow"
+        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={FADE(0.22)}>
         <div className="ec-meta">
           <span className="ec-number">{card.number}</span>
           <span className="ec-category">{card.category}</span>
@@ -139,63 +141,38 @@ function ActiveContent({ card, onNavigate }) {
         </button>
       </motion.div>
 
-      {/* Icon — scales in */}
-      <motion.div
-        className="ec-icon-box"
-        aria-hidden="true"
-        initial={{ opacity: 0, scale: 0.7 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={FADE(0.26)}
-      >
+      <motion.div className="ec-icon-box" aria-hidden="true"
+        initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={FADE(0.26)}>
         <Icon />
       </motion.div>
 
-      {/* Title — rises from preview-footer position */}
-      <motion.h3
-        className="ec-title"
-        initial={{ opacity: 0, y: 90 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={RISE(0.06)}
-      >
+      {/* Title rises from the bottom (where it lived as preview-title) */}
+      <motion.h3 className="ec-title"
+        initial={{ opacity: 0, y: 90 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.06)}>
         {card.title}
       </motion.h3>
 
-      {/* Intro — pulled up just behind the title */}
-      <motion.p
-        className="ec-intro"
-        initial={{ opacity: 0, y: 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={RISE(0.16)}
-      >
+      {/* Intro pulled up behind the rising title */}
+      <motion.p className="ec-intro"
+        initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.16)}>
         {card.intro}
       </motion.p>
 
-      {/* Divider */}
-      <motion.div
-        className="ec-divider"
-        aria-hidden="true"
-        initial={{ opacity: 0, scaleX: 0 }}
-        animate={{ opacity: 1, scaleX: 1 }}
+      {/* Divider sweeps in from left */}
+      <motion.div className="ec-divider" aria-hidden="true"
+        initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }}
         style={{ originX: 0 }}
-        transition={{ duration: 0.45, ease: 'easeOut', delay: 0.28 }}
-      />
+        transition={{ duration: 0.45, ease: 'easeOut', delay: 0.28 }} />
 
-      {/* Capabilities — staggered list */}
-      <motion.div
-        className="ec-cap-block"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={RISE(0.32)}
-      >
+      {/* Capabilities stagger in */}
+      <motion.div className="ec-cap-block"
+        initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.32)}>
         <p className="ec-cap-label">Capabilities</p>
         <ul className="ec-bullets">
           {card.capabilities.map((item, i) => (
-            <motion.li
-              key={i}
-              initial={{ opacity: 0, x: -12 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.38, ease: 'easeOut', delay: 0.36 + i * 0.055 }}
-            >
+            <motion.li key={i}
+              initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.38, ease: 'easeOut', delay: 0.36 + i * 0.055 }}>
               {item}
             </motion.li>
           ))}
@@ -205,44 +182,30 @@ function ActiveContent({ card, onNavigate }) {
   )
 }
 
-/* ── Preview card — minimal with dot grid ───────────────────────────────────── */
+/* ── Preview card ───────────────────────────────────────────────────────────── */
 function PreviewContent({ card, onNavigate }) {
   return (
     <div className="ec-inner ec-inner--preview">
+      {/* Electric blue orb glow — bottom-right corner */}
+      <div className="ec-preview-glow" aria-hidden="true" />
 
-      {/* Number + arrow */}
-      <motion.div
-        className="ec-toprow"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={FADE(0.05)}
-      >
+      <motion.div className="ec-toprow"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.05)}>
         <span className="ec-preview-num">{card.number}</span>
-        <button
-          className="ec-arrow-btn"
+        <button className="ec-arrow-btn"
           onClick={(e) => { e.stopPropagation(); onNavigate() }}
-          aria-label={`Explore ${card.title}`}
-        >
+          aria-label={`Explore ${card.title}`}>
           <ArrowIcon />
         </button>
       </motion.div>
 
-      {/* Dot grid */}
-      <motion.div
-        className="ec-preview-dots"
-        aria-hidden="true"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={FADE(0.10)}
-      />
+      {/* Dot texture — masked to bottom-right corner */}
+      <motion.div className="ec-preview-dots" aria-hidden="true"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.10)} />
 
-      {/* Title footer */}
-      <motion.div
-        className="ec-preview-footer"
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={RISE(0.08)}
-      >
+      {/* Title rises from below */}
+      <motion.div className="ec-preview-footer"
+        initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.08)}>
         <h3 className="ec-preview-title">{card.title}</h3>
       </motion.div>
     </div>
@@ -252,10 +215,19 @@ function PreviewContent({ card, onNavigate }) {
 /* ── Main component ─────────────────────────────────────────────────────────── */
 export default function ExpertiseCarousel() {
   const [activeCard, setActiveCard] = useState(0)
+  const [cardOffset, setCardOffset] = useState(() => computeOffset())
   const activeCardRef = useRef(0)
   const navigate = useNavigate()
 
+  /* keep ref in sync */
   useEffect(() => { activeCardRef.current = activeCard }, [activeCard])
+
+  /* update offset on resize */
+  useEffect(() => {
+    const onResize = () => setCardOffset(computeOffset())
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     registerCarousel({
@@ -277,6 +249,9 @@ export default function ExpertiseCarousel() {
         </div>
 
         <div className="ec-carousel-wrap" role="region" aria-label="Expertise cards">
+          {/* Left-edge shadow — exiting cards disappear behind this */}
+          <div className="ec-left-shadow" aria-hidden="true" />
+
           {CARDS.map((card, i) => {
             const pos       = i - activeCard
             const isActive  = pos === 0
@@ -288,7 +263,7 @@ export default function ExpertiseCarousel() {
                 key={card.number}
                 className={`expertise-card${isActive ? ' expertise-card--active' : ''}`}
                 style={{ zIndex: isActive ? 3 : isPreview ? 2 : isVisible ? 1 : 0 }}
-                animate={getCardAnim(pos)}
+                animate={getCardAnim(pos, cardOffset)}
                 transition={SLIDE_TRANS}
                 onClick={() => isPreview && setActiveCard(i)}
                 role={isPreview ? 'button' : undefined}
@@ -300,29 +275,16 @@ export default function ExpertiseCarousel() {
                   }
                 }}
               >
-                {/* Content switches with AnimatePresence for seamless crossfade */}
                 <AnimatePresence mode="wait" initial={false}>
                   {isActive ? (
-                    <motion.div
-                      key={`active-${card.number}`}
-                      className="ec-content-layer"
-                      exit={{ opacity: 0, transition: { duration: 0.18 } }}
-                    >
-                      <ActiveContent
-                        card={card}
-                        onNavigate={() => navigate(card.route)}
-                      />
+                    <motion.div key={`a-${card.number}`} className="ec-content-layer"
+                      exit={{ opacity: 0, transition: { duration: 0.18 } }}>
+                      <ActiveContent card={card} onNavigate={() => navigate(card.route)} />
                     </motion.div>
                   ) : (
-                    <motion.div
-                      key={`preview-${card.number}`}
-                      className="ec-content-layer"
-                      exit={{ opacity: 0, transition: { duration: 0.14 } }}
-                    >
-                      <PreviewContent
-                        card={card}
-                        onNavigate={() => navigate(card.route)}
-                      />
+                    <motion.div key={`p-${card.number}`} className="ec-content-layer"
+                      exit={{ opacity: 0, transition: { duration: 0.14 } }}>
+                      <PreviewContent card={card} onNavigate={() => navigate(card.route)} />
                     </motion.div>
                   )}
                 </AnimatePresence>
