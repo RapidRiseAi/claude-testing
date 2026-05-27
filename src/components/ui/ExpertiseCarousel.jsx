@@ -218,7 +218,6 @@ export default function ExpertiseCarousel() {
   const [activeCard, setActiveCard] = useState(0)
   const [cardOffset, setCardOffset] = useState(() => computeOffset())
   const activeCardRef = useRef(0)
-  const sectionRef    = useRef(null)
   const navigate = useNavigate()
 
   /* keep ref in sync */
@@ -240,30 +239,8 @@ export default function ExpertiseCarousel() {
     })
   }, [])
 
-  /* Shadow control: bidirectional IntersectionObserver.
-     When expertise section enters view → add .active to #ec-global-shadow
-     (CSS transition kicks in after 1.8s delay so cube is settled first).
-     When section leaves → remove .active and shadow fades out quickly. */
-  useEffect(() => {
-    const el     = sectionRef.current
-    const shadow = document.getElementById('ec-global-shadow')
-    if (!el || !shadow) return
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          shadow.classList.add('active')
-        } else {
-          shadow.classList.remove('active')
-        }
-      },
-      { threshold: 0.2 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
-
   return (
-    <section ref={sectionRef} className="expertise-section" data-carousel="" aria-label="Our expertise">
+    <section className="expertise-section" data-carousel="" aria-label="Our expertise">
       <div className="expertise-left" aria-hidden="true" />
 
       <div className="expertise-right">

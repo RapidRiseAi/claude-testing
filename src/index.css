@@ -1007,42 +1007,42 @@ h2 {
   position: relative;
 }
 
-/* ── Global carousel shadow ───────────────────────────────────────────────────
-   position: fixed at z-index 0 — placed in the DOM BEFORE #canvas-container
-   (also z-index 0). The canvas composites over the shadow; its transparent
-   pixels (background) reveal the shadow; its opaque pixels (sphere/cube) paint
-   on top → the sphere and cube sit genuinely ABOVE the shadow layer.
-
-   Left side: solid #000000 all the way to the screen edge.
-   Right side: fades to transparent over the carousel's left edge so the active
-   card emerges cleanly from the dark zone.
-
-   Hidden by default; revealed via the .active class added/removed by
-   IntersectionObserver in ExpertiseCarousel when the section enters/leaves view. */
+/* ── Shadow layer 1 — behind the canvas (below sphere/cube) ──────────────────
+   Placed in the DOM BEFORE #canvas-container, same z-index: 0.
+   The canvas composites on top; its transparent pixels (background) reveal this
+   solid black; its opaque pixels (sphere/cube) paint above it.
+   Result: sphere and cube genuinely layer ABOVE this element. */
 #ec-global-shadow {
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
-  /* Same width as before: left column (43vw) + carousel padding (5.5vw) */
-  width: calc(43% + clamp(55px, 5.5vw, 90px));
-  background: linear-gradient(to right,
-    #000000 0%,
-    #000000 88%,
-    rgba(0, 0, 0, 0.85) 93%,
-    transparent 100%
-  );
+  width: 43%; /* = left column width */
+  background: #000000;
   z-index: 0;
   pointer-events: none;
-  opacity: 0;
-  /* Fast fade-out (no delay) when section leaves; slow fade-in when it enters */
-  transition: opacity 0.5s ease;
 }
 
-#ec-global-shadow.active {
-  opacity: 1;
-  /* 1.8s delay on enter — cube reaches END_X before shadow materialises */
-  transition: opacity 0.9s ease 1.8s;
+/* ── Shadow layer 2 — above the carousel cards ────────────────────────────────
+   Inside #scroll-content (z-index: 2 stacking context) at z-index: 10, so it
+   sits above the cards (which have inline z-index 1-3 via Framer Motion).
+   Cards exiting left slide behind this fade and disappear.
+   Width matches expertise-right's padding-left so it perfectly covers the gap
+   between the left-column black block and the active card's left edge. */
+.expertise-right::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: clamp(55px, 5.5vw, 90px);
+  background: linear-gradient(to right,
+    #000000 0%,
+    #000000 40%,
+    rgba(0, 0, 0, 0.85) 70%,
+    transparent 100%);
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* ── Section heading ──────────────────────────────────────────────────────── */
@@ -1389,6 +1389,8 @@ h2 {
     padding: 0 6vw 0 6vw;
     min-height: unset;
   }
+  /* No fade-edge pseudo on mobile — left column is hidden, no gap to mask */
+  .expertise-right::before { content: none; }
   .expertise-h2 { white-space: normal; }
   .ec-carousel-wrap { height: clamp(430px, 56vh, 560px); }
   .expertise-card {
