@@ -294,14 +294,14 @@ function _genCommandCube() {
   const R_TOOTH = GR
   const R_BODY  = GR * 0.760
   const R_HOLE  = GR * 0.287
-  const DEPTH   = R  * 0.20   // flat gear-like proportion (not a deep drum)
+  const DEPTH   = R  * 0.34   // clear 3D thickness between the two gear faces
   const FZ      = DEPTH / 2
   const BZ      = -DEPTH / 2
   const period    = Math.PI * 2 / N_TEETH
   const halfTooth = period * 0.42 / 2
 
-  // Modest 3/4 tilt — front face dominant, just enough to reveal the thin depth
-  const TY = Math.PI * 0.14, TX = Math.PI * 0.05
+  // 3/4 tilt — front face dominant, enough to show the gear's full thickness
+  const TY = Math.PI * 0.15, TX = Math.PI * 0.05
   const cY = Math.cos(TY), sY = Math.sin(TY)
   const cX = Math.cos(TX), sX = Math.sin(TX)
   const tilt = (x, y, z) => {
@@ -314,8 +314,9 @@ function _genCommandCube() {
     pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
     tags.push(tag)
   }
-  // Bright vertical edge line joining front face to back face at one (x,y)
-  const edgeLine = (x, y, passes = 2, n = 6) => {
+  // Bright vertical edge line joining front face to back face at one (x,y);
+  // n scales with DEPTH so the line stays densely packed over the thickness
+  const edgeLine = (x, y, passes = 2, n = 11) => {
     for (let pass = 0; pass < passes; pass++)
       for (let k = 0; k <= n; k++) addPt(x, y, FZ - DEPTH * k/n, 0.004, 0)
   }
@@ -357,26 +358,26 @@ function _genCommandCube() {
     corners.push([R_BODY*Math.cos(θf), R_BODY*Math.sin(θf)])
   }
 
-  // Front outline — 3 tight passes (brightest), back outline — 2 passes
+  // Front + back outline — EQUAL passes so both gear faces are equally bright
   for (let pass = 0; pass < 3; pass++)
     for (const [x, y] of outline2d) addPt(x, y, FZ, 0.004, 0)
-  for (let pass = 0; pass < 2; pass++)
+  for (let pass = 0; pass < 3; pass++)
     for (const [x, y] of outline2d) addPt(x, y, BZ, 0.004, 0)
 
   // Connecting EDGES only — bright depth lines at the tooth crease corners,
   // not the full wall surface. This gives the 3D read with clean edges.
-  for (const [x, y] of corners) edgeLine(x, y, 2, 6)
+  for (const [x, y] of corners) edgeLine(x, y, 2, 11)
 
-  // Center hole — front + back rim bright; bore shown by sparse depth lines
+  // Center hole — front + back rim equally bright; bore shown by sparse lines
   const HC = 120
   for (let pass = 0; pass < 3; pass++)
     for (let i = 0; i < HC; i++)
       addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.004, 0)
-  for (let pass = 0; pass < 2; pass++)
+  for (let pass = 0; pass < 3; pass++)
     for (let i = 0; i < HC; i++)
       addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.004, 0)
   for (let i = 0; i < HC; i += 6)
-    edgeLine(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), 1, 5)
+    edgeLine(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), 1, 9)
 
   // Front face fill — densely populate the main surface (normal-size orbs)
   let f = 0, fa = 0
@@ -603,6 +604,11 @@ function InteractiveMiniOrbs({ groupRef }) {
   const localHit = useMemo(() => new THREE.Vector3(), [])
   const hit = useMemo(() => new THREE.Vector3(), [])
   const ndc = useMemo(() => new THREE.Vector2(2, 2), [])
+  // Camera-facing plane through the group origin — used for hover on flat card
+  // shapes (gear etc.) whose orbs lie on a disk, not the globe's sphere shell
+  const hoverPlane = useMemo(() => new THREE.Plane(), [])
+  const camDir     = useMemo(() => new THREE.Vector3(), [])
+  const grpOrigin  = useMemo(() => new THREE.Vector3(), [])
 
   useEffect(() => {
     const canvas = gl.domElement
@@ -797,12 +803,24 @@ function InteractiveMiniOrbs({ groupRef }) {
     raycaster.setFromCamera(ndc, camera)
     let hasHit = false
     if (groupRef?.current && (p < 0.62 || p >= 0.85)) {
-      invMat.copy(groupRef.current.matrixWorld).invert()
-      localRay.copy(raycaster.ray).applyMatrix4(invMat)
-      localSphere.radius = p >= 0.85 ? R * 1.28 : R * Math.max(0.05, 1.0 - collapseT)
-      if (localRay.intersectSphere(localSphere, localHit)) {
-        hit.copy(localHit).applyMatrix4(groupRef.current.matrixWorld)
-        hasHit = true
+      // Globe card and sphere mode: orbs lie on a sphere shell, so intersect
+      // a sphere. Flat card shapes (gear etc.): orbs lie on a disk near the
+      // group origin, so intersect a camera-facing plane through it instead —
+      // this makes the whole surface respond to hover, not just the rim orbs.
+      const flatCard = p >= 0.85 && activeRef.current !== 0
+      if (flatCard) {
+        camera.getWorldDirection(camDir)
+        grpOrigin.setFromMatrixPosition(groupRef.current.matrixWorld)
+        hoverPlane.setFromNormalAndCoplanarPoint(camDir, grpOrigin)
+        if (raycaster.ray.intersectPlane(hoverPlane, hit)) hasHit = true
+      } else {
+        invMat.copy(groupRef.current.matrixWorld).invert()
+        localRay.copy(raycaster.ray).applyMatrix4(invMat)
+        localSphere.radius = p >= 0.85 ? R * 1.28 : R * Math.max(0.05, 1.0 - collapseT)
+        if (localRay.intersectSphere(localSphere, localHit)) {
+          hit.copy(localHit).applyMatrix4(groupRef.current.matrixWorld)
+          hasHit = true
+        }
       }
     }
 
