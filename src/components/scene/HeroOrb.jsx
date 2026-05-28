@@ -270,16 +270,18 @@ function _genBrowserFrame() {
 function _genCommandCube() {
   const pts = []
 
-  const N_TEETH   = 8
-  const R_BODY    = R * 0.66
-  const R_TOOTH   = R * 0.87
-  const R_HOLE    = R * 0.25
-  const DEPTH     = R * 0.26
-  const FZ        = DEPTH / 2
+  // Scale to match globe outer radius (GR = R * 1.28)
+  const GR      = R * 1.25
+  const N_TEETH = 8
+  const R_TOOTH = GR
+  const R_BODY  = GR * 0.760   // valley between teeth
+  const R_HOLE  = GR * 0.287   // center hole
+  const DEPTH   = R  * 0.30
+  const FZ      = DEPTH / 2
+  const BZ      = -DEPTH / 2
   const period    = Math.PI * 2 / N_TEETH
   const halfTooth = period * 0.42 / 2
 
-  // Reduced tilt — front face dominant, depth readable without hiding gear shape
   const TY = Math.PI * 0.11, TX = Math.PI * 0.04
   const cY = Math.cos(TY), sY = Math.sin(TY)
   const cX = Math.cos(TX), sX = Math.sin(TX)
@@ -292,9 +294,6 @@ function _genCommandCube() {
     pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
   }
 
-  // Continuous front-biased z — concentrated at front, fading toward back (no discrete bands)
-  const frontZ = () => FZ - Math.pow(Math.random(), 2) * DEPTH
-
   const gearR = (θ) => {
     const t = ((θ % period) + period) % period
     return Math.min(t, period - t) <= halfTooth ? R_TOOTH : R_BODY
@@ -302,7 +301,7 @@ function _genCommandCube() {
 
   // Gear outline: valley arc → rising wall → tooth top → falling wall
   const outline2d = [], toothTips = []
-  const NV = 12, NW = 5, NT = 10
+  const NV = 14, NW = 6, NT = 12
   for (let i = 0; i < N_TEETH; i++) {
     const θc = i * period
     const θv = θc - (period - halfTooth)
@@ -328,51 +327,53 @@ function _genCommandCube() {
     }
   }
 
-  const BZ = FZ - DEPTH
+  // Front face outline — 5 dense passes, tight jitter → bright glowing edge lines
+  for (let pass = 0; pass < 5; pass++)
+    for (const [x, y] of outline2d) addPt(x, y, FZ, 0.005)
 
-  // Front face outline — 2 passes, tight jitter
-  for (let pass = 0; pass < 2; pass++)
-    for (const [x, y] of outline2d) addPt(x, y, FZ, 0.007 + pass*0.004)
+  // Back edge outline — 3 passes for equally bright far silhouette
+  for (let pass = 0; pass < 3; pass++)
+    for (const [x, y] of outline2d) addPt(x, y, BZ, 0.005)
 
-  // Back edge outline — 1 pass so far silhouette edge is equally visible
-  for (const [x, y] of outline2d) addPt(x, y, BZ, 0.010)
+  // Tooth tip extra brightness — very tight, 4 passes front + 3 back
+  for (let pass = 0; pass < 4; pass++)
+    for (const [x, y] of toothTips) addPt(x, y, FZ, 0.003)
+  for (let pass = 0; pass < 3; pass++)
+    for (const [x, y] of toothTips) addPt(x, y, BZ, 0.004)
 
-  // Extra tooth tip emphasis — front and back so all tooth corners are bright
-  for (const [x, y] of toothTips) addPt(x, y, FZ, 0.005)
-  for (const [x, y] of toothTips) addPt(x, y, BZ, 0.007)
-
-  // Side walls — uniform z so near AND far silhouette edges have equal density
+  // Side walls — 14 uniform z samples (equal density near + far edge)
   for (const [x, y] of outline2d)
-    for (let k = 0; k < 10; k++) addPt(x, y, FZ - Math.random() * DEPTH, 0.013)
+    for (let k = 0; k < 14; k++) addPt(x, y, FZ - Math.random() * DEPTH, 0.010)
 
-  // Center hole — front rim 2 passes, back rim 1 pass, uniform side wall
-  const HC = 100
-  for (let pass = 0; pass < 2; pass++)
+  // Center hole — 5 front + 3 back passes, 12 uniform side samples
+  const HC = 140
+  for (let pass = 0; pass < 5; pass++)
     for (let i = 0; i < HC; i++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.007 + pass*0.003)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.005)
+  for (let pass = 0; pass < 3; pass++)
+    for (let i = 0; i < HC; i++)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.005)
   for (let i = 0; i < HC; i++)
-    addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.010)
-  for (let i = 0; i < HC; i++)
-    for (let k = 0; k < 8; k++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - Math.random() * DEPTH, 0.012)
+    for (let k = 0; k < 12; k++)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - Math.random() * DEPTH, 0.010)
 
-  // Front face fill
+  // Fill — sparse so interior stays dark and edges dominate
   let f = 0, fa = 0
-  while (f < 600 && fa++ < 2400) {
-    const x = (Math.random()*2-1)*R_TOOTH*1.02, y = (Math.random()*2-1)*R_TOOTH*1.02
+  while (f < 220 && fa++ < 1100) {
+    const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
-    addPt(x, y, FZ, 0.020)
+    addPt(x, y, FZ, 0.024)
     f++
   }
 
-  // Volumetric fill — front-biased depth
+  // Sparse volumetric fill
   let v = 0, va = 0
-  while (v < 400 && va++ < 1800) {
-    const x = (Math.random()*2-1)*R_TOOTH*1.02, y = (Math.random()*2-1)*R_TOOTH*1.02
+  while (v < 120 && va++ < 700) {
+    const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
-    addPt(x, y, frontZ(), 0.018)
+    addPt(x, y, FZ - Math.random() * DEPTH, 0.022)
     v++
   }
 
