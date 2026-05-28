@@ -202,6 +202,7 @@ function _padToBig(pts, targetN) {
 
 function _genBrowserFrame() {
   const pts = []
+  const GR = R * 1.28  // larger globe
 
   // Y-axis tilt (~18°) gives 3/4-depth perspective so the globe reads as 3D
   const TY = Math.PI * 0.10
@@ -220,33 +221,47 @@ function _genBrowserFrame() {
   }
 
   // Outer silhouette rim — great circle facing camera (z = 0 plane)
-  arc(t => [R*Math.cos(t*Math.PI*2), R*Math.sin(t*Math.PI*2), 0], 160, 0.014)
+  arc(t => [GR*Math.cos(t*Math.PI*2), GR*Math.sin(t*Math.PI*2), 0], 160, 0.014)
 
   // Equator — front half (more points = brighter), rear half (fewer = dimmer)
-  arc(t => [ R*Math.cos(t*Math.PI),          0,  R*Math.sin(t*Math.PI)],         100, 0.016)
-  arc(t => [ R*Math.cos(Math.PI+t*Math.PI),  0,  R*Math.sin(Math.PI+t*Math.PI)],  38, 0.016)
+  arc(t => [ GR*Math.cos(t*Math.PI),          0,  GR*Math.sin(t*Math.PI)],         100, 0.016)
+  arc(t => [ GR*Math.cos(Math.PI+t*Math.PI),  0,  GR*Math.sin(Math.PI+t*Math.PI)],  38, 0.016)
 
-  // Upper latitude y = R·0.42
-  const rU = R * Math.sqrt(1 - 0.42*0.42)
-  arc(t => [ rU*Math.cos(t*Math.PI),         R*0.42,  rU*Math.sin(t*Math.PI)],   70, 0.015)
-  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI), R*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 26, 0.015)
+  // Upper latitude y = GR·0.42
+  const rU = GR * Math.sqrt(1 - 0.42*0.42)
+  arc(t => [ rU*Math.cos(t*Math.PI),         GR*0.42,  rU*Math.sin(t*Math.PI)],   70, 0.015)
+  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI), GR*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 26, 0.015)
 
-  // Lower latitude y = -R·0.42
-  arc(t => [ rU*Math.cos(t*Math.PI),        -R*0.42,  rU*Math.sin(t*Math.PI)],   70, 0.015)
-  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI),-R*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 26, 0.015)
+  // Lower latitude y = -GR·0.42
+  arc(t => [ rU*Math.cos(t*Math.PI),        -GR*0.42,  rU*Math.sin(t*Math.PI)],   70, 0.015)
+  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI),-GR*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 26, 0.015)
 
   // Center longitude φ=π/2 — vertical line through globe center, front-facing
-  arc(t => [0,  R*Math.sin((t-.5)*Math.PI),  R*Math.cos((t-.5)*Math.PI)],  100, 0.015)
-  arc(t => [0,  R*Math.sin((t-.5)*Math.PI), -R*Math.cos((t-.5)*Math.PI)],   38, 0.017)
+  arc(t => [0,  GR*Math.sin((t-.5)*Math.PI),  GR*Math.cos((t-.5)*Math.PI)],  100, 0.015)
+  arc(t => [0,  GR*Math.sin((t-.5)*Math.PI), -GR*Math.cos((t-.5)*Math.PI)],   38, 0.017)
 
   // Right longitude φ=π/3 (60° right) — softer side curve
   const rx = 0.5, rz = Math.sqrt(1 - rx*rx)
-  arc(t => [ R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI),  R*rz*Math.cos((t-.5)*Math.PI)],  68, 0.017)
-  arc(t => [ R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI), -R*rz*Math.cos((t-.5)*Math.PI)],  28, 0.017)
+  arc(t => [ GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI),  GR*rz*Math.cos((t-.5)*Math.PI)],  68, 0.017)
+  arc(t => [ GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  28, 0.017)
 
   // Left longitude φ=2π/3 (symmetric, same density)
-  arc(t => [-R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI),  R*rz*Math.cos((t-.5)*Math.PI)],  68, 0.017)
-  arc(t => [-R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI), -R*rz*Math.cos((t-.5)*Math.PI)],  28, 0.017)
+  arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI),  GR*rz*Math.cos((t-.5)*Math.PI)],  68, 0.017)
+  arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  28, 0.017)
+
+  // Scattered surface orbs — uniform random distribution across sphere surface
+  for (let i = 0; i < 320; i++) {
+    const phi   = Math.acos(2 * Math.random() - 1)
+    const theta = Math.random() * Math.PI * 2
+    const x = GR * Math.sin(phi) * Math.cos(theta)
+    const y = GR * Math.cos(phi)
+    const z = GR * Math.sin(phi) * Math.sin(theta)
+    pts.push(
+      x*cT + z*sT + (Math.random()-.5)*0.04,
+      y            + (Math.random()-.5)*0.04,
+     -x*sT + z*cT + (Math.random()-.5)*0.04,
+    )
+  }
 
   return _padToBig(pts, N_ORB)
 }
