@@ -848,20 +848,40 @@ function PulsatingRings() {
     })
     return { positions: new Float32Array(pts), count: pts.length / 3 }
   }, [])
-  const matRef = useRef()
+  const { size: viewport } = useThree()
+  const pointsRef = useRef()
+  const material = useMemo(() => new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uMorph:   { value: 0 },
+      uSize:    { value: 0.022 },
+      uScale:   { value: viewport.height / 2 },
+      uMap:     { value: tex },
+      uColor:   { value: new THREE.Color('#c0f4ff') },
+      uOpacity: { value: 0.28 },
+    },
+    vertexShader: MORPH_VERT,
+    fragmentShader: MORPH_FRAG,
+  }), [tex, viewport.height])
   useFrame(({ clock }) => {
-    if (!matRef.current) return
-    const fade = Math.max(0, 1 - scrollState.progress / 0.4)
-    matRef.current.opacity = (0.12 + 0.32 * (0.5 + 0.5 * Math.sin(clock.getElapsedTime() * 0.9))) * fade
+    const p = scrollState.progress
+    const ct = gridCollapseT(p)
+    material.uniforms.uMorph.value  = ct
+    material.uniforms.uScale.value  = viewport.height / 2
+    const fade = collapseFade(ct)
+    const pulse = 0.12 + 0.32 * (0.5 + 0.5 * Math.sin(clock.getElapsedTime() * 0.9))
+    material.uniforms.uOpacity.value = pulse * fade
+    if (pointsRef.current) pointsRef.current.visible = fade > 0.005
   })
   return (
-    <points renderOrder={9}>
+    <points ref={pointsRef} renderOrder={9}>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial ref={matRef} size={0.022} map={tex} color="#c0f4ff" sizeAttenuation
-        transparent opacity={0.28} blending={THREE.AdditiveBlending} depthWrite={false}
-        depthTest={false} alphaTest={0.01} />
+      <primitive object={material} attach="material" />
     </points>
   )
 }
@@ -885,23 +905,28 @@ function FlowParticles() {
   const tex = getGlowDotTexture()
 
   useFrame((_, delta) => {
-    if (matRef.current) {
-      const fade = Math.max(0, 1 - scrollState.progress / 0.35)
-      matRef.current.opacity = 0.96 * fade
-    }
+    const progress = scrollState.progress
+    // Collapse toward sphere centre faster than surface orbs
+    const colT     = Math.min(1, Math.sqrt(progress / 0.35))
+    const colScale = 1 - colT
+    const fade     = Math.max(0, 1 - progress / 0.35)
+    if (matRef.current) matRef.current.opacity = 0.96 * fade
     if (!stateRef.current || !geomRef.current) return
     const pos = posBuffer.current
-    stateRef.current.forEach((p, i) => {
-      p.t += p.speed * delta
-      if (p.t >= 1.0) {
-        p.t -= 1.0
-        if (Math.random() < 0.20) p.arcIdx = Math.floor(Math.random() * FLOW_ARCS.length)
+    stateRef.current.forEach((fp, i) => {
+      fp.t += fp.speed * delta
+      if (fp.t >= 1.0) {
+        fp.t -= 1.0
+        if (Math.random() < 0.20) fp.arcIdx = Math.floor(Math.random() * FLOW_ARCS.length)
       }
-      const arc = FLOW_ARCS[p.arcIdx]
+      const arc = FLOW_ARCS[fp.arcIdx]
       if (!arc || arc.length === 0) return
-      const idx = Math.min(Math.floor(p.t * (arc.length - 1)), arc.length - 1)
-      const pt = arc[idx]
-      pos[i * 3] = pt[0]; pos[i * 3 + 1] = pt[1]; pos[i * 3 + 2] = pt[2]
+      const idx = Math.min(Math.floor(fp.t * (arc.length - 1)), arc.length - 1)
+      const pt  = arc[idx]
+      // Scale arc position toward origin (sphere centre) as collapse progresses
+      pos[i * 3]     = pt[0] * colScale
+      pos[i * 3 + 1] = pt[1] * colScale
+      pos[i * 3 + 2] = pt[2] * colScale
     })
     geomRef.current.attributes.position.needsUpdate = true
   })
@@ -936,8 +961,18 @@ function IconPlane({ center, texIndex }) {
   const meshRef = useRef()
   const matRef = useRef()
   useFrame(() => {
-    const fade = Math.max(0, 1 - scrollState.progress / 0.33)
-    if (meshRef.current) meshRef.current.scale.setScalar(fade)
+    const prog = scrollState.progress
+    // Move toward sphere centre (group origin) faster than surface orbs
+    const colT = Math.min(1, Math.sqrt(prog / 0.35))
+    const fade = Math.max(0, 1 - prog / 0.33)
+    if (meshRef.current) {
+      meshRef.current.position.set(
+        position.x * (1 - colT),
+        position.y * (1 - colT),
+        position.z * (1 - colT),
+      )
+      meshRef.current.scale.setScalar(Math.max(0.001, fade))
+    }
     if (matRef.current) matRef.current.opacity = fade
   })
   return (
