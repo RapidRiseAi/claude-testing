@@ -113,8 +113,10 @@ const JUNCTION_PENT_POSITIONS = (() => {
                          into card shape. Always fully opaque throughout.
  ────────────────────────────────────────────────────────────────────────────── */
 function smoothstep(t)     { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c) }
-function gridCollapseT(p)  { return smoothstep(p / 0.76) }
-function collapseFade(t)   { return Math.max(0, 1.0 - t * 1.5) }
+// Grid/spokes/dots: sqrt ease-out (immediately visible), peaks at p=0.45, gone by p≈0.37
+// Faster than surface orbs (which peak at p=0.40 but never disappear)
+function gridCollapseT(p)  { return Math.min(1, Math.sqrt(p / 0.45)) }
+function collapseFade(t)   { return Math.max(0, 1.0 - t * 1.1) }
 
 /* ── Card shape system ──────────────────────────────────────────────────────────
    N_ORB surface orbs are reused as the section-2 card particles.
