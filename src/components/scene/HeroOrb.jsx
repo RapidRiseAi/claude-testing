@@ -202,43 +202,51 @@ function _padToBig(pts, targetN) {
 
 function _genBrowserFrame() {
   const pts = []
-  const CR = R * 0.10   // corner radius for all slabs
-  const TH = R * 0.055  // slab half-thickness (front/back face separation)
-  const BK = 0.94       // back-face scale factor
 
-  // Build one page slab: thick front face + thinner back face + 4 corner connectors
-  const slab = (cx, cy, cz, hw, hh, nWf, nHf, nCf, nWb, nHb, nCb) => {
-    _addRoundedRect(pts, cx, cy, cz+TH, hw,    hh,    CR, nWf, nHf, nCf, 0.024)
-    _addRoundedRect(pts, cx, cy, cz-TH, hw*BK, hh*BK, CR, nWb, nHb, nCb, 0.020)
-    for (const [sx,sy] of [[1,1],[1,-1],[-1,1],[-1,-1]])
-      _addLine(pts, cx+sx*(hw-CR*.4),    cy+sy*(hh-CR*.4),    cz+TH,
-                    cx+sx*(hw*BK-CR*.38), cy+sy*(hh*BK-CR*.38), cz-TH, 5, 0.016)
+  // Y-axis tilt (~18°) gives 3/4-depth perspective so the globe reads as 3D
+  const TY = Math.PI * 0.10
+  const cT = Math.cos(TY), sT = Math.sin(TY)
+
+  // Emit N+1 points along a parametric sphere-surface curve, with tilt + jitter
+  const arc = (fn, N, jit) => {
+    for (let i = 0; i <= N; i++) {
+      const [x, y, z] = fn(i / N)
+      pts.push(
+        x*cT + z*sT + (Math.random()-.5)*jit,
+        y            + (Math.random()-.5)*jit,
+       -x*sT + z*cT + (Math.random()-.5)*jit,
+      )
+    }
   }
 
-  // ── Three floating page slabs: back/large/low → front/small/high ─────────
-  // This diagonal stack reads immediately as "climbing the rankings"
-  slab(0, -R*.24, -R*.30, R*.68, R*.44, 38, 24, 12, 25, 16, 8)  // rank 3 — back
-  slab(0,  0,      0,     R*.60, R*.39, 34, 22, 11, 22, 14, 8)  // rank 2 — mid
-  slab(0,  R*.24,  R*.30, R*.52, R*.34, 30, 19, 10, 19, 12, 7)  // rank 1 — front
+  // Outer silhouette rim — great circle facing camera (z = 0 plane)
+  arc(t => [R*Math.cos(t*Math.PI*2), R*Math.sin(t*Math.PI*2), 0], 160, 0.014)
 
-  // ── Upward ranking path — runs through all three layers ───────────────────
-  const pX = R * 0.16
-  _addBezier(pts,
-    [pX,  -R*.62, -R*.42],
-    [pX,  -R*.18, -R*.12],
-    [pX,   R*.18,  R*.12],
-    [pX,   R*.60,  R*.40],
-    66, 0.018)
+  // Equator — front half (more points = brighter), rear half (fewer = dimmer)
+  arc(t => [ R*Math.cos(t*Math.PI),          0,  R*Math.sin(t*Math.PI)],         100, 0.016)
+  arc(t => [ R*Math.cos(Math.PI+t*Math.PI),  0,  R*Math.sin(Math.PI+t*Math.PI)],  38, 0.016)
 
-  // ── Three rank nodes — growing in size toward the top/front slab ─────────
-  const node = (nx, ny, nz, r, n1, n2, n3) => {
-    _addCircle(pts, nx, ny, nz, r,      n1, 0.010)
-    _addCircle(pts, nx, ny, nz, r*.52,  n2, 0.007)
-    if (n3) _addCircle(pts, nx, ny, nz, r*.22, n3, 0.004)
-  }
-  node(pX+R*.02, -R*.24, -R*.30, R*.040, 18, 10,  0)  // rank 3 node
-  node(pX+R*.04,  0,      0,     R*.050, 22, 12,  0)  // rank 2 node
-  node(pX+R*.06,  R*.24,  R*.30, R*.060, 26, 14, 10)  // rank 1 — largest, bright core
+  // Upper latitude y = R·0.42
+  const rU = R * Math.sqrt(1 - 0.42*0.42)
+  arc(t => [ rU*Math.cos(t*Math.PI),         R*0.42,  rU*Math.sin(t*Math.PI)],   70, 0.015)
+  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI), R*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 26, 0.015)
+
+  // Lower latitude y = -R·0.42
+  arc(t => [ rU*Math.cos(t*Math.PI),        -R*0.42,  rU*Math.sin(t*Math.PI)],   70, 0.015)
+  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI),-R*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 26, 0.015)
+
+  // Center longitude φ=π/2 — vertical line through globe center, front-facing
+  arc(t => [0,  R*Math.sin((t-.5)*Math.PI),  R*Math.cos((t-.5)*Math.PI)],  100, 0.015)
+  arc(t => [0,  R*Math.sin((t-.5)*Math.PI), -R*Math.cos((t-.5)*Math.PI)],   38, 0.017)
+
+  // Right longitude φ=π/3 (60° right) — softer side curve
+  const rx = 0.5, rz = Math.sqrt(1 - rx*rx)
+  arc(t => [ R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI),  R*rz*Math.cos((t-.5)*Math.PI)],  68, 0.017)
+  arc(t => [ R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI), -R*rz*Math.cos((t-.5)*Math.PI)],  28, 0.017)
+
+  // Left longitude φ=2π/3 (symmetric, same density)
+  arc(t => [-R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI),  R*rz*Math.cos((t-.5)*Math.PI)],  68, 0.017)
+  arc(t => [-R*rx*Math.cos((t-.5)*Math.PI),  R*Math.sin((t-.5)*Math.PI), -R*rz*Math.cos((t-.5)*Math.PI)],  28, 0.017)
 
   return _padToBig(pts, N_ORB)
 }
