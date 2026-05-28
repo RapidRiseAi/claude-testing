@@ -221,34 +221,34 @@ function _genBrowserFrame() {
   // Outer rim — full ring
   arc(t => [GR*Math.cos(t*Math.PI*2), GR*Math.sin(t*Math.PI*2), 0], 480, 0.004)
 
-  // Equator: front dense solid, rear moderately dense
-  arc(t => [ GR*Math.cos(t*Math.PI),         0,  GR*Math.sin(t*Math.PI)],         360, 0.004)
-  arc(t => [ GR*Math.cos(Math.PI+t*Math.PI), 0,  GR*Math.sin(Math.PI+t*Math.PI)], 160, 0.012)
+  // Equator: front and rear equally dense — same brightness both sides
+  arc(t => [ GR*Math.cos(t*Math.PI),         0,  GR*Math.sin(t*Math.PI)],         360, 0.005)
+  arc(t => [ GR*Math.cos(Math.PI+t*Math.PI), 0,  GR*Math.sin(Math.PI+t*Math.PI)], 360, 0.005)
 
   // Upper latitude y = GR·0.42
   const rU = GR * Math.sqrt(1 - 0.42*0.42)
-  arc(t => [ rU*Math.cos(t*Math.PI),          GR*0.42,  rU*Math.sin(t*Math.PI)],          280, 0.004)
-  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI),  GR*0.42,  rU*Math.sin(Math.PI+t*Math.PI)],  120, 0.012)
+  arc(t => [ rU*Math.cos(t*Math.PI),          GR*0.42,  rU*Math.sin(t*Math.PI)],         280, 0.005)
+  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI),  GR*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 280, 0.005)
 
   // Lower latitude y = -GR·0.42
-  arc(t => [ rU*Math.cos(t*Math.PI),         -GR*0.42,  rU*Math.sin(t*Math.PI)],          280, 0.004)
-  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI), -GR*0.42,  rU*Math.sin(Math.PI+t*Math.PI)],  120, 0.012)
+  arc(t => [ rU*Math.cos(t*Math.PI),         -GR*0.42,  rU*Math.sin(t*Math.PI)],         280, 0.005)
+  arc(t => [ rU*Math.cos(Math.PI+t*Math.PI), -GR*0.42,  rU*Math.sin(Math.PI+t*Math.PI)], 280, 0.005)
 
-  // Center longitude: front dense, rear moderate
-  arc(t => [0,  GR*Math.sin((t-.5)*Math.PI),  GR*Math.cos((t-.5)*Math.PI)],  360, 0.004)
-  arc(t => [0,  GR*Math.sin((t-.5)*Math.PI), -GR*Math.cos((t-.5)*Math.PI)],  160, 0.012)
+  // Center longitude: front and rear equally dense
+  arc(t => [0,  GR*Math.sin((t-.5)*Math.PI),  GR*Math.cos((t-.5)*Math.PI)],  360, 0.005)
+  arc(t => [0,  GR*Math.sin((t-.5)*Math.PI), -GR*Math.cos((t-.5)*Math.PI)],  360, 0.005)
 
   // Right longitude φ=60°
   const rx = 0.5, rz = Math.sqrt(1 - rx*rx)
-  arc(t => [ GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI),  GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.004)
-  arc(t => [ GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  120, 0.012)
+  arc(t => [ GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI),  GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.005)
+  arc(t => [ GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.005)
 
   // Left longitude φ=120°
-  arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI),  GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.004)
-  arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  120, 0.012)
+  arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI),  GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.005)
+  arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.005)
 
   // Fibonacci sphere surface fill — even distribution, no clusters
-  // arc anchors above: 481+361+161+281+121+281+121+361+161+281+121+281+121 = 3133
+  // arc anchors above: 481+361+361+281+281+281+281+361+361+281+281+281+281 = 4173
   const N_SURF = 2500
   const golden = Math.PI * (3 - Math.sqrt(5))
   for (let i = 0; i < N_SURF; i++) {
@@ -396,7 +396,7 @@ const MINI_VERT = `
     }
     float g = pow(maxG, 1.5);
     float tw = 0.22 * sin(uTime * 1.6 + aSeed * 12.566);
-    vGlow = clamp(g + tw * 0.5, 0.0, 1.6) * cursorOff;
+    vGlow = clamp(g + tw * 0.5, 0.0, 1.6);
     vCardBlend = uMorphCard;
 
     float cd = distance(worldPos, uCursorWorld);
@@ -496,10 +496,10 @@ function InteractiveMiniOrbs({ groupRef }) {
   }, [gl, ndc])
 
   // Globe card arc/scatter boundary — must match _genBrowserFrame anchor counts
-  // arc anchors: 481+361+161+281+121+281+121+361+161+281+121+281+121 = 3133
-  // scatter anchors: 2500  →  total base = 5633
-  const GLOBE_ARC_BASE  = 3133
-  const GLOBE_BASE      = 5633
+  // arc anchors: 481+361+361+281+281+281+281+361+361+281+281+281+281 = 4173
+  // scatter anchors: 2500  →  total base = 6673
+  const GLOBE_ARC_BASE  = 4173
+  const GLOBE_BASE      = 6673
 
   const { positions, sizes, seeds, tags } = useMemo(() => {
     const N = 48
@@ -657,13 +657,13 @@ function InteractiveMiniOrbs({ groupRef }) {
       trail[i].w = Math.min(trail[i].w + delta, TRAIL_LIFETIME + 1)
     }
 
-    // Cursor interaction only while the orbs are in sphere mode
+    // Cursor interaction in sphere mode and card mode
     raycaster.setFromCamera(ndc, camera)
     let hasHit = false
-    if (groupRef?.current && p < 0.62) {
+    if (groupRef?.current && (p < 0.62 || p >= 0.85)) {
       invMat.copy(groupRef.current.matrixWorld).invert()
       localRay.copy(raycaster.ray).applyMatrix4(invMat)
-      localSphere.radius = R * Math.max(0.05, 1.0 - collapseT)
+      localSphere.radius = p >= 0.85 ? R * 1.28 : R * Math.max(0.05, 1.0 - collapseT)
       if (localRay.intersectSphere(localSphere, localHit)) {
         hit.copy(localHit).applyMatrix4(groupRef.current.matrixWorld)
         hasHit = true
