@@ -848,6 +848,9 @@ export default function HeroOrb() {
       if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false
         setShowHeavy(false)
+      } else if (!heavyRef.current && scrollState.progress < 0.63) {
+        heavyRef.current = true
+        setShowHeavy(true)
       }
     }
     window.addEventListener('scroll', onScroll, { passive: true })

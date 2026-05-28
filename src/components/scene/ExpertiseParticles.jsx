@@ -1,23 +1,27 @@
 /**
  * ExpertiseParticles — one unified N=420 particle system that serves both:
  *
- *   Hero hand-off  (p 0.35 → 0.85)
- *     Particles start on the sphere surface (same positions as the fading
- *     InteractiveMiniOrbs) and morph into the active card's 3-D shape.
- *     This creates the illusion that the sphere's own orbs rearrange.
+ *   Hero hand-off  (p 0.35 → 0.88)  — THREE STATES, fully reversible:
+ *     Phase A (p 0.35→0.62): uMorphCore 0→1  — sphere surface → tight core
+ *     Phase B (p 0.62→0.88): uMorphTarget 0→1 — tight core → active card shape
+ *     Scrolling back simply reverses uMorphTarget then uMorphCore.
  *
- *   Card-change transition (~1 s total)
- *     Phase 1 — collapse: group scale 1 → 0.10  (380 ms, ease-in)
- *     Phase 2 — expand:  group scale 0.10 → 1   (680 ms, ease-out)
- *     At the collapse peak the posTarget buffer is swapped to the new card.
+ *   Card-change transition (~1 s total, only at p ≥ 0.88):
+ *     Collapse: uMorphTarget 1→0  (COLLAPSE_DUR s, ease-in)
+ *     Swap:     posTarget buffer swapped at uMorphTarget=0
+ *     Expand:   uMorphTarget 0→1  (EXPAND_DUR s, ease-out)
  *     Visual: "orbs contract to a glowing core, then bloom into the new shape."
  *
- *   Reduced-motion: immediate buffer swap + 400 ms opacity crossfade.
+ *   If scroll retreats below 0.88 mid-transition, the transition is aborted
+ *   and scroll-driven values resume — the sphere fully reforms on scroll-up.
+ *
+ *   Reduced-motion: immediate buffer swap.
  *
  * Performance
  *   - Single <points> element; no per-frame position array writes except on
  *     card change (one Float32Array.set + needsUpdate = true).
- *   - Only group.scale and material.uniforms change every frame.
+ *   - Only group.position/scale, rotation.y, and material.uniforms change
+ *     every frame.
  *   - Replaces the old CarouselOverlay (7 separate static point-clouds).
  */
 
@@ -34,19 +38,18 @@ const ORB_Y     = 0.18
 const END_X     = -3.3
 const END_SCALE = 0.55
 
-const N          = 420    // total particles — must match sphere hand-off count
-const MAX_OP     = 0.94
+const N      = 420    // total particles
+const MAX_OP = 0.94
 
-const COLLAPSE_DUR = 0.35  // seconds — orbs contract to core
-const EXPAND_DUR   = 0.68  // seconds — orbs bloom into new shape
-const CORE_S       = 0.10  // minimum scale at swap point
+const COLLAPSE_DUR = 0.35  // seconds — uMorphTarget 1→0 during card change
+const EXPAND_DUR   = 0.68  // seconds — uMorphTarget 0→1 during card change
 
 const REDUCED_MOTION =
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   GEOMETRY HELPERS  (push x,y,z triples into pts[])
+   GEOMETRY HELPERS
 ══════════════════════════════════════════════════════════════════════════════ */
 
 function addLine(pts, x0,y0,z0, x1,y1,z1, n, jit=0.04) {
@@ -84,7 +87,6 @@ function addRect(pts, cx,cy,cz, hw,hh, ns,nh, jit=0.03) {
   }
 }
 
-/** All 12 edges of a cube centred at (cx,cy,cz) with half-size s. */
 function addCubeEdges(pts, cx,cy,cz, s, ns=18, jit=0.022) {
   const c = [
     [-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s],
@@ -100,7 +102,6 @@ function addCubeEdges(pts, cx,cy,cz, s, ns=18, jit=0.022) {
                  cx+c[b][0],cy+c[b][1],cz+c[b][2], ns, jit)
 }
 
-/** Cubic Bézier — pushes x,y,z triples directly. */
 function addBezier(pts, p0,p1,p2,p3, n, jit=0.030) {
   for (let i=0; i<=n; i++) {
     const t=i/n, mt=1-t
@@ -112,11 +113,6 @@ function addBezier(pts, p0,p1,p2,p3, n, jit=0.030) {
   }
 }
 
-/**
- * Pad or truncate pts[] to exactly targetN × 3 values.
- * Extra slots are filled with a tight random cluster near the origin
- * (reads as a soft glowing core that doesn't distract from the shape).
- */
 function padTo(pts, targetN) {
   while (pts.length < targetN*3)
     pts.push((Math.random()-.5)*0.06, (Math.random()-.5)*0.06, (Math.random()-.5)*0.06)
@@ -124,7 +120,7 @@ function padTo(pts, targetN) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   SPHERE START STATE  (matches fading InteractiveMiniOrbs positions)
+   SPHERE START STATE  — matches fading InteractiveMiniOrbs surface positions
 ══════════════════════════════════════════════════════════════════════════════ */
 function genSphere() {
   const pts = []
@@ -142,6 +138,23 @@ function genSphere() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
+   CORE STATE  — tight glowing cluster (intermediate morph state)
+   Particles here overlap heavily under additive blending → bright core glow.
+══════════════════════════════════════════════════════════════════════════════ */
+function genCore() {
+  const pts = new Float32Array(N * 3)
+  for (let i=0; i<N; i++) {
+    const phi   = Math.acos(2*Math.random()-1)
+    const theta = Math.random()*Math.PI*2
+    const r     = R * 0.055 * (0.4 + Math.random()*0.6)
+    pts[i*3]   = r*Math.sin(phi)*Math.cos(theta)
+    pts[i*3+1] = r*Math.cos(phi)
+    pts[i*3+2] = r*Math.sin(phi)*Math.sin(theta)
+  }
+  return pts
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
    CARD SHAPE GENERATORS  — each returns exactly N×3 Float32Array
    All shapes have significant Z-depth so the slow auto-rotation reveals 3-D.
 ══════════════════════════════════════════════════════════════════════════════ */
@@ -150,16 +163,11 @@ function genSphere() {
 function genBrowserFrame() {
   const pts = []
   const W=R*.80, H=R*.70, D=R*.40
-  // Front face
   addRect(pts, 0,0, D*.5,  W,H, 46,36, 0.025)
-  // Back face (slightly inset for depth cue)
   addRect(pts, 0,0,-D*.5,  W*.90,H*.90, 40,30, 0.025)
-  // Four depth-edge connections
   for (const [sx,sy] of [[1,1],[1,-1],[-1,1],[-1,-1]])
     addLine(pts, sx*W,sy*H,D*.5, sx*W*.90,sy*H*.90,-D*.5, 10, 0.015)
-  // Top bar
   addLine(pts, -W*.92,H*.58,D*.5+.02, W*.92,H*.58,D*.5+.02, 44, 0.015)
-  // Three browser dots
   for (let d=0; d<3; d++)
     addCircle(pts, -W*.68+d*W*.125, H*.77, D*.5+.02, W*.027, 9, 0.008)
   return padTo(pts, N)
@@ -168,11 +176,8 @@ function genBrowserFrame() {
 /* 02 — Custom Software — cube inside a larger cube */
 function genCommandCube() {
   const pts = []
-  // Outer cube
   addCubeEdges(pts, 0,0,0, R*.82, 18, 0.024)
-  // Inner cube
   addCubeEdges(pts, 0,0,0, R*.36, 10, 0.018)
-  // Corner connectors (outer → inner), one per cube corner
   for (const x of[-1,1]) for (const y of[-1,1]) for (const z of[-1,1])
     addLine(pts, x*R*.82,y*R*.82,z*R*.82, x*R*.36,y*R*.36,z*R*.36, 4, 0.016)
   return padTo(pts, N)
@@ -182,14 +187,11 @@ function genCommandCube() {
 function genAppStack() {
   const pts = []
   const pw=R*.36, ph=R*.74
-  // Panel 1 — front-left
   addRect(pts, -R*.18, 0,   R*.28, pw,   ph,   30,44, 0.022)
   addCircle(pts, -R*.18, ph*.84, R*.30,  R*.034, 10, 0.008)
   addLine(pts, -R*.18-pw*.62,-ph*.83,R*.29, -R*.18+pw*.62,-ph*.83,R*.29, 16, 0.012)
-  // Panel 2 — mid
   addRect(pts,  R*.24,-R*.07,-R*.08, pw*.88,ph*.84, 22,36, 0.022)
   addCircle(pts,  R*.24, ph*.84*.84-R*.07,-R*.06, R*.030, 9, 0.008)
-  // Panel 3 — back-right
   addRect(pts,  R*.56,-R*.16,-R*.38, pw*.74,ph*.68, 16,26, 0.022)
   return padTo(pts, N)
 }
@@ -213,13 +215,11 @@ function genWorkflowPath() {
 function genIntelligenceOrbit() {
   const pts = []
   const cR=R*.36, oR=R*.84, tilt=Math.PI/5.5
-  // Core sphere (random surface scatter)
   for (let i=0; i<108; i++) {
     const phi=Math.acos(2*Math.random()-1), theta=Math.random()*Math.PI*2
     const r=cR*(0.96+Math.random()*.08)
     pts.push(r*Math.sin(phi)*Math.cos(theta), r*Math.cos(phi), r*Math.sin(phi)*Math.sin(theta))
   }
-  // Orbital ring (tilted ellipse)
   for (let i=0; i<76; i++) {
     const a = (i/76)*Math.PI*2
     pts.push(
@@ -228,7 +228,6 @@ function genIntelligenceOrbit() {
       Math.sin(a)*oR*Math.cos(tilt)           + (Math.random()-.5)*.022,
     )
   }
-  // Bright satellite cluster on ring
   const satA = Math.PI*.42
   for (let k=0; k<14; k++) {
     const sa = satA + (Math.random()-.5)*.20
@@ -242,9 +241,7 @@ function genIntelligenceOrbit() {
 function genConnectedCubes() {
   const pts = []
   const cs=R*.26, ss=R*.18, dist=R*.80
-  // Central cube
   addCubeEdges(pts, 0,0,0, cs, 7, 0.018)
-  // 4 satellites: top, bottom, left, right (with z-offset for 3-D spacing)
   const sats = [
     [ 0,      dist,  R*.08],
     [ 0,     -dist, -R*.08],
@@ -260,29 +257,23 @@ function genConnectedCubes() {
   return padTo(pts, N)
 }
 
-/* 07 — Managed Marketing Services — 3-D funnel with front + back faces */
+/* 07 — Managed Marketing Services — 3-D funnel */
 function genFunnel() {
   const pts = []
   const topW=R*.82, botW=R*.12, topY=R*.70, botY=-R*.68, D=R*.30
   const H = topY-botY
-  // Front slant edges
   addLine(pts, -topW,topY, D*.5, -botW,botY, 0,  40, 0.038)
   addLine(pts,  topW,topY, D*.5,  botW,botY, 0,  40, 0.038)
-  // Front top opening
   addLine(pts, -topW,topY, D*.5, topW,topY, D*.5, 52, 0.038)
-  // Bottom exit
   addLine(pts, -botW,botY, 0, botW,botY, 0, 12, 0.025)
-  // Back face (slightly narrower → visible depth)
   addLine(pts, -topW*.88,topY*.96,-D*.5, -botW*.88,botY*.96, 0, 28, 0.038)
   addLine(pts,  topW*.88,topY*.96,-D*.5,  botW*.88,botY*.96, 0, 28, 0.038)
   addLine(pts, -topW*.88,topY*.96,-D*.5,  topW*.88,topY*.96,-D*.5, 40, 0.038)
-  // Two interior level-dividers
   for (let lv=1; lv<=2; lv++) {
     const t=lv/3, y=topY-H*t
     const wl=(topW+(botW-topW)*t)*.80, zl=D*.5*(1-t)
     addLine(pts, -wl,y,zl, wl,y,zl, Math.ceil(wl*11), 0.030)
   }
-  // Converging fill particles
   for (let k=0; k<38; k++) {
     const t=Math.random(), y=topY-H*t
     const wl=(topW+(botW-topW)*t)*.68, zl=D*.5*(1-t)
@@ -293,39 +284,49 @@ function genFunnel() {
 
 /* ── Registry ────────────────────────────────────────────────────────────────── */
 const GENERATORS = [
-  genBrowserFrame,       // 00 Websites & SEO
-  genCommandCube,        // 01 Custom Software
-  genAppStack,           // 02 App Development
-  genWorkflowPath,       // 03 Workflow Automation
-  genIntelligenceOrbit,  // 04 AI Implementation
-  genConnectedCubes,     // 05 Connected Ecosystems
-  genFunnel,             // 06 Managed Marketing Services
+  genBrowserFrame,
+  genCommandCube,
+  genAppStack,
+  genWorkflowPath,
+  genIntelligenceOrbit,
+  genConnectedCubes,
+  genFunnel,
 ]
 
 const COLORS = [
-  '#68ccff',  // browser   — ice blue
-  '#4ab8ff',  // cube      — mid blue
-  '#78d4ff',  // app stack — bright cyan-blue
-  '#5ab8ff',  // workflow  — clean blue
-  '#8ae0ff',  // orbit     — bright sky
-  '#54bbff',  // cubes     — steady blue
-  '#4caaff',  // funnel    — deep blue
+  '#68ccff',
+  '#4ab8ff',
+  '#78d4ff',
+  '#5ab8ff',
+  '#8ae0ff',
+  '#54bbff',
+  '#4caaff',
 ]
 
-/* ── Morph shader
-   - Interpolates position from sphere surface → card target (uMorph 0 → 1)
-   - Depth-based brightness: closer particles (positive Z in group space) appear
-     slightly brighter, reinforcing the 3-D read as the object slow-rotates.
+/* ── Three-state morph shader ───────────────────────────────────────────────────
+   position   = sphere surface (starting state)
+   aPosCore   = tight glowing cluster (intermediate state)
+   aPosTarget = active card shape (final state, swapped on card change)
+
+   uMorphCore   : 0 = sphere,  1 = core
+   uMorphTarget : 0 = core,    1 = card
+
+   Scroll drives: sphere → core → card as p goes 0.35 → 0.62 → 0.88
+   Card change:   animates uMorphTarget 1→0→1 only (sphere never touched again)
+   Scroll-back:   reverses both uniforms — sphere reforms fully.
  ────────────────────────────────────────────────────────────────────────────── */
 const VERT = /* glsl */`
-  uniform float uMorph;
+  attribute vec3 aPosCore;
+  attribute vec3 aPosTarget;
+  uniform float uMorphCore;
+  uniform float uMorphTarget;
   uniform float uSize;
   uniform float uScale;
-  attribute vec3 aPosTarget;
   varying float vZ;
 
   void main() {
-    vec3 pos    = mix(position, aPosTarget, uMorph);
+    vec3 atCore = mix(position, aPosCore, uMorphCore);
+    vec3 pos    = mix(atCore, aPosTarget, uMorphTarget);
     vZ          = pos.z;
     vec4 mv     = modelViewMatrix * vec4(pos, 1.0);
     gl_PointSize = uSize * (uScale / -mv.z);
@@ -353,8 +354,7 @@ export default function ExpertiseParticles() {
   const groupRef  = useRef()
   const pointsRef = useRef()
   const scrollRef = useRef(0)
-  const baseSRef  = useRef(1.0)   // scroll-driven scale (lerped)
-  const scaleRef  = useRef(1.0)   // transition scale multiplier
+  const baseSRef  = useRef(1.0)
 
   // Transition state (mutated only in useFrame — no re-renders)
   const activeRef = useRef(0)
@@ -362,10 +362,11 @@ export default function ExpertiseParticles() {
   const timerRef  = useRef(0)
   const crossRef  = useRef(0)
 
-  // Geometry
+  // Geometry: three position buffers
   const posSphere = useMemo(() => genSphere(), [])
+  const posCore   = useMemo(() => genCore(),   [])
   const cardBufs  = useMemo(() => GENERATORS.map(g => g()), [])
-  // posTarget is a mutable buffer we update in-place on card change
+  // posTarget is mutable — swapped in-place on card change
   const posTarget = useMemo(() => new Float32Array(cardBufs[0]), [cardBufs])
 
   const tex  = useMemo(() => getGlowDotTexture(), [])
@@ -377,12 +378,13 @@ export default function ExpertiseParticles() {
     depthTest:   false,
     blending:    THREE.AdditiveBlending,
     uniforms: {
-      uMorph:   { value: 0 },
-      uSize:    { value: 0.090 },
-      uScale:   { value: size.height / 2 },
-      uMap:     { value: tex },
-      uColor:   { value: new THREE.Color(COLORS[0]) },
-      uOpacity: { value: 0 },
+      uMorphCore:   { value: 0 },
+      uMorphTarget: { value: 0 },
+      uSize:        { value: 0.090 },
+      uScale:       { value: size.height / 2 },
+      uMap:         { value: tex },
+      uColor:       { value: new THREE.Color(COLORS[0]) },
+      uOpacity:     { value: 0 },
     },
     vertexShader:   VERT,
     fragmentShader: FRAG,
@@ -407,23 +409,39 @@ export default function ExpertiseParticles() {
     g.position.x += (ORB_X + (END_X - ORB_X)*p - g.position.x) * lerp
     g.position.y += (ORB_Y * (1-p)              - g.position.y) * lerp
 
-    /* ── Scale: scroll-driven base × transition multiplier ──────────────── */
-    const targetBaseS  = 1.0 + (END_SCALE - 1.0)*p
-    baseSRef.current  += (targetBaseS - baseSRef.current) * lerp
-    g.scale.setScalar(baseSRef.current * scaleRef.current)
+    /* ── Scroll-driven scale (no transition scale multiplier) ────────────── */
+    const targetBaseS = 1.0 + (END_SCALE - 1.0)*p
+    baseSRef.current += (targetBaseS - baseSRef.current) * lerp
+    g.scale.setScalar(baseSRef.current)
 
     /* ── Slow Y rotation — makes 3-D depth visible ───────────────────────── */
     g.rotation.y += delta * 0.022
 
-    /* ── Scroll morph: sphere (uMorph=0) → card shape (uMorph=1) ─────────── */
-    const morphT    = Math.max(0, Math.min(1, (p - 0.35) / 0.50))
-    const scrollVis = morphT
-    material.uniforms.uMorph.value  = morphT
-    material.uniforms.uScale.value  = size.height / 2
+    /* ── Three-state scroll morph values ────────────────────────────────────
+       coreT: sphere→core  at p 0.35→0.62
+       cardT: core→card    at p 0.62→0.88
+    ─────────────────────────────────────────────────────────────────────── */
+    const coreT = Math.max(0, Math.min(1, (p - 0.35) / 0.27))
+    const cardT = Math.max(0, Math.min(1, (p - 0.62) / 0.26))
 
-    /* ── Detect card change, start collapse ──────────────────────────────── */
+    /* ── Abort transition if scroll retreats below 0.88 ─────────────────── */
+    if (p < 0.88 && phaseRef.current !== 'idle') {
+      phaseRef.current = 'idle'
+      timerRef.current = 0
+    }
+
+    /* ── Silent card sync when still in sphere/core phase ───────────────── */
     const wanted = carouselState.activeCard
-    if (wanted !== activeRef.current && phaseRef.current === 'idle') {
+    if (wanted !== activeRef.current && p < 0.88) {
+      activeRef.current = wanted
+      posTarget.set(cardBufs[wanted])
+      if (pointsRef.current?.geometry?.attributes?.aPosTarget)
+        pointsRef.current.geometry.attributes.aPosTarget.needsUpdate = true
+      material.uniforms.uColor.value.setStyle(COLORS[wanted])
+    }
+
+    /* ── Detect card change (only when fully in card mode and idle) ──────── */
+    if (wanted !== activeRef.current && phaseRef.current === 'idle' && p >= 0.88) {
       phaseRef.current = REDUCED_MOTION ? 'crossfade' : 'collapsing'
       timerRef.current = 0
       crossRef.current = 0
@@ -431,41 +449,44 @@ export default function ExpertiseParticles() {
 
     timerRef.current += delta
 
-    /* ── Advance transition ──────────────────────────────────────────────── */
+    /* ── Advance transition phase ────────────────────────────────────────── */
     if (phaseRef.current === 'collapsing') {
-      const t = Math.min(1, timerRef.current / COLLAPSE_DUR)
-      // ease-in: fast at start, slow approaching core
-      scaleRef.current = CORE_S + (1 - CORE_S) * (1 - t*t)
+      const t     = Math.min(1, timerRef.current / COLLAPSE_DUR)
+      const eased = t * t  // ease-in
+      material.uniforms.uMorphCore.value   = 1.0
+      material.uniforms.uMorphTarget.value = 1.0 - eased  // 1→0
 
       if (t >= 1) {
-        // Swap to latest requested card (handles multiple rapid clicks)
+        // Swap to latest requested card at the compact core moment
         activeRef.current = carouselState.activeCard
         posTarget.set(cardBufs[activeRef.current])
         if (pointsRef.current?.geometry?.attributes?.aPosTarget)
           pointsRef.current.geometry.attributes.aPosTarget.needsUpdate = true
         material.uniforms.uColor.value.setStyle(COLORS[activeRef.current])
-
-        phaseRef.current  = 'expanding'
-        timerRef.current  = 0
-        scaleRef.current  = CORE_S
+        material.uniforms.uMorphTarget.value = 0.0
+        phaseRef.current = 'expanding'
+        timerRef.current = 0
       }
     } else if (phaseRef.current === 'expanding') {
-      const t = Math.min(1, timerRef.current / EXPAND_DUR)
-      // ease-out cubic: slow acceleration from core
-      scaleRef.current = CORE_S + (1 - CORE_S) * (1 - Math.pow(1 - t, 3))
+      const t     = Math.min(1, timerRef.current / EXPAND_DUR)
+      const eased = 1 - Math.pow(1 - t, 3)  // ease-out cubic
+      material.uniforms.uMorphCore.value   = 1.0
+      material.uniforms.uMorphTarget.value = eased  // 0→1
 
       if (t >= 1) {
-        scaleRef.current = 1.0
+        material.uniforms.uMorphTarget.value = 1.0
         phaseRef.current = 'idle'
-        // If another change arrived while expanding, immediately re-collapse
+        // Another card change arrived while expanding — immediately re-collapse
         if (carouselState.activeCard !== activeRef.current) {
           phaseRef.current = 'collapsing'
           timerRef.current = 0
         }
       }
     } else if (phaseRef.current === 'crossfade') {
-      // Reduced-motion: swap buffer at midpoint, no scale animation
+      // Reduced-motion: swap at midpoint, no morph animation
       crossRef.current = Math.min(1, timerRef.current / 0.40)
+      material.uniforms.uMorphCore.value   = 1.0
+      material.uniforms.uMorphTarget.value = crossRef.current < 0.5 ? 0.0 : 1.0
       if (crossRef.current >= 0.5 && activeRef.current !== carouselState.activeCard) {
         activeRef.current = carouselState.activeCard
         posTarget.set(cardBufs[activeRef.current])
@@ -474,9 +495,15 @@ export default function ExpertiseParticles() {
         material.uniforms.uColor.value.setStyle(COLORS[activeRef.current])
       }
       if (crossRef.current >= 1) phaseRef.current = 'idle'
+    } else {
+      /* Idle: scroll drives both morph uniforms directly */
+      material.uniforms.uMorphCore.value   = coreT
+      material.uniforms.uMorphTarget.value = cardT
     }
 
-    material.uniforms.uOpacity.value = scrollVis * MAX_OP
+    /* ── Opacity fades in as sphere begins collapsing (coreT 0→1) ────────── */
+    material.uniforms.uOpacity.value = coreT * MAX_OP
+    material.uniforms.uScale.value   = size.height / 2
   })
 
   return (
@@ -487,6 +514,12 @@ export default function ExpertiseParticles() {
             attach="attributes-position"
             count={N}
             array={posSphere}
+            itemSize={3}
+          />
+          <bufferAttribute
+            attach="attributes-aPosCore"
+            count={N}
+            array={posCore}
             itemSize={3}
           />
           <bufferAttribute
