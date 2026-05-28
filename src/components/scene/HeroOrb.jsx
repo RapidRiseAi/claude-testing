@@ -328,25 +328,33 @@ function _genCommandCube() {
     }
   }
 
-  // Front face outline — 2 passes, tight jitter (no concentric rings)
+  const BZ = FZ - DEPTH
+
+  // Front face outline — 2 passes, tight jitter
   for (let pass = 0; pass < 2; pass++)
     for (const [x, y] of outline2d) addPt(x, y, FZ, 0.007 + pass*0.004)
 
-  // Extra tooth tip emphasis — bright crisp silhouette on teeth
+  // Back edge outline — 1 pass so far silhouette edge is equally visible
+  for (const [x, y] of outline2d) addPt(x, y, BZ, 0.010)
+
+  // Extra tooth tip emphasis — front and back so all tooth corners are bright
   for (const [x, y] of toothTips) addPt(x, y, FZ, 0.005)
+  for (const [x, y] of toothTips) addPt(x, y, BZ, 0.007)
 
-  // Side walls — 10 random front-biased z samples per outline point (no discrete levels)
+  // Side walls — uniform z so near AND far silhouette edges have equal density
   for (const [x, y] of outline2d)
-    for (let k = 0; k < 10; k++) addPt(x, y, frontZ(), 0.013)
+    for (let k = 0; k < 10; k++) addPt(x, y, FZ - Math.random() * DEPTH, 0.013)
 
-  // Center hole — front rim 2 passes, continuous side wall
+  // Center hole — front rim 2 passes, back rim 1 pass, uniform side wall
   const HC = 100
   for (let pass = 0; pass < 2; pass++)
     for (let i = 0; i < HC; i++)
       addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.007 + pass*0.003)
   for (let i = 0; i < HC; i++)
+    addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.010)
+  for (let i = 0; i < HC; i++)
     for (let k = 0; k < 8; k++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), frontZ(), 0.012)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - Math.random() * DEPTH, 0.012)
 
   // Front face fill
   let f = 0, fa = 0
