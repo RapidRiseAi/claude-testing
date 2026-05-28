@@ -270,12 +270,11 @@ function _genBrowserFrame() {
 function _genCommandCube() {
   const pts = []
 
-  // Scale to match globe outer radius (GR = R * 1.28)
   const GR      = R * 1.25
   const N_TEETH = 8
   const R_TOOTH = GR
-  const R_BODY  = GR * 0.760   // valley between teeth
-  const R_HOLE  = GR * 0.287   // center hole
+  const R_BODY  = GR * 0.760
+  const R_HOLE  = GR * 0.287
   const DEPTH   = R  * 0.30
   const FZ      = DEPTH / 2
   const BZ      = -DEPTH / 2
@@ -300,8 +299,9 @@ function _genCommandCube() {
   }
 
   // Gear outline: valley arc → rising wall → tooth top → falling wall
+  // NV/NW/NT raised so all segments have ~equal density per unit arc length
   const outline2d = [], toothTips = []
-  const NV = 14, NW = 6, NT = 12
+  const NV = 16, NW = 7, NT = 14
   for (let i = 0; i < N_TEETH; i++) {
     const θc = i * period
     const θv = θc - (period - halfTooth)
@@ -326,40 +326,40 @@ function _genCommandCube() {
       outline2d.push([r*Math.cos(θf), r*Math.sin(θf)])
     }
   }
+  // outline2d ≈ 368 pts, toothTips ≈ 120 pts
 
-  // Front face outline — 5 dense passes, tight jitter → bright glowing edge lines
+  // Front + back face outline — 5 passes each, tight jitter
+  // Equal passes on both faces so all edges are equally bright at any view angle
   for (let pass = 0; pass < 5; pass++)
-    for (const [x, y] of outline2d) addPt(x, y, FZ, 0.005)
+    for (const [x, y] of outline2d) addPt(x, y, FZ, 0.004)
+  for (let pass = 0; pass < 5; pass++)
+    for (const [x, y] of outline2d) addPt(x, y, BZ, 0.004)
 
-  // Back edge outline — 3 passes for equally bright far silhouette
-  for (let pass = 0; pass < 3; pass++)
-    for (const [x, y] of outline2d) addPt(x, y, BZ, 0.005)
-
-  // Tooth tip extra brightness — very tight, 4 passes front + 3 back
+  // Tooth tips — extra dense emphasis, 4 passes each face
   for (let pass = 0; pass < 4; pass++)
     for (const [x, y] of toothTips) addPt(x, y, FZ, 0.003)
-  for (let pass = 0; pass < 3; pass++)
-    for (const [x, y] of toothTips) addPt(x, y, BZ, 0.004)
+  for (let pass = 0; pass < 4; pass++)
+    for (const [x, y] of toothTips) addPt(x, y, BZ, 0.003)
 
-  // Side walls — 14 uniform z samples (equal density near + far edge)
+  // Side walls — only 3 samples per point (hints depth, doesn't compete with face edges)
   for (const [x, y] of outline2d)
-    for (let k = 0; k < 14; k++) addPt(x, y, FZ - Math.random() * DEPTH, 0.010)
+    for (let k = 0; k < 3; k++) addPt(x, y, FZ - Math.random() * DEPTH, 0.010)
 
-  // Center hole — 5 front + 3 back passes, 12 uniform side samples
-  const HC = 140
+  // Center hole — 5 passes each face, 3 side samples
+  const HC = 120
   for (let pass = 0; pass < 5; pass++)
     for (let i = 0; i < HC; i++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.005)
-  for (let pass = 0; pass < 3; pass++)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.004)
+  for (let pass = 0; pass < 5; pass++)
     for (let i = 0; i < HC; i++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.005)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.004)
   for (let i = 0; i < HC; i++)
-    for (let k = 0; k < 12; k++)
+    for (let k = 0; k < 3; k++)
       addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - Math.random() * DEPTH, 0.010)
 
-  // Fill — sparse so interior stays dark and edges dominate
+  // Face fill — enough to show surface texture, sparse enough edges dominate
   let f = 0, fa = 0
-  while (f < 220 && fa++ < 1100) {
+  while (f < 600 && fa++ < 2500) {
     const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
@@ -367,9 +367,9 @@ function _genCommandCube() {
     f++
   }
 
-  // Sparse volumetric fill
+  // Volumetric fill
   let v = 0, va = 0
-  while (v < 120 && va++ < 700) {
+  while (v < 300 && va++ < 1500) {
     const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
