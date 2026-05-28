@@ -294,15 +294,14 @@ function _genCommandCube() {
   const R_TOOTH = GR
   const R_BODY  = GR * 0.760
   const R_HOLE  = GR * 0.287
-  const DEPTH   = R  * 0.30
+  const DEPTH   = R  * 0.20   // flat gear-like proportion (not a deep drum)
   const FZ      = DEPTH / 2
   const BZ      = -DEPTH / 2
   const period    = Math.PI * 2 / N_TEETH
   const halfTooth = period * 0.42 / 2
 
-  // Moderate 3/4 tilt — reveals the depth/side so the connecting edges between
-  // the front and back faces are actually visible (continuous z = no layering)
-  const TY = Math.PI * 0.15, TX = Math.PI * 0.05
+  // Modest 3/4 tilt — front face dominant, just enough to reveal the thin depth
+  const TY = Math.PI * 0.14, TX = Math.PI * 0.05
   const cY = Math.cos(TY), sY = Math.sin(TY)
   const cX = Math.cos(TX), sX = Math.sin(TX)
   const tilt = (x, y, z) => {
@@ -315,17 +314,21 @@ function _genCommandCube() {
     pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
     tags.push(tag)
   }
+  // Bright vertical edge line joining front face to back face at one (x,y)
+  const edgeLine = (x, y, passes = 2, n = 6) => {
+    for (let pass = 0; pass < passes; pass++)
+      for (let k = 0; k <= n; k++) addPt(x, y, FZ - DEPTH * k/n, 0.004, 0)
+  }
 
   const gearR = (θ) => {
     const t = ((θ % period) + period) % period
     return Math.min(t, period - t) <= halfTooth ? R_TOOTH : R_BODY
   }
 
-  // Gear outline: valley arc → rising wall → tooth top → falling wall.
-  // High along-line resolution so edge orbs sit tightly against each other
-  // and read as continuous lines (instead of many overlapping jittered passes).
-  const outline2d = [], toothTips = []
-  const NV = 22, NW = 10, NT = 20
+  // Gear outline + crease corners. The corners are the only points whose depth
+  // is connected (the visible 3D edges); the rest of the side wall is left open.
+  const outline2d = [], corners = []
+  const NV = 20, NW = 9, NT = 18
   for (let i = 0; i < N_TEETH; i++) {
     const θc = i * period
     const θv = θc - (period - halfTooth)
@@ -341,59 +344,58 @@ function _genCommandCube() {
     }
     for (let j = 0; j <= NT; j++) {
       const θ = θr + (θf-θr)*j/NT
-      const pt = [R_TOOTH*Math.cos(θ), R_TOOTH*Math.sin(θ)]
-      outline2d.push(pt)
-      toothTips.push(pt)
+      outline2d.push([R_TOOTH*Math.cos(θ), R_TOOTH*Math.sin(θ)])
     }
     for (let j = 1; j <= NW; j++) {
       const r = R_TOOTH + (R_BODY-R_TOOTH)*j/NW
       outline2d.push([r*Math.cos(θf), r*Math.sin(θf)])
     }
+    // 4 crease corners of this tooth (base + tip on rising and falling walls)
+    corners.push([R_BODY*Math.cos(θr), R_BODY*Math.sin(θr)])
+    corners.push([R_TOOTH*Math.cos(θr), R_TOOTH*Math.sin(θr)])
+    corners.push([R_TOOTH*Math.cos(θf), R_TOOTH*Math.sin(θf)])
+    corners.push([R_BODY*Math.cos(θf), R_BODY*Math.sin(θf)])
   }
 
-  // Front + back face outline — 2 tight passes each (big orbs do the work)
-  for (let pass = 0; pass < 2; pass++)
+  // Front outline — 3 tight passes (brightest), back outline — 2 passes
+  for (let pass = 0; pass < 3; pass++)
     for (const [x, y] of outline2d) addPt(x, y, FZ, 0.004, 0)
   for (let pass = 0; pass < 2; pass++)
     for (const [x, y] of outline2d) addPt(x, y, BZ, 0.004, 0)
 
-  // Connecting silhouette edges — vertical lines joining front face to back
-  // face at every outline point, densely sampled so the depth corners read
-  // as bright continuous edges (same treatment as the face outlines).
-  const NZ = 7
-  for (const [x, y] of outline2d)
-    for (let k = 0; k <= NZ; k++) addPt(x, y, FZ - DEPTH * k/NZ, 0.004, 0)
+  // Connecting EDGES only — bright depth lines at the tooth crease corners,
+  // not the full wall surface. This gives the 3D read with clean edges.
+  for (const [x, y] of corners) edgeLine(x, y, 2, 6)
 
-  // Center hole rim — front + back outline and connecting wall, all edge orbs
-  const HC = 130
-  for (let pass = 0; pass < 2; pass++)
+  // Center hole — front + back rim bright; bore shown by sparse depth lines
+  const HC = 120
+  for (let pass = 0; pass < 3; pass++)
     for (let i = 0; i < HC; i++)
       addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.004, 0)
   for (let pass = 0; pass < 2; pass++)
     for (let i = 0; i < HC; i++)
       addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.004, 0)
-  for (let i = 0; i < HC; i++)
-    for (let k = 0; k <= NZ; k++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - DEPTH * k/NZ, 0.004, 0)
+  for (let i = 0; i < HC; i += 6)
+    edgeLine(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), 1, 5)
 
-  // Front face fill — densely populate the surface (normal-size orbs)
+  // Front face fill — densely populate the main surface (normal-size orbs)
   let f = 0, fa = 0
-  while (f < 1400 && fa++ < 5000) {
+  while (f < 2600 && fa++ < 9000) {
     const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
-    addPt(x, y, FZ, 0.022, 1)
+    addPt(x, y, FZ, 0.020, 1)
     f++
   }
 
-  // Volumetric fill through the depth — surface orbs
-  let v = 0, va = 0
-  while (v < 700 && va++ < 3000) {
+  // Light back-face fill so the gear reads solid from its visible far edge
+  let b = 0, ba = 0
+  while (b < 500 && ba++ < 2000) {
     const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
-    addPt(x, y, FZ - Math.random() * DEPTH, 0.020, 1)
-    v++
+    addPt(x, y, BZ, 0.020, 1)
+    b++
   }
 
   return _padToBigTagged(pts, tags, N_ORB)
