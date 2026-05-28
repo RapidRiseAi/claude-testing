@@ -104,12 +104,16 @@ const JUNCTION_PENT_POSITIONS = (() => {
 })()
 
 /* ── Collapse timing ────────────────────────────────────────────────────────────
-   Grid/glow/dots/rings: collapseT ramps p 0.30 → 0.78 (duration 0.48)
-   Surface orbs:         collapseT ramps p 0.30 → 0.785 (duration 0.485, 1% slower)
-   fade = max(0, 1 - collapseT * 1.5)  →  transparent by collapseT ≈ 0.67
+   Both animations start immediately on scroll (p = 0) with a smoothstep ease
+   so the opening motion is barely perceptible and builds gradually.
+
+   Grid/glow/dots/rings: smoothstep p 0 → 0.76, transparent by p ≈ 0.46,
+                         fully at centre by p 0.76, then unmounted at p 0.80.
+   Surface orbs:         smoothstep p 0 → 0.62, max collapse 50% (not all the
+                         way), fade fully by p 0.62 — ExpertiseParticles hand-off.
  ────────────────────────────────────────────────────────────────────────────── */
-function gridCollapseT(p)  { return Math.max(0, Math.min(1, (p - 0.30) / 0.48)) }
-function orbsCollapseT(p)  { return Math.max(0, Math.min(1, (p - 0.30) / 0.485)) }
+function smoothstep(t)     { const c = Math.max(0, Math.min(1, t)); return c * c * (3 - 2 * c) }
+function gridCollapseT(p)  { return smoothstep(p / 0.76) }
 function collapseFade(t)   { return Math.max(0, 1.0 - t * 1.5) }
 
 const TRAIL_LEN = 24
@@ -299,11 +303,14 @@ function InteractiveMiniOrbs({ groupRef }) {
 
   useFrame(({ clock }, delta) => {
     const p = scrollState.progress
-    const collapseT = orbsCollapseT(p)         // 1% slower than grid
     const scale = 1.0 + (END_SCALE - 1.0) * p
+    // Orbs: smoothstep ease, collapse to 50% max, fade fully by p=0.62
+    const rawT      = smoothstep(p / 0.62)
+    const collapseT = rawT * 0.5              // 0 → 0.5  (50% toward centre)
+    const orbFade   = Math.max(0, 1.0 - rawT) // 1 → 0 as rawT goes 0 → 1
 
     material.uniforms.uMorph.value    = collapseT
-    material.uniforms.uOpacity.value  = collapseFade(collapseT)
+    material.uniforms.uOpacity.value  = orbFade
     material.uniforms.uTime.value     = clock.getElapsedTime()
     material.uniforms.uScale.value    = size.height / 2
     material.uniforms.uRadius.value   = 0.58 * scale
@@ -318,7 +325,7 @@ function InteractiveMiniOrbs({ groupRef }) {
     if (groupRef && groupRef.current) {
       invMat.copy(groupRef.current.matrixWorld).invert()
       localRay.copy(raycaster.ray).applyMatrix4(invMat)
-      // Shrink cursor-hit sphere as orbs collapse inward
+      // Cursor hit sphere shrinks proportionally to collapse position
       localSphere.radius = R * Math.max(0.05, 1.0 - collapseT)
       let localHitFound = false
       if (localRay.intersectSphere(localSphere, localHit)) localHitFound = true
