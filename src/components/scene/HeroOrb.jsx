@@ -173,6 +173,18 @@ function _addBezier(pts, p0,p1,p2,p3, n, jit=0.030) {
     )
   }
 }
+// Cubic-Bezier approximation of a rounded-rectangle outline (4 edges + 4 quarter-circle arcs)
+function _addRoundedRect(pts, cx, cy, cz, hw, hh, cr, nW, nH, nC, jit=0.022) {
+  const k = 0.5523 * cr
+  _addLine(pts, cx-hw+cr, cy+hh, cz, cx+hw-cr, cy+hh, cz, nW, jit)
+  _addLine(pts, cx+hw-cr, cy-hh, cz, cx-hw+cr, cy-hh, cz, nW, jit)
+  _addLine(pts, cx-hw, cy-hh+cr, cz, cx-hw, cy+hh-cr, cz, nH, jit)
+  _addLine(pts, cx+hw, cy+hh-cr, cz, cx+hw, cy-hh+cr, cz, nH, jit)
+  _addBezier(pts,[cx+hw-cr,cy+hh,cz],[cx+hw-cr+k,cy+hh,cz],[cx+hw,cy+hh-cr+k,cz],[cx+hw,cy+hh-cr,cz],nC,jit)
+  _addBezier(pts,[cx+hw,cy-hh+cr,cz],[cx+hw,cy-hh+cr-k,cz],[cx+hw-cr+k,cy-hh,cz],[cx+hw-cr,cy-hh,cz],nC,jit)
+  _addBezier(pts,[cx-hw+cr,cy-hh,cz],[cx-hw+cr-k,cy-hh,cz],[cx-hw,cy-hh+cr-k,cz],[cx-hw,cy-hh+cr,cz],nC,jit)
+  _addBezier(pts,[cx-hw,cy+hh-cr,cz],[cx-hw,cy+hh-cr+k,cz],[cx-hw+cr-k,cy+hh,cz],[cx-hw+cr,cy+hh,cz],nC,jit)
+}
 
 // Tiles a small anchor set of positions up to N_ORB with slight jitter
 function _padToBig(pts, targetN) {
@@ -189,13 +201,61 @@ function _padToBig(pts, targetN) {
 }
 
 function _genBrowserFrame() {
-  const pts=[], W=R*.80, H=R*.70, D=R*.40
-  _addRect(pts, 0,0,D*.5, W,H, 46,36, 0.025)
-  _addRect(pts, 0,0,-D*.5, W*.90,H*.90, 40,30, 0.025)
-  for (const [sx,sy] of [[1,1],[1,-1],[-1,1],[-1,-1]])
-    _addLine(pts, sx*W,sy*H,D*.5, sx*W*.90,sy*H*.90,-D*.5, 10, 0.015)
-  _addLine(pts, -W*.92,H*.58,D*.5+.02, W*.92,H*.58,D*.5+.02, 44, 0.015)
-  for (let d=0; d<3; d++) _addCircle(pts, -W*.68+d*W*.125,H*.77,D*.5+.02, W*.027, 9, 0.008)
+  const pts = []
+  const W  = R * 0.72   // portal half-width (landscape)
+  const H  = R * 0.56   // portal half-height
+  const D  = R * 0.28   // depth — shallow 3-D portal feel
+  const CR = R * 0.12   // corner radius
+
+  // ── Front face — double ring creates a thick glowing edge ──────────────
+  _addRoundedRect(pts, 0, 0,  D*.5, W,      H,      CR,     42, 26, 14, 0.024)
+  _addRoundedRect(pts, 0, 0,  D*.5, W*.965, H*.965, CR*.93, 28, 17,  9, 0.020)
+
+  // ── Back face — slightly inset, shows portal depth ─────────────────────
+  _addRoundedRect(pts, 0, 0, -D*.5, W*.88,  H*.88,  CR*.85, 30, 19, 10, 0.022)
+
+  // ── Depth connectors — 4 corners + 2 mid-edge ─────────────────────────
+  _addLine(pts,  W-CR*.3,  H,  D*.5,   W*.88-CR*.26,  H*.88,  -D*.5, 8, 0.018)
+  _addLine(pts, -W+CR*.3,  H,  D*.5,  -W*.88+CR*.26,  H*.88,  -D*.5, 8, 0.018)
+  _addLine(pts,  W-CR*.3, -H,  D*.5,   W*.88-CR*.26, -H*.88,  -D*.5, 8, 0.018)
+  _addLine(pts, -W+CR*.3, -H,  D*.5,  -W*.88+CR*.26, -H*.88,  -D*.5, 8, 0.018)
+  _addLine(pts,  W,  0,    D*.5,   W*.88,  0,         -D*.5,   6, 0.018)
+  _addLine(pts, -W,  0,    D*.5,  -W*.88,  0,         -D*.5,   6, 0.018)
+
+  // ── Search lens — large circle, right half, proud of front face ─────────
+  // Right edge of lens (R*0.84) protrudes beyond portal right edge (R*0.72)
+  // so the lens visibly integrates into — not merely decorates — the portal
+  const lR = R * 0.40   // lens radius
+  const lX = R * 0.44   // lens centre x (right half)
+  const lY = R * 0.02   // lens centre y (fractionally above mid)
+  const lZ = D * 0.54   // proud of front face
+  _addCircle(pts, lX, lY, lZ,       lR,      96, 0.018)   // main outer ring
+  _addCircle(pts, lX, lY, lZ,       lR*.975, 72, 0.014)   // ring thickness
+  _addCircle(pts, lX, lY, lZ-0.04,  lR*.95,  48, 0.014)   // depth layer
+  _addCircle(pts, lX, lY, lZ,       lR*.58,  52, 0.013)   // inner accent ring
+
+  // ── Handle — thick 3-line diagonal, bottom-right of lens ───────────────
+  const hA  = -Math.PI / 4                      // -45° (bottom-right)
+  const hx0 = lX + Math.cos(hA) * lR * 0.92
+  const hy0 = lY + Math.sin(hA) * lR * 0.92
+  const hx1 = hx0 + Math.cos(hA) * lR * 0.72
+  const hy1 = hy0 + Math.sin(hA) * lR * 0.72
+  const hp  = 0.022 / Math.SQRT2               // perpendicular half-offset
+  _addLine(pts, hx0,    hy0,    lZ,       hx1,    hy1,    lZ-0.03, 24, 0.016)
+  _addLine(pts, hx0+hp, hy0+hp, lZ,       hx1+hp, hy1+hp, lZ-0.03, 16, 0.016)
+  _addLine(pts, hx0-hp, hy0-hp, lZ,       hx1-hp, hy1-hp, lZ-0.03, 14, 0.016)
+
+  // ── Discovery path — single arc flowing from left into the lens ─────────
+  // Suggests a visitor's digital journey: web → search → discovery
+  const pX = -W * 1.06
+  const pY =  H * 0.10
+  _addBezier(pts,
+    [pX,            pY,          lZ],
+    [pX + W * .52,  pY + H*.30,  lZ + 0.02],
+    [lX - lR*1.80,  lY + H*.20,  lZ + 0.01],
+    [lX - lR*1.02,  lY,          lZ],
+    58, 0.042)
+
   return _padToBig(pts, N_ORB)
 }
 function _genCommandCube() {
