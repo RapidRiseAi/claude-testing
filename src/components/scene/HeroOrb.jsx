@@ -200,8 +200,26 @@ function _padToBig(pts, targetN) {
   return arr
 }
 
+// Like _padToBig but tiles a parallel per-point tag array with the SAME
+// src = i % base mapping, so positions and tags stay aligned after padding.
+// tag 0 = bright/large edge orb, tag 1 = normal surface orb.
+function _padToBigTagged(pts, tags, targetN) {
+  const base = Math.floor(pts.length / 3)
+  const pos = new Float32Array(targetN * 3)
+  const tag = new Float32Array(targetN)
+  if (base === 0) return { pos, tags: tag }
+  for (let i = 0; i < targetN; i++) {
+    const src = i % base
+    pos[i*3]   = pts[src*3]   + (Math.random()-.5)*0.05
+    pos[i*3+1] = pts[src*3+1] + (Math.random()-.5)*0.05
+    pos[i*3+2] = pts[src*3+2] + (Math.random()-.5)*0.05
+    tag[i]     = tags[src]
+  }
+  return { pos, tags: tag }
+}
+
 function _genBrowserFrame() {
-  const pts = []
+  const pts = [], tags = []
   const GR = R * 1.28
 
   const TY = Math.PI * 0.10
@@ -215,6 +233,7 @@ function _genBrowserFrame() {
         y            + (Math.random()-.5)*jit,
        -x*sT + z*cT + (Math.random()-.5)*jit,
       )
+      tags.push(0)  // grid-line orb = bright/large edge
     }
   }
 
@@ -248,7 +267,6 @@ function _genBrowserFrame() {
   arc(t => [-GR*rx*Math.cos((t-.5)*Math.PI),  GR*Math.sin((t-.5)*Math.PI), -GR*rz*Math.cos((t-.5)*Math.PI)],  280, 0.005)
 
   // Fibonacci sphere surface fill — even distribution, no clusters
-  // arc anchors above: 481+361+361+281+281+281+281+361+361+281+281+281+281 = 4173
   const N_SURF = 2500
   const golden = Math.PI * (3 - Math.sqrt(5))
   for (let i = 0; i < N_SURF; i++) {
@@ -263,12 +281,13 @@ function _genBrowserFrame() {
       y            + (Math.random()-.5)*0.04,
      -x*sT + z*cT + (Math.random()-.5)*0.04,
     )
+    tags.push(1)  // surface scatter = normal size, dimmer
   }
 
-  return _padToBig(pts, N_ORB)
+  return _padToBigTagged(pts, tags, N_ORB)
 }
 function _genCommandCube() {
-  const pts = []
+  const pts = [], tags = []
 
   const GR      = R * 1.25
   const N_TEETH = 8
@@ -281,16 +300,20 @@ function _genCommandCube() {
   const period    = Math.PI * 2 / N_TEETH
   const halfTooth = period * 0.42 / 2
 
-  const TY = Math.PI * 0.11, TX = Math.PI * 0.04
+  // Moderate 3/4 tilt — reveals the depth/side so the connecting edges between
+  // the front and back faces are actually visible (continuous z = no layering)
+  const TY = Math.PI * 0.15, TX = Math.PI * 0.05
   const cY = Math.cos(TY), sY = Math.sin(TY)
   const cX = Math.cos(TX), sX = Math.sin(TX)
   const tilt = (x, y, z) => {
     const x1 = x*cY + z*sY, z1 = -x*sY + z*cY
     return [x1, y*cX - z1*sX, y*sX + z1*cX]
   }
-  const addPt = (x, y, z, jit = 0.016) => {
+  // tag 0 = edge orb (rendered 2× larger + brighter), tag 1 = surface orb (normal)
+  const addPt = (x, y, z, jit, tag) => {
     const [tx, ty, tz] = tilt(x, y, z)
     pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
+    tags.push(tag)
   }
 
   const gearR = (θ) => {
@@ -298,10 +321,11 @@ function _genCommandCube() {
     return Math.min(t, period - t) <= halfTooth ? R_TOOTH : R_BODY
   }
 
-  // Gear outline: valley arc → rising wall → tooth top → falling wall
-  // NV/NW/NT raised so all segments have ~equal density per unit arc length
+  // Gear outline: valley arc → rising wall → tooth top → falling wall.
+  // High along-line resolution so edge orbs sit tightly against each other
+  // and read as continuous lines (instead of many overlapping jittered passes).
   const outline2d = [], toothTips = []
-  const NV = 16, NW = 7, NT = 14
+  const NV = 22, NW = 10, NT = 20
   for (let i = 0; i < N_TEETH; i++) {
     const θc = i * period
     const θv = θc - (period - halfTooth)
@@ -326,58 +350,53 @@ function _genCommandCube() {
       outline2d.push([r*Math.cos(θf), r*Math.sin(θf)])
     }
   }
-  // outline2d ≈ 368 pts, toothTips ≈ 120 pts
 
-  // Front + back face outline — 5 passes each, tight jitter
-  // Equal passes on both faces so all edges are equally bright at any view angle
-  for (let pass = 0; pass < 5; pass++)
-    for (const [x, y] of outline2d) addPt(x, y, FZ, 0.004)
-  for (let pass = 0; pass < 5; pass++)
-    for (const [x, y] of outline2d) addPt(x, y, BZ, 0.004)
+  // Front + back face outline — 2 tight passes each (big orbs do the work)
+  for (let pass = 0; pass < 2; pass++)
+    for (const [x, y] of outline2d) addPt(x, y, FZ, 0.004, 0)
+  for (let pass = 0; pass < 2; pass++)
+    for (const [x, y] of outline2d) addPt(x, y, BZ, 0.004, 0)
 
-  // Tooth tips — extra dense emphasis, 4 passes each face
-  for (let pass = 0; pass < 4; pass++)
-    for (const [x, y] of toothTips) addPt(x, y, FZ, 0.003)
-  for (let pass = 0; pass < 4; pass++)
-    for (const [x, y] of toothTips) addPt(x, y, BZ, 0.003)
-
-  // Side walls — only 3 samples per point (hints depth, doesn't compete with face edges)
+  // Connecting silhouette edges — vertical lines joining front face to back
+  // face at every outline point, densely sampled so the depth corners read
+  // as bright continuous edges (same treatment as the face outlines).
+  const NZ = 7
   for (const [x, y] of outline2d)
-    for (let k = 0; k < 3; k++) addPt(x, y, FZ - Math.random() * DEPTH, 0.010)
+    for (let k = 0; k <= NZ; k++) addPt(x, y, FZ - DEPTH * k/NZ, 0.004, 0)
 
-  // Center hole — 5 passes each face, 3 side samples
-  const HC = 120
-  for (let pass = 0; pass < 5; pass++)
+  // Center hole rim — front + back outline and connecting wall, all edge orbs
+  const HC = 130
+  for (let pass = 0; pass < 2; pass++)
     for (let i = 0; i < HC; i++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.004)
-  for (let pass = 0; pass < 5; pass++)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ, 0.004, 0)
+  for (let pass = 0; pass < 2; pass++)
     for (let i = 0; i < HC; i++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.004)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), BZ, 0.004, 0)
   for (let i = 0; i < HC; i++)
-    for (let k = 0; k < 3; k++)
-      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - Math.random() * DEPTH, 0.010)
+    for (let k = 0; k <= NZ; k++)
+      addPt(R_HOLE*Math.cos(i/HC*Math.PI*2), R_HOLE*Math.sin(i/HC*Math.PI*2), FZ - DEPTH * k/NZ, 0.004, 0)
 
-  // Face fill — enough to show surface texture, sparse enough edges dominate
+  // Front face fill — densely populate the surface (normal-size orbs)
   let f = 0, fa = 0
-  while (f < 600 && fa++ < 2500) {
+  while (f < 1400 && fa++ < 5000) {
     const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
-    addPt(x, y, FZ, 0.024)
+    addPt(x, y, FZ, 0.022, 1)
     f++
   }
 
-  // Volumetric fill
+  // Volumetric fill through the depth — surface orbs
   let v = 0, va = 0
-  while (v < 300 && va++ < 1500) {
+  while (v < 700 && va++ < 3000) {
     const x = (Math.random()*2-1)*R_TOOTH*1.01, y = (Math.random()*2-1)*R_TOOTH*1.01
     const r = Math.sqrt(x*x+y*y)
     if (r < R_HOLE || r > gearR(Math.atan2(y, x))) continue
-    addPt(x, y, FZ - Math.random() * DEPTH, 0.022)
+    addPt(x, y, FZ - Math.random() * DEPTH, 0.020, 1)
     v++
   }
 
-  return _padToBig(pts, N_ORB)
+  return _padToBigTagged(pts, tags, N_ORB)
 }
 function _genAppStack() {
   const pts=[], pw=R*.36, ph=R*.74
@@ -599,13 +618,7 @@ function InteractiveMiniOrbs({ groupRef }) {
     }
   }, [gl, ndc])
 
-  // Globe card arc/scatter boundary — must match _genBrowserFrame anchor counts
-  // arc anchors: 481+361+361+281+281+281+281+361+361+281+281+281+281 = 4173
-  // scatter anchors: 2500  →  total base = 6673
-  const GLOBE_ARC_BASE  = 4173
-  const GLOBE_BASE      = 6673
-
-  const { positions, sizes, seeds, tags } = useMemo(() => {
+  const { positions, sizes, seeds } = useMemo(() => {
     const N = 48
     const sphPts = []
     for (const [axis, sign] of [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]]) {
@@ -627,15 +640,12 @@ function InteractiveMiniOrbs({ groupRef }) {
     const p  = new Float32Array(sphPts)
     const s  = new Float32Array(count)
     const sd = new Float32Array(count)
-    const tg = new Float32Array(count)
     for (let i = 0; i < count; i++) {
       s[i]  = 0.013 + Math.random() * 0.005
       sd[i] = Math.random()
-      // Tag: 1 = scatter slot (dimmed in globe card mode), 0 = arc slot
-      tg[i] = (i % GLOBE_BASE) >= GLOBE_ARC_BASE ? 1 : 0
     }
-    return { positions: p, sizes: s, seeds: sd, tags: tg }
-  }, [GLOBE_ARC_BASE, GLOBE_BASE])
+    return { positions: p, sizes: s, seeds: sd }
+  }, [])
 
   const trail = useMemo(() => Array.from({ length: TRAIL_LEN },
     () => new THREE.Vector4(1000, 1000, 1000, TRAIL_LIFETIME + 1)
@@ -646,10 +656,22 @@ function InteractiveMiniOrbs({ groupRef }) {
   const phaseRef      = useRef('idle')
   const timerRef      = useRef(0)
   const targetAttrRef = useRef()
+  const tagAttrRef    = useRef()
 
-  // Pre-generate all 7 card shapes (tiled to N_ORB); posTarget is the live GPU buffer
-  const cardBufs  = useMemo(() => CARD_GENERATORS.map(g => g()), [])
+  // Pre-generate all 7 card shapes (tiled to N_ORB). Generators return either a
+  // plain Float32Array of positions, or { pos, tags } when they differentiate
+  // edge vs surface orbs (globe + gear). posTarget/tagTarget are the live GPU
+  // buffers swapped on card change, exactly like aPosTarget.
+  const cardData = useMemo(() => CARD_GENERATORS.map(g => {
+    const r = g()
+    return r instanceof Float32Array
+      ? { pos: r, tags: new Float32Array(r.length / 3) }
+      : r
+  }), [])
+  const cardBufs  = useMemo(() => cardData.map(d => d.pos),  [cardData])
+  const cardTags  = useMemo(() => cardData.map(d => d.tags), [cardData])
   const posTarget = useMemo(() => new Float32Array(cardBufs[0]), [cardBufs])
+  const tagTarget = useMemo(() => new Float32Array(cardTags[0]), [cardTags])
 
   const material = useMemo(() => new THREE.ShaderMaterial({
     transparent: true,
@@ -704,7 +726,9 @@ function InteractiveMiniOrbs({ groupRef }) {
     if (wanted !== activeRef.current && p < 0.90) {
       activeRef.current = wanted
       posTarget.set(cardBufs[wanted])
+      tagTarget.set(cardTags[wanted])
       if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
+      if (tagAttrRef.current)    tagAttrRef.current.needsUpdate = true
       material.uniforms.uColorCard.value.setStyle(CARD_COLORS[wanted])
     }
 
@@ -725,7 +749,9 @@ function InteractiveMiniOrbs({ groupRef }) {
       if (t >= 1) {
         activeRef.current = carouselState.activeCard
         posTarget.set(cardBufs[activeRef.current])
+        tagTarget.set(cardTags[activeRef.current])
         if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
+        if (tagAttrRef.current)    tagAttrRef.current.needsUpdate = true
         material.uniforms.uColorCard.value.setStyle(CARD_COLORS[activeRef.current])
         finalCardMorph = 0.0
         phaseRef.current = 'expanding'
@@ -748,13 +774,17 @@ function InteractiveMiniOrbs({ groupRef }) {
     // Card morph only kicks in once the collapse starts transitioning (p≥0.38)
     const usedCardMorph = p >= 0.38 ? finalCardMorph : 0.0
 
+    // Edge-orb size boost applies only to cards that tag edge vs surface (globe,
+    // gear). For all other cards uSizeScale stays 1.0 → orbs revert to original.
+    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1
+
     // Always fully opaque — the transform is purely positional, never fades
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
     material.uniforms.uOpacity.value    = MAX_CARD_OP
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
-    material.uniforms.uSizeScale.value  = 1.0 + (activeRef.current === 0 ? 1.0 : 0.0) * usedCardMorph
+    material.uniforms.uSizeScale.value  = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
     material.uniforms.uRadius.value     = 0.58 * scale
 
     for (let i = 0; i < TRAIL_LEN; i++) {
@@ -796,8 +826,13 @@ function InteractiveMiniOrbs({ groupRef }) {
           array={sizes} itemSize={1} />
         <bufferAttribute attach="attributes-aSeed" count={seeds.length}
           array={seeds} itemSize={1} />
-        <bufferAttribute attach="attributes-aSizeTag" count={tags.length}
-          array={tags} itemSize={1} />
+        <bufferAttribute
+          ref={tagAttrRef}
+          attach="attributes-aSizeTag"
+          count={tagTarget.length}
+          array={tagTarget}
+          itemSize={1}
+        />
         <bufferAttribute
           ref={targetAttrRef}
           attach="attributes-aPosTarget"
