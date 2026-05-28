@@ -372,6 +372,7 @@ const MINI_VERT = `
   uniform float uMorphCard;
   attribute float aSize;
   attribute float aSeed;
+  attribute float aSizeTag;
   attribute vec3 aPosTarget;
   varying float vGlow;
   varying float vCardBlend;
@@ -412,7 +413,9 @@ const MINI_VERT = `
     vec3 displacedPos = basePos + pushDir * windProx * strengthMult;
 
     vec4 mv = modelViewMatrix * vec4(displacedPos, 1.0);
-    gl_PointSize = aSize * uSizeScale * 2.0 * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
+    float globeFactor = max(0.0, uSizeScale - 1.0);
+    float effectiveScale = uSizeScale * (1.0 - aSizeTag * globeFactor * 0.68);
+    gl_PointSize = aSize * effectiveScale * 2.0 * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
 `
@@ -492,7 +495,13 @@ function InteractiveMiniOrbs({ groupRef }) {
     }
   }, [gl, ndc])
 
-  const { positions, sizes, seeds } = useMemo(() => {
+  // Globe card arc/scatter boundary — must match _genBrowserFrame anchor counts
+  // arc anchors: 481+401+39+321+27+321+27+401+39+321+29+321+29 = 2757
+  // scatter anchors: 260  →  total base = 3017
+  const GLOBE_ARC_BASE  = 2757
+  const GLOBE_BASE      = 3017
+
+  const { positions, sizes, seeds, tags } = useMemo(() => {
     const N = 48
     const sphPts = []
     for (const [axis, sign] of [[0,1],[0,-1],[1,1],[1,-1],[2,1],[2,-1]]) {
@@ -511,15 +520,18 @@ function InteractiveMiniOrbs({ groupRef }) {
       }
     }
     const count = sphPts.length / 3
-    const p = new Float32Array(sphPts)
-    const s = new Float32Array(count)
+    const p  = new Float32Array(sphPts)
+    const s  = new Float32Array(count)
     const sd = new Float32Array(count)
+    const tg = new Float32Array(count)
     for (let i = 0; i < count; i++) {
-      s[i] = 0.013 + Math.random() * 0.005
+      s[i]  = 0.013 + Math.random() * 0.005
       sd[i] = Math.random()
+      // Tag: 1 = scatter slot (dimmed in globe card mode), 0 = arc slot
+      tg[i] = (i % GLOBE_BASE) >= GLOBE_ARC_BASE ? 1 : 0
     }
-    return { positions: p, sizes: s, seeds: sd }
-  }, [])
+    return { positions: p, sizes: s, seeds: sd, tags: tg }
+  }, [GLOBE_ARC_BASE, GLOBE_BASE])
 
   const trail = useMemo(() => Array.from({ length: TRAIL_LEN },
     () => new THREE.Vector4(1000, 1000, 1000, TRAIL_LIFETIME + 1)
@@ -638,7 +650,7 @@ function InteractiveMiniOrbs({ groupRef }) {
     material.uniforms.uOpacity.value    = MAX_CARD_OP
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
-    material.uniforms.uSizeScale.value  = activeRef.current === 0 ? 2.0 : 1.0
+    material.uniforms.uSizeScale.value  = 1.0 + (activeRef.current === 0 ? 1.0 : 0.0) * usedCardMorph
     material.uniforms.uRadius.value     = 0.58 * scale
 
     for (let i = 0; i < TRAIL_LEN; i++) {
@@ -680,6 +692,8 @@ function InteractiveMiniOrbs({ groupRef }) {
           array={sizes} itemSize={1} />
         <bufferAttribute attach="attributes-aSeed" count={seeds.length}
           array={seeds} itemSize={1} />
+        <bufferAttribute attach="attributes-aSizeTag" count={tags.length}
+          array={tags} itemSize={1} />
         <bufferAttribute
           ref={targetAttrRef}
           attach="attributes-aPosTarget"
