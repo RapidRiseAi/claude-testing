@@ -412,38 +412,38 @@ function _genCommandCube() {
   out.normal = tilt(0, 0, 1)
   return out
 }
-// Object 03 — a single unified holographic CODE BLOCK: a rounded rectangular
-// slab with real thickness and an engraved </> symbol cut into the front face.
-// Edge orbs (tag 0) are dense + bright; surface orbs (tag 1) give a controlled
-// even fill. Same dimensional language as the gear: 3/4 tilt, two faces joined
-// by corner depth lines, recessed symbol with bright top + floor rim edges.
+// Object 03 — 3D holographic CODE BLOCK: a rounded rectangular slab with a
+// raised </> symbol that protrudes outward from the front face.
+// Edge orbs (tag 0) are dense + bright; surface orbs (tag 1) fill evenly.
+// Symbol: 5 stroke segments, each extruded FZ→SFZ with bright side-wall depth
+// lines and a lit top-face outline so the symbol clearly sits on the slab.
 function _genCodeBlock() {
   const pts = [], tags = []
 
-  const HW    = R * 1.06   // slab half-width
-  const HH    = R * 0.96   // slab half-height
-  const CR    = R * 0.24   // corner radius
-  const DEPTH = R * 0.34   // slab thickness (matches the gear's 3D feel)
+  // Slab dimensions
+  const HW    = R * 1.05
+  const HH    = R * 0.93
+  const CR    = R * 0.22
+  const DEPTH = R * 0.34
   const FZ    = DEPTH / 2
   const BZ    = -DEPTH / 2
+  // Raised symbol — protrudes OUTWARD from the front face
+  const LIFT  = R * 0.20
+  const SFZ   = FZ + LIFT   // top face of raised symbol
 
-  // Engraved </> symbol
-  const sHW   = R * 0.052  // stroke half-width (groove opening)
-  const GRV   = R * 0.12   // groove depth (how far the symbol is recessed)
-  const GZ    = FZ - GRV   // groove floor z
-  const cw    = R * 0.30   // chevron horizontal reach
-  const ch    = R * 0.42   // chevron / slash half-height
-  const ix    = R * 0.26   // inner x of the brackets
-  const seg   = (ax, ay, bx, by) => [ax, ay, bx, by]
+  // </> glyph: 5 stroke segments defined as [ax,ay,bx,by]
+  // < apex on left, > apex on right, / centered
+  const sHW = R * 0.065
+  const ix  = R * 0.20, cw = R * 0.30, ch = R * 0.38
   const glyph = [
-    seg(-ix,  ch, -ix - cw, 0),   // < upper arm
-    seg(-ix - cw, 0, -ix, -ch),   // < lower arm
-    seg( ix,  ch,  ix + cw, 0),   // > upper arm
-    seg( ix + cw, 0,  ix, -ch),   // > lower arm
-    seg(-R * 0.13, -ch, R * 0.13, ch), // / slash
+    [-ix,  ch, -ix-cw, 0  ],   // < upper arm
+    [-ix-cw, 0, -ix, -ch  ],   // < lower arm
+    [ ix,  ch,  ix+cw, 0  ],   // > upper arm
+    [ ix+cw, 0,  ix, -ch  ],   // > lower arm
+    [-R*0.10, -ch, R*0.10, ch],// / slash
   ]
 
-  // 3/4 tilt — front face dominant, side thickness clearly visible
+  // 3/4 tilt — front face dominant, side depth clearly visible
   const TY = Math.PI * 0.15, TX = Math.PI * 0.05
   const cY = Math.cos(TY), sY = Math.sin(TY)
   const cX = Math.cos(TX), sX = Math.sin(TX)
@@ -451,116 +451,132 @@ function _genCodeBlock() {
     const x1 = x*cY + z*sY, z1 = -x*sY + z*cY
     return [x1, y*cX - z1*sX, y*sX + z1*cX]
   }
-  // tag 0 = edge orb (2× larger + brighter), tag 1 = surface orb (normal)
   const addPt = (x, y, z, jit, tag) => {
     const [tx, ty, tz] = tilt(x, y, z)
     pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
     tags.push(tag)
   }
-  // Bright vertical depth line joining two z levels at one (x,y)
   const vline = (x, y, z0, z1, passes, n) => {
     for (let p = 0; p < passes; p++)
-      for (let k = 0; k <= n; k++) addPt(x, y, z0 + (z1-z0)*k/n, 0.004, 0)
+      for (let k = 0; k <= n; k++) addPt(x, y, z0+(z1-z0)*k/n, 0.004, 0)
   }
 
-  // Rounded-rect perimeter as an [x,y] list (4 straight edges + 4 corner arcs)
-  const peri = []
-  const nS = 26, nA = 11
-  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([-HW+CR + t*(2*HW-2*CR),  HH]) }
-  for (let i = 0; i < nA; i++) { const a=Math.PI/2*(1-i/nA);            peri.push([ HW-CR+Math.cos(a)*CR,  HH-CR+Math.sin(a)*CR]) }
-  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([ HW,  HH-CR - t*(2*HH-2*CR)]) }
-  for (let i = 0; i < nA; i++) { const a=-Math.PI/2*(i/nA);             peri.push([ HW-CR+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR]) }
-  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([ HW-CR - t*(2*HW-2*CR), -HH]) }
-  for (let i = 0; i < nA; i++) { const a=-Math.PI/2-Math.PI/2*(i/nA);   peri.push([-(HW-CR)+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR]) }
-  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([-HW, -(HH-CR) + t*(2*HH-2*CR)]) }
-  for (let i = 0; i < nA; i++) { const a=Math.PI-Math.PI/2*(i/nA);      peri.push([-(HW-CR)+Math.cos(a)*CR,  (HH-CR)+Math.sin(a)*CR]) }
+  // ── SLAB PERIMETER ──────────────────────────────────────────────────────────
+  // Build peri as [x,y] list; track index ranges of the 4 corner arcs separately
+  const peri = [], cornerRanges = []
+  const nS = 28, nA = 14
+  const addPeri = (x, y) => peri.push([x, y])
+  // top edge (left→right, exclude right endpoint)
+  for (let i=0; i<nS; i++) { const t=i/nS; addPeri(-HW+CR+t*(2*HW-2*CR), HH) }
+  // top-right corner arc
+  cornerRanges.push(peri.length)
+  for (let i=0; i<=nA; i++) { const a=Math.PI/2*(1-i/nA); addPeri(HW-CR+Math.cos(a)*CR, HH-CR+Math.sin(a)*CR) }
+  cornerRanges.push(peri.length)
+  // right edge
+  for (let i=1; i<nS; i++) { const t=i/nS; addPeri(HW, HH-CR-t*(2*HH-2*CR)) }
+  // bottom-right corner arc
+  cornerRanges.push(peri.length)
+  for (let i=0; i<=nA; i++) { const a=-Math.PI/2*i/nA; addPeri(HW-CR+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR) }
+  cornerRanges.push(peri.length)
+  // bottom edge
+  for (let i=1; i<nS; i++) { const t=i/nS; addPeri(HW-CR-t*(2*HW-2*CR), -HH) }
+  // bottom-left corner arc
+  cornerRanges.push(peri.length)
+  for (let i=0; i<=nA; i++) { const a=-Math.PI/2-Math.PI/2*i/nA; addPeri(-(HW-CR)+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR) }
+  cornerRanges.push(peri.length)
+  // left edge
+  for (let i=1; i<nS; i++) { const t=i/nS; addPeri(-HW, -(HH-CR)+t*(2*HH-2*CR)) }
+  // top-left corner arc
+  cornerRanges.push(peri.length)
+  for (let i=0; i<=nA; i++) { const a=Math.PI-Math.PI/2*i/nA; addPeri(-(HW-CR)+Math.cos(a)*CR, (HH-CR)+Math.sin(a)*CR) }
+  cornerRanges.push(peri.length)
 
-  // Outer silhouette — front + back perimeter, EQUAL passes so both faces match
-  for (let pass = 0; pass < 3; pass++) for (const [x,y] of peri) addPt(x, y, FZ, 0.004, 0)
-  for (let pass = 0; pass < 3; pass++) for (const [x,y] of peri) addPt(x, y, BZ, 0.004, 0)
+  // Front + back perimeter outlines — equal passes so both faces are equally bright
+  for (let pass=0; pass<3; pass++) for (const [x,y] of peri) addPt(x, y, FZ, 0.004, 0)
+  for (let pass=0; pass<3; pass++) for (const [x,y] of peri) addPt(x, y, BZ, 0.004, 0)
 
-  // Depth edges — connect the two faces only at the 4 rounded corners + the
-  // 4 edge midpoints (8 connectors), not the whole wall (avoids a solid band)
-  const connAt = [nS/2, nS+nA/2, nS+nA+nS/2, 2*nS+nA+nA/2,
-                  2*nS+2*nA+nS/2, 3*nS+2*nA+nA/2, 3*nS+3*nA+nS/2, 4*nS+3*nA+nA/2]
-  for (const idx of connAt) {
-    const [x,y] = peri[Math.floor(idx) % peri.length]
-    vline(x, y, FZ, BZ, 2, 12)
+  // Depth connectors — all 4 corner arcs get full FZ→BZ lines (clean rounded 3D corners)
+  for (let ci=0; ci<cornerRanges.length; ci+=2) {
+    for (let i=cornerRanges[ci]; i<cornerRanges[ci+1]; i++) {
+      const [x,y] = peri[i]
+      vline(x, y, FZ, BZ, 2, 12)
+    }
   }
+  // Midpoints of the 4 straight edges also get connectors
+  for (const [x,y] of [[0,HH],[HW,0],[0,-HH],[-HW,0]]) vline(x, y, FZ, BZ, 2, 12)
 
-  // Side wall — plain even surface scatter (dimmer), gives the band of thickness
-  for (let i = 0; i < 720; i++) {
+  // Side wall scatter — even, dim, no bright lines, just gives thickness
+  for (let i=0; i<480; i++) {
     const [x,y] = peri[Math.floor(Math.random()*peri.length)]
-    addPt(x, y, FZ - Math.random()*DEPTH, 0.02, 1)
+    addPt(x, y, FZ-Math.random()*DEPTH, 0.018, 1)
   }
 
+  // ── FACE FILLS ──────────────────────────────────────────────────────────────
   const inRR = (x, y) => {
-    const ax = Math.abs(x), ay = Math.abs(y)
-    if (ax > HW || ay > HH) return false
-    if (ax <= HW-CR || ay <= HH-CR) return true
-    const dx = ax-(HW-CR), dy = ay-(HH-CR)
-    return dx*dx + dy*dy <= CR*CR
+    const ax=Math.abs(x), ay=Math.abs(y)
+    if (ax>HW || ay>HH) return false
+    if (ax<=HW-CR || ay<=HH-CR) return true
+    return (ax-(HW-CR))**2 + (ay-(HH-CR))**2 <= CR*CR
   }
-  const distSeg = (px, py, ax, ay, bx, by) => {
-    const dx = bx-ax, dy = by-ay
-    const t = Math.max(0, Math.min(1, ((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)))
-    const cx = ax+dx*t, cy = ay+dy*t
-    return Math.hypot(px-cx, py-cy)
-  }
-  const inSymbol = (x, y) => glyph.some(([ax,ay,bx,by]) => distSeg(x,y,ax,ay,bx,by) < sHW)
-
-  // Front face fill — even, controlled, EXCLUDING the engraved symbol footprint
-  let f = 0, fa = 0
-  while (f < 3100 && fa++ < 13000) {
-    const x = (Math.random()*2-1)*HW, y = (Math.random()*2-1)*HH
-    if (!inRR(x, y) || inSymbol(x, y)) continue
+  // Front face — even fill over the whole slab face
+  let f=0, fa=0
+  while (f<2600 && fa++<11000) {
+    const x=(Math.random()*2-1)*HW, y=(Math.random()*2-1)*HH
+    if (!inRR(x,y)) continue
     addPt(x, y, FZ, 0.020, 1); f++
   }
-  // Back face fill — lighter, so the slab reads solid from its far edge
-  let b = 0, ba = 0
-  while (b < 760 && ba++ < 3500) {
-    const x = (Math.random()*2-1)*HW, y = (Math.random()*2-1)*HH
-    if (!inRR(x, y)) continue
+  // Back face — lighter, so slab reads solid from its visible far edge
+  let b=0, ba=0
+  while (b<520 && ba++<2400) {
+    const x=(Math.random()*2-1)*HW, y=(Math.random()*2-1)*HH
+    if (!inRR(x,y)) continue
     addPt(x, y, BZ, 0.020, 1); b++
   }
 
-  // Engraved symbol — bright stroke outlines at the surface rim (FZ) AND the
-  // recessed floor rim (GZ); the z gap reads as real groove depth at this angle.
-  const strokeEdges = (ax, ay, bx, by, z) => {
-    const dx = bx-ax, dy = by-ay, L = Math.hypot(dx, dy)
-    const ux = dx/L, uy = dy/L, nx = -uy, ny = ux
-    const n = Math.max(8, Math.round(L / (R*0.028)))
-    for (let pass = 0; pass < 3; pass++)
-      for (let k = 0; k <= n; k++) {
-        const t = k/n, px = ax+dx*t, py = ay+dy*t
-        addPt(px + nx*sHW, py + ny*sHW, z, 0.004, 0)
-        addPt(px - nx*sHW, py - ny*sHW, z, 0.004, 0)
-      }
-    // end caps across the stroke width
-    for (const [ex, ey] of [[ax,ay],[bx,by]])
-      for (let pass = 0; pass < 3; pass++)
-        for (let k = 0; k <= 5; k++) {
-          const s = (k/5*2-1)*sHW
-          addPt(ex + nx*s, ey + ny*s, z, 0.004, 0)
-        }
-  }
+  // ── RAISED </> SYMBOL ───────────────────────────────────────────────────────
+  // Each stroke extrudes from FZ outward to SFZ.
+  // Bright depth lines define the vertical side walls.
+  // Bright outline at SFZ defines the top face.
+  // Light fill at SFZ gives the top face a solid feel.
   for (const [ax,ay,bx,by] of glyph) {
-    strokeEdges(ax, ay, bx, by, FZ)   // top rim of the groove
-    strokeEdges(ax, ay, bx, by, GZ)   // floor rim of the groove
-    // inner groove walls — short bright depth lines at the stroke edges of each end
-    const dx = bx-ax, dy = by-ay, L = Math.hypot(dx, dy)
-    const nx = -dy/L, ny = dx/L
-    for (const [ex, ey] of [[ax,ay],[bx,by]]) {
-      vline(ex + nx*sHW, ey + ny*sHW, FZ, GZ, 1, 5)
-      vline(ex - nx*sHW, ey - ny*sHW, FZ, GZ, 1, 5)
+    const dx=bx-ax, dy=by-ay, L=Math.hypot(dx,dy)
+    const nx=-dy/L, ny=dx/L       // perpendicular to stroke
+    const nSeg = Math.max(7, Math.round(L/(R*0.07)))  // samples along length
+    const nCap = 5                // samples across width at each end cap
+
+    // Side walls: vertical depth lines at both outer edges of the stroke
+    for (let k=0; k<=nSeg; k++) {
+      const t=k/nSeg, px=ax+dx*t, py=ay+dy*t
+      vline(px+nx*sHW, py+ny*sHW, FZ, SFZ, 2, 9)
+      vline(px-nx*sHW, py-ny*sHW, FZ, SFZ, 2, 9)
     }
-  }
-  // Groove floor fill — light, so the engraved symbol reads as a solid recess
-  let g = 0, ga = 0
-  while (g < 760 && ga++ < 7000) {
-    const x = (Math.random()*2-1)*(ix+cw+sHW), y = (Math.random()*2-1)*(ch+sHW)
-    if (!inSymbol(x, y)) continue
-    addPt(x, y, GZ, 0.012, 1); g++
+    // End cap walls (face at each stroke tip)
+    for (const [ex,ey] of [[ax,ay],[bx,by]])
+      for (let k=0; k<=nCap; k++) {
+        const s=sHW*(2*k/nCap-1)
+        vline(ex+nx*s, ey+ny*s, FZ, SFZ, 1, 7)
+      }
+
+    // Top face outline at SFZ — both side edges + end caps, 3 passes
+    for (let pass=0; pass<3; pass++) {
+      for (let k=0; k<=nSeg; k++) {
+        const t=k/nSeg, px=ax+dx*t, py=ay+dy*t
+        addPt(px+nx*sHW, py+ny*sHW, SFZ, 0.004, 0)
+        addPt(px-nx*sHW, py-ny*sHW, SFZ, 0.004, 0)
+      }
+      for (const [ex,ey] of [[ax,ay],[bx,by]])
+        for (let k=0; k<=nCap; k++) {
+          const s=sHW*(2*k/nCap-1)
+          addPt(ex+nx*s, ey+ny*s, SFZ, 0.004, 0)
+        }
+    }
+
+    // Top face fill of raised symbol — even light scatter inside stroke area
+    let g=0, ga=0
+    while (g<90 && ga++<600) {
+      const t=Math.random(), s=(Math.random()*2-1)*sHW*0.88
+      addPt(ax+dx*t+nx*s, ay+dy*t+ny*s, SFZ, 0.012, 1); g++
+    }
   }
 
   const out = _padToBigTagged(pts, tags, N_ORB)
