@@ -104,8 +104,14 @@ try {
   })
   await wait(200)
 
-  const canvas = await page.$('canvas')
-  await canvas.screenshot({ path: outfile })
+  // CROP env (x,y,w,h) clips the page to a sub-region for close inspection.
+  if (process.env.CROP) {
+    const [x, y, w, h] = process.env.CROP.split(',').map(Number)
+    await page.screenshot({ path: outfile, clip: { x, y, width: w, height: h } })
+  } else {
+    const canvas = await page.$('canvas')
+    await canvas.screenshot({ path: outfile })
+  }
   console.log(`\n✓ saved ${outfile} (card ${card})`)
 } finally {
   if (browser) await browser.close()

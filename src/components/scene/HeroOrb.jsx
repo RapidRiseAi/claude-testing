@@ -509,9 +509,9 @@ function _genWorkflowPath() {
   // Three process nodes on a lower-left → upper-right diagonal. Center node is the
   // dominant logic hub: larger sphere and wider ring system than the outer two.
   const nodeParams = [
-    { pos: [-R*0.62, -R*0.72,  R*0.05], cR: R*0.130, iR: R*0.205, oR: R*0.385, N: 100 },
-    { pos: [ R*0.01,  R*0.02,  R*0.07], cR: R*0.170, iR: R*0.265, oR: R*0.495, N: 140 },
-    { pos: [ R*0.64,  R*0.74, -R*0.04], cR: R*0.130, iR: R*0.205, oR: R*0.385, N: 100 },
+    { pos: [-R*0.62, -R*0.72,  R*0.05], cR: R*0.130, iR: R*0.215, oR: R*0.385, N: 100 },
+    { pos: [ R*0.01,  R*0.02,  R*0.07], cR: R*0.170, iR: R*0.280, oR: R*0.495, N: 140 },
+    { pos: [ R*0.64,  R*0.74, -R*0.04], cR: R*0.130, iR: R*0.215, oR: R*0.385, N: 100 },
   ]
 
   // tag 1 = small crisp orb (half size under edge-boost) — used for spheres/rings/route
@@ -540,42 +540,41 @@ function _genWorkflowPath() {
     const gold = Math.PI*(3-Math.sqrt(5))
 
     // Sphere — tag-0 (bright 2× orbs) on outer shell so it reads as a glowing orb.
-    // Dense fibonacci surface shell for a crisp spherical silhouette.
-    for (let p=0; p<3; p++)
+    // Dense fibonacci surface shell (5 passes, tight radius) for a smooth bright orb.
+    for (let p=0; p<5; p++)
       for (let i=0; i<N; i++) {
         const fy=1-(i/(N-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i
-        const rr=cR*(0.94+Math.random()*0.06)
-        addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.004, 0)
+        const rr=cR*(0.96+Math.random()*0.04)
+        addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.003, 0)
       }
-    // Interior volume fill — tag-1 (smaller) so the core is softer than the bright rim.
-    const nI = Math.floor(N*0.40)
+    // Interior volume fill — tag-1 (smaller) fills the body so it isn't a hollow shell.
+    const nI = Math.floor(N*0.70)
     for (let i=0; i<nI; i++) {
       const fy=1-(i/(nI-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i*1.7
-      const rr=cR*Math.cbrt(Math.random())*0.70
-      addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.006, 1)
+      const rr=cR*Math.cbrt(Math.random())*0.85
+      addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.005, 1)
     }
 
-    // Inner ring — full orbital ring clearly separate from sphere (iR ≈ 1.58× cR).
-    // tX=0.60: visible ellipse with h/w = cos(0.60) = 0.825 — clearly 3D, not a disc.
-    // tZ=0.10 tilts the major axis to align with the diagonal.
-    drawArc(nx,ny,nz, iR, 0.60, 0.10, 0, Math.PI*2, 3, 1)
+    // Inner ring — FLAT horizontal disc (Saturn-style) cutting through the equator.
+    // tX=1.22: h/w = cos(1.22) = 0.34 — a clearly flat disc, not an upright circle.
+    // iR ≈ 1.65× cR so the disc extends out past the sphere on both sides.
+    // tZ=0.10 tilts the major axis to follow the diagonal. Full loop, dense.
+    drawArc(nx,ny,nz, iR, 1.22, 0.10, 0, Math.PI*2, 4, 1)
 
-    // Outer halo — two bracket arcs clearly separated (gaps 72° at top and bottom).
-    // span=0.60π (108°) each, centred on LEFT (180°) and RIGHT (0°) of the node.
-    // tX=0.35 tilts the arc plane so they read as curving around the node in depth.
-    // Right arc: -54°→+54° (rightmost point of oval)
-    // Left  arc: 126°→234° (leftmost point of oval)
-    drawArc(nx,ny,nz, oR, 0.35, 0.0, -Math.PI*0.30, Math.PI*0.60, 3, 1) // right
-    drawArc(nx,ny,nz, oR, 0.35, 0.0,  Math.PI*0.70, Math.PI*0.60, 3, 1) // left
+    // Outer halo — two UPRIGHT bracket arcs on a near-vertical plane (tX=0.52, so the
+    // arcs are clearly more upright than the flat inner disc → strong 3D layering).
+    // span=0.66π (119°) each, centred LEFT (180°) and RIGHT (0°), gaps ~61° top/bottom.
+    drawArc(nx,ny,nz, oR, 0.52, 0.0, -Math.PI*0.33, Math.PI*0.66, 3, 1) // right
+    drawArc(nx,ny,nz, oR, 0.52, 0.0,  Math.PI*0.67, Math.PI*0.66, 3, 1) // left
   }
 
   // Connection route — one bright continuous line through all three node centres.
   const [x0,y0,z0]=nodeParams[0].pos, [x1,y1,z1]=nodeParams[1].pos, [x2,y2,z2]=nodeParams[2].pos
   const segLine = (ax,ay,az, bx,by,bz) => {
-    const n = Math.max(Math.ceil(Math.hypot(bx-ax,by-ay,bz-az)/0.022), 20)
-    for (let p=0; p<4; p++)
+    const n = Math.max(Math.ceil(Math.hypot(bx-ax,by-ay,bz-az)/0.016), 24)
+    for (let p=0; p<6; p++)
       for (let i=0; i<=n; i++) { const t=i/n
-        addPt(ax+(bx-ax)*t, ay+(by-ay)*t, az+(bz-az)*t, 0.003, 1) }
+        addPt(ax+(bx-ax)*t, ay+(by-ay)*t, az+(bz-az)*t, 0.0025, 1) }
   }
   segLine(x0,y0,z0, x1,y1,z1)
   segLine(x1,y1,z1, x2,y2,z2)
