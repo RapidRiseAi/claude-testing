@@ -504,15 +504,74 @@ function _genCodeBlock() {
   return out
 }
 function _genWorkflowPath() {
-  const pts=[]
-  const n0=[-R*.56,-R*.72,-R*.04], n1=[R*.06,R*.02,R*.10], n2=[R*.60,R*.72,R*.04]
-  for (const [nx,ny,nz] of [n0,n1,n2]) {
-    _addCircle(pts, nx,ny,nz, R*.130, 26, 0.018)
-    _addCircle(pts, nx,ny,nz, R*.058, 14, 0.012)
+  const pts = [], tags = []
+
+  // Three process nodes arranged diagonally bottom-left → top-right
+  const nodes = [
+    [-R*0.64, -R*0.74,  R*0.04],
+    [ R*0.01,  R*0.03,  R*0.07],
+    [ R*0.65,  R*0.76, -R*0.03],
+  ]
+  const cR = R * 0.20   // sphere core radius
+  const aR = R * 0.33   // orbital arc radius
+
+  const addPt = (x, y, z, jit, tag) => {
+    pts.push(x+(Math.random()-.5)*jit, y+(Math.random()-.5)*jit, z+(Math.random()-.5)*jit)
+    tags.push(tag)
   }
-  _addBezier(pts, n0,[n0[0]+R*.28,n0[1]+R*.52,n0[2]],[n1[0]-R*.28,n1[1]-R*.40,n1[2]],n1, 52, 0.028)
-  _addBezier(pts, n1,[n1[0]+R*.26,n1[1]+R*.44,n1[2]],[n2[0]-R*.26,n2[1]-R*.42,n2[2]],n2, 52, 0.028)
-  return _padToBig(pts, N_ORB)
+
+  // Arc in a plane tilted by tX (around X axis) then tZ (around Z axis)
+  const drawArc = (cx, cy, cz, r, tX, tZ, a0, span, nPts, passes, tag) => {
+    const cX=Math.cos(tX), sX=Math.sin(tX), cZ=Math.cos(tZ), sZ=Math.sin(tZ)
+    for (let pass=0; pass<passes; pass++)
+      for (let i=0; i<=nPts; i++) {
+        const a = a0 + span*i/nPts
+        const rx=Math.cos(a)*r, ry=Math.sin(a)*r
+        const ry1=ry*cX, rz1=ry*sX
+        const rx2=rx*cZ-ry1*sZ, ry2=rx*sZ+ry1*cZ
+        addPt(cx+rx2, cy+ry2, cz+rz1, 0.004, tag)
+      }
+  }
+
+  for (const [nx, ny, nz] of nodes) {
+    // Dense fibonacci sphere core — tag 1 (surface, dim fill)
+    const N=90, gold=Math.PI*(3-Math.sqrt(5))
+    for (let i=0; i<N; i++) {
+      const fy=1-(i/(N-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i
+      const r=cR*(0.85+Math.random()*0.15)
+      addPt(nx+Math.cos(fa)*fr*r, ny+fy*r, nz+Math.sin(fa)*fr*r, 0.012, 1)
+    }
+
+    // 3 orbital arc segments per node at distinct tilt angles — tag 0 (bright)
+    // nPts sized so spacing ≤ 0.05 (tiler jitter fills gaps → solid lines)
+    drawArc(nx,ny,nz, aR,  0.28,  0.08, 0.22, Math.PI*1.75, 62, 3, 0)  // near-equatorial
+    drawArc(nx,ny,nz, aR,  1.10,  0.40, 0.35, Math.PI*1.60, 56, 3, 0)  // steeply tilted
+    drawArc(nx,ny,nz, aR, -0.40,  0.88, 0.28, Math.PI*1.65, 60, 3, 0)  // perpendicular
+  }
+
+  // Straight connection lines n0→n1 and n1→n2 — dense path, tag 0
+  const [x0,y0,z0]=nodes[0], [x1,y1,z1]=nodes[1], [x2,y2,z2]=nodes[2]
+  const nPath = 48
+  for (let pass=0; pass<2; pass++) {
+    for (let i=0; i<=nPath; i++) {
+      const t=i/nPath
+      addPt(x0+(x1-x0)*t, y0+(y1-y0)*t, z0+(z1-z0)*t, 0.004, 0)
+      addPt(x1+(x2-x1)*t, y1+(y2-y1)*t, z1+(z2-z1)*t, 0.004, 0)
+    }
+  }
+
+  // Waypoint beads — bright concentrated clusters evenly spaced along each segment
+  for (let i=1; i<=6; i++) {
+    const t=i/7
+    for (let pass=0; pass<5; pass++) {
+      addPt(x0+(x1-x0)*t, y0+(y1-y0)*t, z0+(z1-z0)*t, 0.018, 0)
+      addPt(x1+(x2-x1)*t, y1+(y2-y1)*t, z1+(z2-z1)*t, 0.018, 0)
+    }
+  }
+
+  const out = _padToBigTagged(pts, tags, N_ORB)
+  out.normal = [0, 0, 1]
+  return out
 }
 function _genIntelligenceOrbit() {
   const pts=[], cR=R*.36, oR=R*.84, tilt=Math.PI/5.5
@@ -876,7 +935,7 @@ function InteractiveMiniOrbs({ groupRef }) {
 
     // Edge-orb size boost applies only to cards that tag edge vs surface (globe,
     // gear, code block). For all other cards uSizeScale stays 1.0 → orbs revert.
-    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2
+    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3
 
     // Always fully opaque — the transform is purely positional, never fades
     material.uniforms.uMorph.value      = collapseT
