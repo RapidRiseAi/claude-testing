@@ -509,9 +509,9 @@ function _genWorkflowPath() {
   // Three process nodes on a lower-left → upper-right diagonal. Center node is the
   // dominant logic hub: larger sphere and wider ring system than the outer two.
   const nodeParams = [
-    { pos: [-R*0.62, -R*0.72,  R*0.05], cR: R*0.115, iR: R*0.158, oR: R*0.275, N: 90  },
-    { pos: [ R*0.01,  R*0.02,  R*0.07], cR: R*0.150, iR: R*0.205, oR: R*0.355, N: 130 },
-    { pos: [ R*0.64,  R*0.74, -R*0.04], cR: R*0.115, iR: R*0.158, oR: R*0.275, N: 90  },
+    { pos: [-R*0.62, -R*0.72,  R*0.05], cR: R*0.130, iR: R*0.205, oR: R*0.385, N: 100 },
+    { pos: [ R*0.01,  R*0.02,  R*0.07], cR: R*0.170, iR: R*0.265, oR: R*0.495, N: 140 },
+    { pos: [ R*0.64,  R*0.74, -R*0.04], cR: R*0.130, iR: R*0.205, oR: R*0.385, N: 100 },
   ]
 
   // tag 1 = small crisp orb (half size under edge-boost) — used for spheres/rings/route
@@ -539,41 +539,41 @@ function _genWorkflowPath() {
   for (const { pos: [nx, ny, nz], cR, iR, oR, N } of nodeParams) {
     const gold = Math.PI*(3-Math.sqrt(5))
 
-    // Sphere — crisp glowing orb. Dense fibonacci surface shell (tag 1, small) gives a
-    // clean bright rim instead of a fuzzy blob.
+    // Sphere — tag-0 (bright 2× orbs) on outer shell so it reads as a glowing orb.
+    // Dense fibonacci surface shell for a crisp spherical silhouette.
     for (let p=0; p<3; p++)
       for (let i=0; i<N; i++) {
         const fy=1-(i/(N-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i
-        const rr=cR*(0.95+Math.random()*0.05)
-        addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.004, 1)
+        const rr=cR*(0.94+Math.random()*0.06)
+        addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.004, 0)
       }
-    // Light interior fill — volume/glow without clumping.
-    const nI = Math.floor(N*0.45)
+    // Interior volume fill — tag-1 (smaller) so the core is softer than the bright rim.
+    const nI = Math.floor(N*0.40)
     for (let i=0; i<nI; i++) {
       const fy=1-(i/(nI-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i*1.7
-      const rr=cR*Math.cbrt(Math.random())*0.78
+      const rr=cR*Math.cbrt(Math.random())*0.70
       addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.006, 1)
     }
-    // Bright core highlight — a few large (tag 0) orbs for the glowing centre pop.
-    for (let i=0; i<8; i++) addPt(nx, ny, nz, cR*0.40, 0)
 
-    // Inner ring — tilted elliptical orbit hugging the sphere equator. tX=1.0 gives a
-    // height ≈0.54× width (a clear ring, not a flat pancake); small tZ tilts the major
-    // axis to follow the diagonal. Full closed loop with strong front/back depth.
-    drawArc(nx,ny,nz, iR, 1.0, 0.12, 0, Math.PI*2, 2, 1)
+    // Inner ring — full orbital ring clearly separate from sphere (iR ≈ 1.58× cR).
+    // tX=0.60: visible ellipse with h/w = cos(0.60) = 0.825 — clearly 3D, not a disc.
+    // tZ=0.10 tilts the major axis to align with the diagonal.
+    drawArc(nx,ny,nz, iR, 0.60, 0.10, 0, Math.PI*2, 3, 1)
 
-    // Outer halo — two bracket arcs hugging the LEFT and RIGHT of the node with gaps at
-    // top and bottom (like parentheses), matching the mockup. tX=0.45 gives a subtle 3D
-    // oval so the arcs read as wrapping around the node in space.
-    drawArc(nx,ny,nz, oR, 0.45, 0.0, -1.134, Math.PI*0.72, 2, 1) // right arc (−65°→65°)
-    drawArc(nx,ny,nz, oR, 0.45, 0.0,  2.007, Math.PI*0.72, 2, 1) // left  arc (115°→245°)
+    // Outer halo — two bracket arcs clearly separated (gaps 72° at top and bottom).
+    // span=0.60π (108°) each, centred on LEFT (180°) and RIGHT (0°) of the node.
+    // tX=0.35 tilts the arc plane so they read as curving around the node in depth.
+    // Right arc: -54°→+54° (rightmost point of oval)
+    // Left  arc: 126°→234° (leftmost point of oval)
+    drawArc(nx,ny,nz, oR, 0.35, 0.0, -Math.PI*0.30, Math.PI*0.60, 3, 1) // right
+    drawArc(nx,ny,nz, oR, 0.35, 0.0,  Math.PI*0.70, Math.PI*0.60, 3, 1) // left
   }
 
   // Connection route — one bright continuous line through all three node centres.
   const [x0,y0,z0]=nodeParams[0].pos, [x1,y1,z1]=nodeParams[1].pos, [x2,y2,z2]=nodeParams[2].pos
   const segLine = (ax,ay,az, bx,by,bz) => {
-    const n = Math.max(Math.ceil(Math.hypot(bx-ax,by-ay,bz-az)/0.024), 20)
-    for (let p=0; p<3; p++)
+    const n = Math.max(Math.ceil(Math.hypot(bx-ax,by-ay,bz-az)/0.022), 20)
+    for (let p=0; p<4; p++)
       for (let i=0; i<=n; i++) { const t=i/n
         addPt(ax+(bx-ax)*t, ay+(by-ay)*t, az+(bz-az)*t, 0.003, 1) }
   }
@@ -1448,7 +1448,20 @@ export default function HeroOrb() {
     }
     window.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
-    return () => window.removeEventListener('scroll', onScroll)
+
+    // Screenshot harness hook — only with ?shot. Drives scroll progress directly
+    // so the capture script can place the object in card mode deterministically.
+    let cleanupShot
+    if (new URLSearchParams(window.location.search).has('shot')) {
+      window.__wfSetProgress = (v) => {
+        scrollState.progress = Math.min(1, Math.max(0, v))
+        const heavy = scrollState.progress < 0.7
+        heavyRef.current = heavy
+        setShowHeavy(heavy)
+      }
+      cleanupShot = () => { delete window.__wfSetProgress }
+    }
+    return () => { window.removeEventListener('scroll', onScroll); cleanupShot && cleanupShot() }
   }, [])
 
   useEffect(() => {

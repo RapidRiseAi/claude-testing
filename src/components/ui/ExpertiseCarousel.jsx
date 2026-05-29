@@ -282,6 +282,16 @@ export default function ExpertiseCarousel() {
     carouselState.activeCard = activeCard
   }, [activeCard])
 
+  /* screenshot harness hook — only attached when the page is opened with ?shot,
+     lets the Playwright capture script jump straight to any card. No effect in
+     normal use. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (!new URLSearchParams(window.location.search).has('shot')) return
+    window.__wfSetCard = (i) => setActiveCard(Math.max(0, Math.min(CARDS.length - 1, i)))
+    return () => { delete window.__wfSetCard }
+  }, [])
+
   useEffect(() => {
     const onResize = () => setCardOffset(computeOffset())
     window.addEventListener('resize', onResize)
