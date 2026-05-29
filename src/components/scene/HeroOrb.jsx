@@ -508,11 +508,10 @@ function _genWorkflowPath() {
 
   // Three process nodes on a lower-left → upper-right diagonal. Center node is the
   // dominant logic hub: larger sphere and wider ring system than the outer two.
-  // Sizes kept deliberately small so the fine ring/line detail reads crisply.
   const nodeParams = [
-    { pos: [-R*0.62, -R*0.72,  R*0.05], cR: R*0.105, iR: R*0.165, oR: R*0.31, N: 80  },
-    { pos: [ R*0.01,  R*0.02,  R*0.07], cR: R*0.140, iR: R*0.215, oR: R*0.40, N: 110 },
-    { pos: [ R*0.64,  R*0.74, -R*0.04], cR: R*0.105, iR: R*0.165, oR: R*0.31, N: 80  },
+    { pos: [-R*0.62, -R*0.72,  R*0.05], cR: R*0.115, iR: R*0.158, oR: R*0.275, N: 90  },
+    { pos: [ R*0.01,  R*0.02,  R*0.07], cR: R*0.150, iR: R*0.205, oR: R*0.355, N: 130 },
+    { pos: [ R*0.64,  R*0.74, -R*0.04], cR: R*0.115, iR: R*0.158, oR: R*0.275, N: 90  },
   ]
 
   // tag 1 = small crisp orb (half size under edge-boost) — used for spheres/rings/route
@@ -556,18 +555,18 @@ function _genWorkflowPath() {
       addPt(nx+Math.cos(fa)*fr*rr, ny+fy*rr, nz+Math.sin(fa)*fr*rr, 0.006, 1)
     }
     // Bright core highlight — a few large (tag 0) orbs for the glowing centre pop.
-    for (let i=0; i<6; i++) addPt(nx, ny, nz, cR*0.45, 0)
+    for (let i=0; i<8; i++) addPt(nx, ny, nz, cR*0.40, 0)
 
-    // Inner ring — flat near-horizontal disc hugging the equator (Saturn-like). tX=1.30
-    // squashes the vertical extent to ~0.27 for a clean flat ellipse; small tZ tilts the
-    // major axis up to follow the diagonal. Full closed loop, strong front/back depth.
-    drawArc(nx,ny,nz, iR, 1.30, 0.16, 0, Math.PI*2, 2, 1)
+    // Inner ring — tilted elliptical orbit hugging the sphere equator. tX=1.0 gives a
+    // height ≈0.54× width (a clear ring, not a flat pancake); small tZ tilts the major
+    // axis to follow the diagonal. Full closed loop with strong front/back depth.
+    drawArc(nx,ny,nz, iR, 1.0, 0.12, 0, Math.PI*2, 2, 1)
 
-    // Outer halo — two bracket arcs framing the node. Gaps centred on the path direction
-    // (~49° and ~229°) so the route threads cleanly through the openings; arcs bulge to
-    // upper-left and lower-right. tX=0.45 gives a subtle 3D oval.
-    drawArc(nx,ny,nz, oR, 0.45, 0.0, 1.292, Math.PI*0.72, 2, 1) // upper-left  (≈74°→204°)
-    drawArc(nx,ny,nz, oR, 0.45, 0.0, 4.433, Math.PI*0.72, 2, 1) // lower-right (≈254°→384°)
+    // Outer halo — two bracket arcs hugging the LEFT and RIGHT of the node with gaps at
+    // top and bottom (like parentheses), matching the mockup. tX=0.45 gives a subtle 3D
+    // oval so the arcs read as wrapping around the node in space.
+    drawArc(nx,ny,nz, oR, 0.45, 0.0, -1.134, Math.PI*0.72, 2, 1) // right arc (−65°→65°)
+    drawArc(nx,ny,nz, oR, 0.45, 0.0,  2.007, Math.PI*0.72, 2, 1) // left  arc (115°→245°)
   }
 
   // Connection route — one bright continuous line through all three node centres.
