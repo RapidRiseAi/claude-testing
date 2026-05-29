@@ -412,15 +412,160 @@ function _genCommandCube() {
   out.normal = tilt(0, 0, 1)
   return out
 }
-function _genAppStack() {
-  const pts=[], pw=R*.36, ph=R*.74
-  _addRect(pts, -R*.18,0,R*.28, pw,ph, 30,44, 0.022)
-  _addCircle(pts, -R*.18,ph*.84,R*.30, R*.034, 10, 0.008)
-  _addLine(pts, -R*.18-pw*.62,-ph*.83,R*.29, -R*.18+pw*.62,-ph*.83,R*.29, 16, 0.012)
-  _addRect(pts, R*.24,-R*.07,-R*.08, pw*.88,ph*.84, 22,36, 0.022)
-  _addCircle(pts, R*.24,ph*.84*.84-R*.07,-R*.06, R*.030, 9, 0.008)
-  _addRect(pts, R*.56,-R*.16,-R*.38, pw*.74,ph*.68, 16,26, 0.022)
-  return _padToBig(pts, N_ORB)
+// Object 03 — a single unified holographic CODE BLOCK: a rounded rectangular
+// slab with real thickness and an engraved </> symbol cut into the front face.
+// Edge orbs (tag 0) are dense + bright; surface orbs (tag 1) give a controlled
+// even fill. Same dimensional language as the gear: 3/4 tilt, two faces joined
+// by corner depth lines, recessed symbol with bright top + floor rim edges.
+function _genCodeBlock() {
+  const pts = [], tags = []
+
+  const HW    = R * 1.06   // slab half-width
+  const HH    = R * 0.96   // slab half-height
+  const CR    = R * 0.24   // corner radius
+  const DEPTH = R * 0.34   // slab thickness (matches the gear's 3D feel)
+  const FZ    = DEPTH / 2
+  const BZ    = -DEPTH / 2
+
+  // Engraved </> symbol
+  const sHW   = R * 0.052  // stroke half-width (groove opening)
+  const GRV   = R * 0.12   // groove depth (how far the symbol is recessed)
+  const GZ    = FZ - GRV   // groove floor z
+  const cw    = R * 0.30   // chevron horizontal reach
+  const ch    = R * 0.42   // chevron / slash half-height
+  const ix    = R * 0.26   // inner x of the brackets
+  const seg   = (ax, ay, bx, by) => [ax, ay, bx, by]
+  const glyph = [
+    seg(-ix,  ch, -ix - cw, 0),   // < upper arm
+    seg(-ix - cw, 0, -ix, -ch),   // < lower arm
+    seg( ix,  ch,  ix + cw, 0),   // > upper arm
+    seg( ix + cw, 0,  ix, -ch),   // > lower arm
+    seg(-R * 0.13, -ch, R * 0.13, ch), // / slash
+  ]
+
+  // 3/4 tilt — front face dominant, side thickness clearly visible
+  const TY = Math.PI * 0.15, TX = Math.PI * 0.05
+  const cY = Math.cos(TY), sY = Math.sin(TY)
+  const cX = Math.cos(TX), sX = Math.sin(TX)
+  const tilt = (x, y, z) => {
+    const x1 = x*cY + z*sY, z1 = -x*sY + z*cY
+    return [x1, y*cX - z1*sX, y*sX + z1*cX]
+  }
+  // tag 0 = edge orb (2× larger + brighter), tag 1 = surface orb (normal)
+  const addPt = (x, y, z, jit, tag) => {
+    const [tx, ty, tz] = tilt(x, y, z)
+    pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
+    tags.push(tag)
+  }
+  // Bright vertical depth line joining two z levels at one (x,y)
+  const vline = (x, y, z0, z1, passes, n) => {
+    for (let p = 0; p < passes; p++)
+      for (let k = 0; k <= n; k++) addPt(x, y, z0 + (z1-z0)*k/n, 0.004, 0)
+  }
+
+  // Rounded-rect perimeter as an [x,y] list (4 straight edges + 4 corner arcs)
+  const peri = []
+  const nS = 26, nA = 11
+  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([-HW+CR + t*(2*HW-2*CR),  HH]) }
+  for (let i = 0; i < nA; i++) { const a=Math.PI/2*(1-i/nA);            peri.push([ HW-CR+Math.cos(a)*CR,  HH-CR+Math.sin(a)*CR]) }
+  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([ HW,  HH-CR - t*(2*HH-2*CR)]) }
+  for (let i = 0; i < nA; i++) { const a=-Math.PI/2*(i/nA);             peri.push([ HW-CR+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR]) }
+  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([ HW-CR - t*(2*HW-2*CR), -HH]) }
+  for (let i = 0; i < nA; i++) { const a=-Math.PI/2-Math.PI/2*(i/nA);   peri.push([-(HW-CR)+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR]) }
+  for (let i = 0; i < nS; i++) { const t=i/nS; peri.push([-HW, -(HH-CR) + t*(2*HH-2*CR)]) }
+  for (let i = 0; i < nA; i++) { const a=Math.PI-Math.PI/2*(i/nA);      peri.push([-(HW-CR)+Math.cos(a)*CR,  (HH-CR)+Math.sin(a)*CR]) }
+
+  // Outer silhouette — front + back perimeter, EQUAL passes so both faces match
+  for (let pass = 0; pass < 3; pass++) for (const [x,y] of peri) addPt(x, y, FZ, 0.004, 0)
+  for (let pass = 0; pass < 3; pass++) for (const [x,y] of peri) addPt(x, y, BZ, 0.004, 0)
+
+  // Depth edges — connect the two faces only at the 4 rounded corners + the
+  // 4 edge midpoints (8 connectors), not the whole wall (avoids a solid band)
+  const connAt = [nS/2, nS+nA/2, nS+nA+nS/2, 2*nS+nA+nA/2,
+                  2*nS+2*nA+nS/2, 3*nS+2*nA+nA/2, 3*nS+3*nA+nS/2, 4*nS+3*nA+nA/2]
+  for (const idx of connAt) {
+    const [x,y] = peri[Math.floor(idx) % peri.length]
+    vline(x, y, FZ, BZ, 2, 12)
+  }
+
+  // Side wall — plain even surface scatter (dimmer), gives the band of thickness
+  for (let i = 0; i < 720; i++) {
+    const [x,y] = peri[Math.floor(Math.random()*peri.length)]
+    addPt(x, y, FZ - Math.random()*DEPTH, 0.02, 1)
+  }
+
+  const inRR = (x, y) => {
+    const ax = Math.abs(x), ay = Math.abs(y)
+    if (ax > HW || ay > HH) return false
+    if (ax <= HW-CR || ay <= HH-CR) return true
+    const dx = ax-(HW-CR), dy = ay-(HH-CR)
+    return dx*dx + dy*dy <= CR*CR
+  }
+  const distSeg = (px, py, ax, ay, bx, by) => {
+    const dx = bx-ax, dy = by-ay
+    const t = Math.max(0, Math.min(1, ((px-ax)*dx+(py-ay)*dy)/(dx*dx+dy*dy)))
+    const cx = ax+dx*t, cy = ay+dy*t
+    return Math.hypot(px-cx, py-cy)
+  }
+  const inSymbol = (x, y) => glyph.some(([ax,ay,bx,by]) => distSeg(x,y,ax,ay,bx,by) < sHW)
+
+  // Front face fill — even, controlled, EXCLUDING the engraved symbol footprint
+  let f = 0, fa = 0
+  while (f < 3100 && fa++ < 13000) {
+    const x = (Math.random()*2-1)*HW, y = (Math.random()*2-1)*HH
+    if (!inRR(x, y) || inSymbol(x, y)) continue
+    addPt(x, y, FZ, 0.020, 1); f++
+  }
+  // Back face fill — lighter, so the slab reads solid from its far edge
+  let b = 0, ba = 0
+  while (b < 760 && ba++ < 3500) {
+    const x = (Math.random()*2-1)*HW, y = (Math.random()*2-1)*HH
+    if (!inRR(x, y)) continue
+    addPt(x, y, BZ, 0.020, 1); b++
+  }
+
+  // Engraved symbol — bright stroke outlines at the surface rim (FZ) AND the
+  // recessed floor rim (GZ); the z gap reads as real groove depth at this angle.
+  const strokeEdges = (ax, ay, bx, by, z) => {
+    const dx = bx-ax, dy = by-ay, L = Math.hypot(dx, dy)
+    const ux = dx/L, uy = dy/L, nx = -uy, ny = ux
+    const n = Math.max(8, Math.round(L / (R*0.028)))
+    for (let pass = 0; pass < 3; pass++)
+      for (let k = 0; k <= n; k++) {
+        const t = k/n, px = ax+dx*t, py = ay+dy*t
+        addPt(px + nx*sHW, py + ny*sHW, z, 0.004, 0)
+        addPt(px - nx*sHW, py - ny*sHW, z, 0.004, 0)
+      }
+    // end caps across the stroke width
+    for (const [ex, ey] of [[ax,ay],[bx,by]])
+      for (let pass = 0; pass < 3; pass++)
+        for (let k = 0; k <= 5; k++) {
+          const s = (k/5*2-1)*sHW
+          addPt(ex + nx*s, ey + ny*s, z, 0.004, 0)
+        }
+  }
+  for (const [ax,ay,bx,by] of glyph) {
+    strokeEdges(ax, ay, bx, by, FZ)   // top rim of the groove
+    strokeEdges(ax, ay, bx, by, GZ)   // floor rim of the groove
+    // inner groove walls — short bright depth lines at the stroke edges of each end
+    const dx = bx-ax, dy = by-ay, L = Math.hypot(dx, dy)
+    const nx = -dy/L, ny = dx/L
+    for (const [ex, ey] of [[ax,ay],[bx,by]]) {
+      vline(ex + nx*sHW, ey + ny*sHW, FZ, GZ, 1, 5)
+      vline(ex - nx*sHW, ey - ny*sHW, FZ, GZ, 1, 5)
+    }
+  }
+  // Groove floor fill — light, so the engraved symbol reads as a solid recess
+  let g = 0, ga = 0
+  while (g < 760 && ga++ < 7000) {
+    const x = (Math.random()*2-1)*(ix+cw+sHW), y = (Math.random()*2-1)*(ch+sHW)
+    if (!inSymbol(x, y)) continue
+    addPt(x, y, GZ, 0.012, 1); g++
+  }
+
+  const out = _padToBigTagged(pts, tags, N_ORB)
+  out.normal = tilt(0, 0, 1)
+  return out
 }
 function _genWorkflowPath() {
   const pts=[]
@@ -483,7 +628,7 @@ function _genFunnel() {
 }
 
 const CARD_GENERATORS = [
-  _genBrowserFrame, _genCommandCube, _genAppStack, _genWorkflowPath,
+  _genBrowserFrame, _genCommandCube, _genCodeBlock, _genWorkflowPath,
   _genIntelligenceOrbit, _genConnectedCubes, _genFunnel,
 ]
 
@@ -794,8 +939,8 @@ function InteractiveMiniOrbs({ groupRef }) {
     const usedCardMorph = p >= 0.38 ? finalCardMorph : 0.0
 
     // Edge-orb size boost applies only to cards that tag edge vs surface (globe,
-    // gear). For all other cards uSizeScale stays 1.0 → orbs revert to original.
-    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1
+    // gear, code block). For all other cards uSizeScale stays 1.0 → orbs revert.
+    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2
 
     // Always fully opaque — the transform is purely positional, never fades
     material.uniforms.uMorph.value      = collapseT
