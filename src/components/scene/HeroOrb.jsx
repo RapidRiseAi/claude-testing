@@ -203,16 +203,16 @@ function _padToBig(pts, targetN) {
 // Like _padToBig but tiles a parallel per-point tag array with the SAME
 // src = i % base mapping, so positions and tags stay aligned after padding.
 // tag 0 = bright/large edge orb, tag 1 = normal surface orb.
-function _padToBigTagged(pts, tags, targetN) {
+function _padToBigTagged(pts, tags, targetN, tileJit = 0.05) {
   const base = Math.floor(pts.length / 3)
   const pos = new Float32Array(targetN * 3)
   const tag = new Float32Array(targetN)
   if (base === 0) return { pos, tags: tag }
   for (let i = 0; i < targetN; i++) {
     const src = i % base
-    pos[i*3]   = pts[src*3]   + (Math.random()-.5)*0.05
-    pos[i*3+1] = pts[src*3+1] + (Math.random()-.5)*0.05
-    pos[i*3+2] = pts[src*3+2] + (Math.random()-.5)*0.05
+    pos[i*3]   = pts[src*3]   + (Math.random()-.5)*tileJit
+    pos[i*3+1] = pts[src*3+1] + (Math.random()-.5)*tileJit
+    pos[i*3+2] = pts[src*3+2] + (Math.random()-.5)*tileJit
     tag[i]     = tags[src]
   }
   return { pos, tags: tag }
@@ -418,27 +418,26 @@ function _genCommandCube() {
 function _genCodeBlock() {
   const pts = [], tags = []
 
-  const HW    = R * 0.98
-  const HH    = R * 0.88
+  const HW    = R * 1.02
+  const HH    = R * 0.92
   const CR    = R * 0.18
   const DEPTH = R * 0.34
   const FZ    = DEPTH / 2
   const BZ    = -DEPTH / 2
   const LIFT  = R * 0.20
-  const SFZ   = FZ + LIFT   // top face of raised </> symbol
+  const SFZ   = FZ + LIFT
 
-  // </> glyph — larger symbol, 5 stroke segments [ax,ay,bx,by]
-  const sHW = R * 0.068
-  const ix  = R * 0.17, cw = R * 0.40, ch = R * 0.44
-  const glyph = [
-    [-ix,  ch, -ix-cw, 0  ],
-    [-ix-cw, 0, -ix, -ch  ],
-    [ ix,  ch,  ix+cw, 0  ],
-    [ ix+cw, 0,  ix, -ch  ],
-    [-R*0.085, -ch, R*0.085, ch],
+  // Symbol: large bold </>, path-based so < and > apexes get exactly one
+  // depth connector pair (not two), and end-caps only at outer vertices.
+  const sHW  = R * 0.080
+  const ix   = R * 0.10, cw = R * 0.58, ch = R * 0.54
+  const sltX = R * 0.075
+  const glyphPaths = [
+    [[-ix,  ch], [-ix-cw, 0], [-ix, -ch]],
+    [[ ix,  ch], [ ix+cw, 0], [ ix, -ch]],
+    [[-sltX, -ch], [sltX, ch]],
   ]
 
-  // 3/4 tilt
   const TY = Math.PI * 0.15, TX = Math.PI * 0.05
   const cY = Math.cos(TY), sY = Math.sin(TY)
   const cX = Math.cos(TX), sX = Math.sin(TX)
@@ -451,120 +450,104 @@ function _genCodeBlock() {
     pts.push(tx+(Math.random()-.5)*jit, ty+(Math.random()-.5)*jit, tz+(Math.random()-.5)*jit)
     tags.push(tag)
   }
-  // Bright depth line from z0 to z1 at (x,y)
   const vline = (x, y, z0, z1, passes, n) => {
     for (let p = 0; p < passes; p++)
-      for (let k = 0; k <= n; k++) addPt(x, y, z0+(z1-z0)*k/n, 0.003, 0)
+      for (let k = 0; k <= n; k++) addPt(x, y, z0+(z1-z0)*k/n, 0.002, 0)
   }
 
-  // ── SLAB PERIMETER ──────────────────────────────────────────────────────────
+  // Slab perimeter
   const nS = 26, nA = 13
   const peri = []
   const ap = (x, y) => peri.push([x, y])
-  // top edge
   for (let i=0; i<nS; i++) { const t=i/nS; ap(-HW+CR+t*(2*HW-2*CR), HH) }
-  // top-right arc
   for (let i=0; i<=nA; i++) { const a=Math.PI/2*(1-i/nA); ap(HW-CR+Math.cos(a)*CR, HH-CR+Math.sin(a)*CR) }
-  // right edge
   for (let i=1; i<nS; i++) { const t=i/nS; ap(HW, HH-CR-t*(2*HH-2*CR)) }
-  // bottom-right arc
   for (let i=0; i<=nA; i++) { const a=-Math.PI/2*i/nA; ap(HW-CR+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR) }
-  // bottom edge
   for (let i=1; i<nS; i++) { const t=i/nS; ap(HW-CR-t*(2*HW-2*CR), -HH) }
-  // bottom-left arc
   for (let i=0; i<=nA; i++) { const a=-Math.PI/2-Math.PI/2*i/nA; ap(-(HW-CR)+Math.cos(a)*CR, -(HH-CR)+Math.sin(a)*CR) }
-  // left edge
   for (let i=1; i<nS; i++) { const t=i/nS; ap(-HW, -(HH-CR)+t*(2*HH-2*CR)) }
-  // top-left arc
   for (let i=0; i<=nA; i++) { const a=Math.PI-Math.PI/2*i/nA; ap(-(HW-CR)+Math.cos(a)*CR, (HH-CR)+Math.sin(a)*CR) }
 
-  // Front + back outlines — tight jitter so orbs form a clean visible line
-  for (let pass=0; pass<3; pass++) for (const [x,y] of peri) addPt(x, y, FZ, 0.003, 0)
-  for (let pass=0; pass<3; pass++) for (const [x,y] of peri) addPt(x, y, BZ, 0.003, 0)
+  for (let pass=0; pass<3; pass++) for (const [x,y] of peri) addPt(x, y, FZ, 0.002, 0)
+  for (let pass=0; pass<3; pass++) for (const [x,y] of peri) addPt(x, y, BZ, 0.002, 0)
 
-  // Depth connectors — ONLY at the 4 corner arc endpoints (2 per arc) and the
-  // 4 arc midpoints. No straight-edge midpoints — those create bright lines across
-  // the faces that read as grid artefacts not structure.
-  const k45 = CR * Math.SQRT1_2
-  const depthPts = [
-    // arc endpoints (where straight edges meet arcs)
-    [ HW-CR, HH], [HW,  HH-CR],
-    [ HW, -(HH-CR)], [ HW-CR, -HH],
-    [-(HW-CR), -HH], [-HW, -(HH-CR)],
-    [-HW,  HH-CR], [-(HW-CR), HH],
-    // arc midpoints (45° into each corner)
-    [ HW-CR+k45,  HH-CR+k45],
-    [ HW-CR+k45, -(HH-CR)-k45],
-    [-(HW-CR)-k45, -(HH-CR)-k45],
-    [-(HW-CR)-k45,  HH-CR+k45],
-  ]
-  for (const [x,y] of depthPts) vline(x, y, FZ, BZ, 2, 12)
+  // NO depth connectors: no beveled-corner blobs, no mid-edge lines.
+  // Two offset rounded-rect outlines + side scatter give a clean 3D read.
 
-  // Side wall scatter — dim surface fill, tag 1 (no bright lines)
-  for (let i=0; i<400; i++) {
+  for (let i=0; i<280; i++) {
     const [x,y] = peri[Math.floor(Math.random()*peri.length)]
-    addPt(x, y, FZ-Math.random()*DEPTH, 0.016, 1)
+    addPt(x, y, FZ-Math.random()*DEPTH, 0.015, 1)
   }
 
-  // ── FACE FILLS ──────────────────────────────────────────────────────────────
   const inRR = (x, y) => {
     const ax=Math.abs(x), ay=Math.abs(y)
     if (ax>HW||ay>HH) return false
     if (ax<=HW-CR||ay<=HH-CR) return true
-    return (ax-(HW-CR))**2+(ay-(HH-CR))**2 <= CR*CR
+    return (ax-(HW-CR))**2+(ay-(HH-CR))**2<=CR*CR
   }
-  let f=0, fa=0
-  while (f<2000 && fa++<8500) {
-    const x=(Math.random()*2-1)*HW, y=(Math.random()*2-1)*HH
-    if (!inRR(x,y)) continue
-    addPt(x, y, FZ, 0.018, 1); f++
-  }
-  let b=0, ba=0
-  while (b<400 && ba++<1800) {
-    const x=(Math.random()*2-1)*HW, y=(Math.random()*2-1)*HH
-    if (!inRR(x,y)) continue
-    addPt(x, y, BZ, 0.018, 1); b++
-  }
+  // Grid fills — regular pattern like the hero object
+  const gStep = R * 0.065
+  for (let gy=-HH; gy<=HH+0.001; gy+=gStep)
+    for (let gx=-HW; gx<=HW+0.001; gx+=gStep)
+      if (inRR(gx, gy)) addPt(gx, gy, FZ, 0.007, 1)
+  for (let gy=-HH; gy<=HH+0.001; gy+=gStep*1.6)
+    for (let gx=-HW; gx<=HW+0.001; gx+=gStep*1.6)
+      if (inRR(gx, gy)) addPt(gx, gy, BZ, 0.007, 1)
 
-  // ── RAISED </> SYMBOL ───────────────────────────────────────────────────────
-  // Each stroke: tight line outline at SFZ (top face) + depth connectors ONLY
-  // at the 4 stroke corners (2 ends × 2 sides) — no dense side-wall vlines.
-  // Fill is the same density as the slab face (light, not cluttered).
-  for (const [ax,ay,bx,by] of glyph) {
-    const dx=bx-ax, dy=by-ay, L=Math.hypot(dx,dy)
-    const nx=-dy/L, ny=dx/L
-    const n = Math.max(8, Math.round(L/(R*0.06)))
-
-    // Top face outline — tight string of orbs along both stroke edges, 3 passes
-    for (let pass=0; pass<3; pass++) {
-      for (let k=0; k<=n; k++) {
-        const t=k/n, px=ax+dx*t, py=ay+dy*t
-        addPt(px+nx*sHW, py+ny*sHW, SFZ, 0.003, 0)
-        addPt(px-nx*sHW, py-ny*sHW, SFZ, 0.003, 0)
-      }
-      // end caps — span the stroke width at each tip
-      for (const [ex,ey] of [[ax,ay],[bx,by]])
-        for (let k=0; k<=6; k++) {
-          const s = sHW*(2*k/6-1)
-          addPt(ex+nx*s, ey+ny*s, SFZ, 0.003, 0)
+  // Raised symbol: each segment gets a tight orb-line at FZ (base edge) and
+  // SFZ (top edge). End caps only at path outer vertices. Depth connectors
+  // at outer vertices only — shared < and > apexes get zero connectors.
+  for (const path of glyphPaths) {
+    for (let s=0; s<path.length-1; s++) {
+      const [ax,ay] = path[s], [bx,by] = path[s+1]
+      const dx=bx-ax, dy=by-ay, L=Math.hypot(dx,dy)
+      const nx=-dy/L, ny=dx/L
+      const n = Math.round(L/(R*0.024))  // dense: orbs appear as solid line
+      const isFirst = s === 0
+      const isLast  = s === path.length-2
+      const emitLine = (z) => {
+        for (let pass=0; pass<3; pass++) {
+          for (let k=0; k<=n; k++) {
+            const t=k/n, px=ax+dx*t, py=ay+dy*t
+            addPt(px+nx*sHW, py+ny*sHW, z, 0.001, 0)
+            addPt(px-nx*sHW, py-ny*sHW, z, 0.001, 0)
+          }
+          if (isFirst)
+            for (let k=0; k<=6; k++) { const s2=sHW*(2*k/6-1); addPt(ax+nx*s2,ay+ny*s2,z,0.001,0) }
+          if (isLast)
+            for (let k=0; k<=6; k++) { const s2=sHW*(2*k/6-1); addPt(bx+nx*s2,by+ny*s2,z,0.001,0) }
         }
-    }
-
-    // Depth connectors — only the 4 corners of the stroke (gives 3D read cleanly)
-    for (const [ex,ey] of [[ax,ay],[bx,by]]) {
-      vline(ex+nx*sHW, ey+ny*sHW, FZ, SFZ, 2, 10)
-      vline(ex-nx*sHW, ey-ny*sHW, FZ, SFZ, 2, 10)
-    }
-
-    // Top fill — light, same density as slab surface
-    let g=0, ga=0
-    while (g<60 && ga++<380) {
-      const t=Math.random(), s=(Math.random()*2-1)*sHW*0.85
-      addPt(ax+dx*t+nx*s, ay+dy*t+ny*s, SFZ, 0.014, 1); g++
+      }
+      emitLine(FZ)   // base edge at slab surface
+      emitLine(SFZ)  // top edge of raised symbol
+      // Grid fill on symbol top face
+      const fStep=R*0.068, nFL=Math.round(L/fStep), nFW=Math.max(1,Math.round(2*sHW/fStep))
+      for (let k=0; k<=nFL; k++) {
+        const t=k/nFL, px=ax+dx*t, py=ay+dy*t
+        for (let j=0; j<=nFW; j++) {
+          addPt(px+nx*sHW*(2*j/nFW-1)*0.85, py+ny*sHW*(2*j/nFW-1)*0.85, SFZ, 0.009, 1)
+        }
+      }
     }
   }
 
-  const out = _padToBigTagged(pts, tags, N_ORB)
+  // Depth connectors at 6 outer glyph vertices only (no apex doubling)
+  const L1    = Math.hypot(cw, ch)
+  const slashL = 2 * Math.hypot(sltX, ch)
+  const outerVerts = [
+    [-ix,   ch,  ch/L1, -cw/L1],
+    [-ix,  -ch,  ch/L1,  cw/L1],
+    [ ix,   ch,  ch/L1,  cw/L1],
+    [ ix,  -ch,  ch/L1, -cw/L1],
+    [-sltX, -ch, -2*ch/slashL, 2*sltX/slashL],
+    [ sltX,  ch, -2*ch/slashL, 2*sltX/slashL],
+  ]
+  for (const [ex,ey,enx,eny] of outerVerts) {
+    vline(ex+enx*sHW, ey+eny*sHW, FZ, SFZ, 2, 10)
+    vline(ex-enx*sHW, ey-eny*sHW, FZ, SFZ, 2, 10)
+  }
+
+  const out = _padToBigTagged(pts, tags, N_ORB, 0.012)
   out.normal = tilt(0, 0, 1)
   return out
 }
