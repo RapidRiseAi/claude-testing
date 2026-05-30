@@ -56,9 +56,11 @@ body {
   top: 0; left: 0; right: 0;
   z-index: 20;
   padding: 1.1rem 3vw;
-  transition: padding 0.35s;
+  transition: padding 0.35s, top 0.42s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .navbar--scrolled { padding-top: 0.65rem; }
+/* Auto-hide on scroll-down (slides up via top; gsap entrance uses transform) */
+.navbar--hidden { top: -130px; }
 
 .navbar-inner {
   position: relative;
@@ -1623,7 +1625,7 @@ h2 {
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding: clamp(76px, 8.5vh, 104px) 5vw clamp(30px, 3.8vh, 50px);
+  padding: clamp(58px, 6.5vh, 84px) 5vw clamp(28px, 3.5vh, 46px);
 }
 
 .fp-container {
@@ -1640,7 +1642,7 @@ h2 {
 /* ── Heading block ────────────────────────────────────────────────────────── */
 .fp-head {
   text-align: center;
-  max-width: 760px;
+  max-width: 900px;
   margin: 0 auto clamp(20px, 2.6vh, 32px);
   display: flex;
   flex-direction: column;
@@ -1677,8 +1679,8 @@ h2 {
 .fp-sub {
   font-size: clamp(0.96rem, 1.1vw, 1.1rem);
   line-height: 1.68;
-  color: rgba(176, 200, 230, 0.62);
-  max-width: 600px;
+  color: rgba(182, 205, 233, 0.66);
+  max-width: 820px;        /* fits the supporting line on a single row */
   margin-bottom: 1.25rem;
 }
 
@@ -1713,20 +1715,21 @@ h2 {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-height: clamp(424px, 48vh, 470px);
+  min-height: clamp(450px, 51vh, 500px);
   padding: 30px 24px 26px;
   border-radius: 22px;
   background: linear-gradient(162deg,
-    rgba(15, 25, 42, 0.86) 0%,
-    rgba(9, 15, 28, 0.88) 52%,
-    rgba(5, 9, 18, 0.92) 100%);
-  border: 1px solid rgba(86, 142, 210, 0.17);
+    rgba(11, 18, 33, 0.93) 0%,
+    rgba(6, 11, 22, 0.95) 52%,
+    rgba(3, 6, 13, 0.97) 100%);
+  border: 1px solid rgba(66, 140, 248, 0.28);
   overflow: hidden;
   will-change: transform;
   box-shadow:
-    0 22px 64px rgba(0, 0, 0, 0.48),
-    0 0 38px rgba(26, 96, 200, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    0 0 0 1px rgba(74, 150, 250, 0.06),
+    0 22px 64px rgba(0, 0, 0, 0.58),
+    0 0 46px rgba(34, 112, 232, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   transition: border-color 0.28s, box-shadow 0.28s, background 0.28s;
 }
 /* Soft internal gradient — faint top sheen + soft lower-blue glow */
@@ -1757,16 +1760,16 @@ h2 {
 .fp-card > * { position: relative; z-index: 1; }
 
 .fp-card:hover {
-  border-color: rgba(52, 150, 255, 0.46);
-  background: linear-gradient(160deg,
-    rgba(16, 27, 46, 0.94) 0%,
-    rgba(8, 14, 28, 0.94) 55%,
-    rgba(5, 9, 18, 0.95) 100%);
+  border-color: rgba(78, 168, 255, 0.55);
+  background: linear-gradient(162deg,
+    rgba(14, 23, 41, 0.95) 0%,
+    rgba(8, 13, 25, 0.96) 52%,
+    rgba(4, 8, 16, 0.98) 100%);
   box-shadow:
-    0 0 0 1px rgba(52, 150, 255, 0.18),
-    0 26px 72px rgba(0, 0, 0, 0.55),
-    0 0 50px rgba(34, 145, 255, 0.13),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    0 0 0 1px rgba(78, 162, 255, 0.22),
+    0 26px 76px rgba(0, 0, 0, 0.60),
+    0 0 62px rgba(42, 132, 250, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 .fp-card:hover::after { opacity: 0.5; }
 
@@ -1779,7 +1782,7 @@ h2 {
     transparent 0%,
     rgba(120, 195, 255, 0.55) 50%,
     transparent 100%);
-  opacity: 0.45;
+  opacity: 0.6;
   transition: opacity 0.3s;
   pointer-events: none;
 }
@@ -1792,18 +1795,20 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3aa4ff;
-  background: rgba(47, 148, 255, 0.09);
-  border: 1px solid rgba(82, 160, 255, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #5cb4ff;
+  background: rgba(46, 130, 245, 0.13);
+  border: 1px solid rgba(92, 170, 255, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0 18px rgba(40, 120, 240, 0.10);
   margin-bottom: 24px;
   transition: background 0.28s, border-color 0.28s, color 0.28s, box-shadow 0.28s;
 }
 .fp-card:hover .fp-card-icon {
-  background: rgba(47, 148, 255, 0.16);
-  border-color: rgba(92, 175, 255, 0.40);
-  color: #62bcff;
-  box-shadow: 0 0 22px rgba(34, 145, 255, 0.20);
+  background: rgba(50, 140, 250, 0.20);
+  border-color: rgba(108, 184, 255, 0.50);
+  color: #7cc6ff;
+  box-shadow: 0 0 26px rgba(46, 140, 250, 0.28);
 }
 
 .fp-card-title {
@@ -1831,8 +1836,8 @@ h2 {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #3a9bf0;
-  opacity: 0.9;
+  color: #4aa6f8;
+  opacity: 0.95;
   margin-bottom: 5px;
 }
 
@@ -1857,7 +1862,7 @@ h2 {
   font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #3aa4ff;
+  color: #4fb0ff;
 }
 .fp-card-monthly-note {
   font-size: 0.78rem;

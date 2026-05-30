@@ -823,27 +823,26 @@ const CARD_GENERATORS = [
 /* ── Section 3 — the funnel's orbs rearranged into a tall vertical helix ───────
    No new particles: the last card's funnel buffer (cardBufs[6]) is lerped into
    this helix target as Section 3 scrolls in. Tiled to N_ORB so it morphs 1:1. */
-const SEC3_DX   = -1.3    // leftward world shift — helix sits partly off-screen left
-const SEC3_OP   = 0.4     // subtle ambient opacity (was bright) once fully formed
-const SEC3_SIZE = 1.0     // finer atmospheric particles (was the 2× edge-boosted size)
+const SEC3_DX   = -1.45   // leftward world shift — helix sits partly off-screen left
+const SEC3_OP   = 0.42    // subtle ambient opacity (was bright) once fully formed
+const SEC3_SIZE = 0.9     // finer atmospheric particles (was the 2× edge-boosted size)
+// Misty double-helix: scatter every orb in a soft gaussian cloud around the two
+// strands (instead of tight tiled clusters) so it reads as atmosphere, not a
+// hard dotted rope. Same overall helix shape, just diffuse.
 const HELIX_TARGET = (() => {
-  const pts = []
-  const TURNS = 3.0, H = R * 2.35, RAD = R * 0.60, PER = 150
-  for (let s = 0; s < 2; s++) {
-    const phase = s * Math.PI
-    for (let i = 0; i < PER; i++) {
-      const t = i / (PER - 1)
-      const a = phase + t * TURNS * Math.PI * 2
-      const rr = RAD * (0.80 + 0.20 * Math.sin(t * Math.PI))
-      pts.push(Math.cos(a) * rr, (t - 0.5) * 2 * H, Math.sin(a) * rr)
-    }
+  const out = new Float32Array(N_ORB * 3)
+  const TURNS = 3.0, H = R * 2.35, RAD = R * 0.62, SPREAD = 0.62
+  const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 0.6667 // ~gaussian [-1,1]
+  for (let i = 0; i < N_ORB; i++) {
+    const strand = i % 2
+    const t  = Math.random()
+    const a  = strand * Math.PI + t * TURNS * Math.PI * 2
+    const rr = RAD * (0.78 + 0.22 * Math.sin(t * Math.PI))
+    out[i * 3]     = Math.cos(a) * rr + g() * SPREAD
+    out[i * 3 + 1] = (t - 0.5) * 2 * H + g() * SPREAD * 1.4
+    out[i * 3 + 2] = Math.sin(a) * rr + g() * SPREAD
   }
-  // sparse axis shimmer so the core never looks hollow
-  for (let i = 0; i < 50; i++) {
-    const t = i / 49
-    pts.push((Math.random() - 0.5) * 0.22, (t - 0.5) * 2 * H, (Math.random() - 0.5) * 0.22)
-  }
-  return _padToBig(new Float32Array(pts), N_ORB)
+  return out
 })()
 
 const TRAIL_LEN = 24

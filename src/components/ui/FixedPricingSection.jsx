@@ -172,7 +172,7 @@ export default function FixedPricingSection() {
           className="fp-custom"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={inView}
+          viewport={{ once: true, amount: 0, margin: '0px 0px 35% 0px' }}
           transition={{ duration: 0.6, delay: 0.12, ease: EASE }}
         >
           <div className="fp-custom-icon" aria-hidden="true"><WandIcon /></div>
