@@ -996,8 +996,8 @@ function InteractiveMiniOrbs({ groupRef }) {
     const usedCardMorph = p >= 0.38 ? finalCardMorph : 0.0
 
     // Edge-orb size boost applies only to cards that tag edge vs surface (globe,
-    // gear, code block). For all other cards uSizeScale stays 1.0 → orbs revert.
-    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3
+    // gear, code block, clock, sparkle). For all other cards uSizeScale stays 1.0 → orbs revert.
+    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4
 
     // Always fully opaque — the transform is purely positional, never fades
     material.uniforms.uMorph.value      = collapseT
