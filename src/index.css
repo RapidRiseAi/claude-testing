@@ -1085,6 +1085,22 @@ h2 {
 
 
 /* ── Individual card ──────────────────────────────────────────────────────── */
+/* Preview card gradient behind the permanent title — fades when card becomes active */
+.expertise-card::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 96px;
+  background: linear-gradient(to top, #050810 55%, transparent);
+  z-index: 4;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+.expertise-card--active::before {
+  opacity: 0;
+}
+
 .expertise-card {
   position: absolute;
   top: 0;
@@ -1161,6 +1177,27 @@ h2 {
   top: 28px;
   right: 26px;
   z-index: 10;
+}
+
+/* Permanent title — layout-animated between bottom (preview) and top (active) */
+.ec-card-title {
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  z-index: 5;
+  margin: 0 !important;
+}
+.ec-card-title--active {
+  top: 62px;
+}
+.ec-card-title--preview {
+  bottom: 26px;
+}
+
+/* Gap in active content layer to reserve space for the permanent title */
+.ec-title-gap {
+  height: 88px;
+  flex-shrink: 0;
 }
 
 /* ── Shared inner wrapper ─────────────────────────────────────────────────── */

@@ -156,17 +156,16 @@ function computeOffset() {
 const SLIDE_TRANS = { duration: 1.65, ease: [0.22, 1, 0.36, 1] }
 const FADE        = (delay = 0) => ({ duration: 0.38, ease: 'easeOut', delay })
 
-// Direction-aware curtain: dir >= 0 → enter from below; dir < 0 → enter from above
-// Exit is always a quick fade so the layoutId title can morph cleanly
+// Direction-aware curtain: dir >= 0 → enter from below/exit top; dir < 0 → enter from above/exit bottom
 const CURTAIN = {
   initial: (dir) => ({ y: dir >= 0 ? '105%' : '-105%' }),
   animate: { y: '0%', transition: { duration: 0.90, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, transition: { duration: 0.20 } },
+  exit:    (dir) => ({ y: dir >= 0 ? '-105%' : '105%', transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] } }),
 }
 const CURTAIN_PREVIEW = {
   initial: (dir) => ({ y: dir >= 0 ? '105%' : '-105%' }),
   animate: { y: '0%', transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] } },
-  exit:    { opacity: 0, transition: { duration: 0.16 } },
+  exit:    (dir) => ({ y: dir >= 0 ? '-105%' : '105%', transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } }),
 }
 
 function getCardAnim(pos, offset) {
@@ -182,7 +181,7 @@ function ActiveContent({ card }) {
   return (
     <div className="ec-inner ec-inner--active">
 
-      {/* Category only — arrow lives permanently on the card outside this layer */}
+      {/* Category only — arrow and title live permanently on the card outside this layer */}
       <div className="ec-toprow">
         <motion.span className="ec-category"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.28)}>
@@ -190,13 +189,8 @@ function ActiveContent({ card }) {
         </motion.span>
       </div>
 
-      {/* Title — shared layoutId element: morphs from preview position/size to here */}
-      <motion.h3
-        layoutId={`title-${card.number}`}
-        className="ec-title"
-        transition={{ duration: 0.88, ease: [0.22, 1, 0.36, 1] }}>
-        {card.title}
-      </motion.h3>
+      {/* Vertical gap that reserves space for the permanent title above */}
+      <div className="ec-title-gap" />
 
       {/* Intro */}
       <motion.p className="ec-intro"
@@ -268,15 +262,7 @@ function PreviewContent({ card }) {
       <motion.div className="ec-preview-dots" aria-hidden="true"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.12)} />
 
-      {/* Title at bottom — shared layoutId element: morphs to active position/size */}
-      <div className="ec-preview-footer">
-        <motion.h3
-          layoutId={`title-${card.number}`}
-          className="ec-preview-title"
-          transition={{ duration: 0.88, ease: [0.22, 1, 0.36, 1] }}>
-          {card.title}
-        </motion.h3>
-      </div>
+      {/* Title lives permanently on the card — no ec-preview-footer here */}
     </div>
   )
 }
@@ -366,7 +352,7 @@ export default function ExpertiseCarousel() {
                   }
                 }}
               >
-                {/* Arrow lives outside AnimatePresence so it never animates or disappears */}
+                {/* Arrow — never animated, always at top-right */}
                 <button
                   className="ec-arrow-btn ec-arrow-permanent"
                   onClick={(e) => { e.stopPropagation(); navigate(card.route) }}
@@ -374,6 +360,19 @@ export default function ExpertiseCarousel() {
                 >
                   <ArrowIcon />
                 </button>
+
+                {/* Title — permanent on card, Framer Motion layout animates it between
+                    bottom (preview) and top (active) as one continuous element */}
+                <motion.h3
+                  layout
+                  className={`ec-card-title ${isActive
+                    ? 'ec-card-title--active ec-title'
+                    : 'ec-card-title--preview ec-preview-title'}`}
+                  style={{ margin: 0 }}
+                  transition={{ layout: { duration: 0.88, ease: [0.22, 1, 0.36, 1] } }}
+                >
+                  {card.title}
+                </motion.h3>
 
                 <AnimatePresence mode="popLayout" custom={direction} initial={false}>
                   {isActive ? (
