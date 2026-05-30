@@ -1598,6 +1598,7 @@ export default function HeroOrb() {
   const isDragging = useRef(false)
   const snappingBack = useRef(false)
   const lastPointer = useRef({ x: 0, y: 0 })
+  const enteredOsc = useRef(false)
   const dragRaycaster = useMemo(() => new THREE.Raycaster(), [])
   const dragLocalSphere = useMemo(() => new THREE.Sphere(new THREE.Vector3(0, 0, 0), R * 1.05), [])
   const dragLocalRay = useMemo(() => new THREE.Ray(), [])
@@ -1696,11 +1697,20 @@ export default function HeroOrb() {
 
     if (isDragging.current) return
     if (p < 0.85 || carouselState.activeCard === 0) {
-      groupRef.current.rotation.y += delta * 0.044
+      enteredOsc.current = false
+      let y = groupRef.current.rotation.y + delta * 0.044
+      if (y > Math.PI)  y -= Math.PI * 2
+      if (y < -Math.PI) y += Math.PI * 2
+      groupRef.current.rotation.y = y
     } else {
       const t = state.clock.getElapsedTime()
       const oscTarget = Math.sin(t * 0.32) * 0.22
-      groupRef.current.rotation.y += (oscTarget - groupRef.current.rotation.y) * Math.min(1, delta * 1.5)
+      if (!enteredOsc.current) {
+        enteredOsc.current = true
+        groupRef.current.rotation.y = oscTarget
+      } else {
+        groupRef.current.rotation.y += (oscTarget - groupRef.current.rotation.y) * Math.min(1, delta * 1.5)
+      }
     }
     if (snappingBack.current) {
       const rot = groupRef.current.rotation

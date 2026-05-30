@@ -173,7 +173,7 @@ function ActiveContent({ card, onNavigate }) {
 
       {/* Top metadata row */}
       <motion.div className="ec-toprow"
-        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={FADE(0.20)}>
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.22)}>
         <div className="ec-meta">
           <span className="ec-number">{card.number}</span>
           <span className="ec-category">{card.category}</span>
@@ -185,19 +185,19 @@ function ActiveContent({ card, onNavigate }) {
 
       {/* Icon tile */}
       <motion.div className="ec-icon-box" aria-hidden="true"
-        initial={{ opacity: 0, scale: 0.72 }} animate={{ opacity: 1, scale: 1 }} transition={FADE(0.24)}>
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={FADE(0.28)}>
         <Icon />
       </motion.div>
 
-      {/* Title rises from where it lived as preview-title */}
+      {/* Title */}
       <motion.h3 className="ec-title"
-        initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.05)}>
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.40, delay: 0.30 }}>
         {card.title}
       </motion.h3>
 
       {/* Intro */}
       <motion.p className="ec-intro"
-        initial={{ opacity: 0, y: 52 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.14)}>
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.38, delay: 0.35 }}>
         {card.intro}
       </motion.p>
 
@@ -205,11 +205,11 @@ function ActiveContent({ card, onNavigate }) {
       <motion.div className="ec-divider" aria-hidden="true"
         initial={{ opacity: 0, scaleX: 0 }} animate={{ opacity: 1, scaleX: 1 }}
         style={{ originX: 0 }}
-        transition={{ duration: 0.42, ease: 'easeOut', delay: 0.26 }} />
+        transition={{ duration: 0.38, ease: 'easeOut', delay: 0.40 }} />
 
       {/* What We Build + Business Value — inside the flexible cap-block */}
       <motion.div className="ec-cap-block"
-        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.30)}>
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.38, delay: 0.44 }}>
 
         <p className="ec-section-label">What We Build</p>
         <ul className="ec-bullets">
@@ -345,12 +345,18 @@ export default function ExpertiseCarousel() {
                 <AnimatePresence mode="wait" initial={false}>
                   {isActive ? (
                     <motion.div key={`a-${card.number}`} className="ec-content-layer"
-                      exit={{ opacity: 0, transition: { duration: 0.16 } }}>
+                      initial={{ y: '100%' }}
+                      animate={{ y: '0%' }}
+                      exit={{ y: '110%', transition: { duration: 0.26, ease: [0.4, 0, 1, 1] } }}
+                      transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}>
                       <ActiveContent card={card} onNavigate={() => navigate(card.route)} />
                     </motion.div>
                   ) : (
                     <motion.div key={`p-${card.number}`} className="ec-content-layer"
-                      exit={{ opacity: 0, transition: { duration: 0.12 } }}>
+                      initial={{ y: '100%' }}
+                      animate={{ y: '0%' }}
+                      exit={{ y: '110%', transition: { duration: 0.20, ease: [0.4, 0, 1, 1] } }}
+                      transition={{ duration: 0.50, ease: [0.22, 1, 0.36, 1] }}>
                       <PreviewContent card={card} onNavigate={() => navigate(card.route)} />
                     </motion.div>
                   )}
