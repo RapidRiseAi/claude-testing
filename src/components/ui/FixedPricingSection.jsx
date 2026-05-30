@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import PricingHelix from '../scene/PricingHelix'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const MonitorCodeIcon = () => (
@@ -138,8 +137,6 @@ function ProductCard({ product, index }) {
 export default function FixedPricingSection() {
   return (
     <section className="fp-section" aria-label="Fixed pricing services">
-      <PricingHelix />
-
       <div className="fp-container">
         {/* Heading block */}
         <motion.header

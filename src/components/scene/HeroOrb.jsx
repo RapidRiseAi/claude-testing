@@ -13,7 +13,7 @@ const ORB_Y = 0.18
 const END_X = -3.3
 const END_SCALE = 0.55
 
-const scrollState = { progress: 0 }
+const scrollState = { progress: 0, sec3: 0 }
 
 const { vertices, edges, hexCenters } = buildSoccerBall()
 
@@ -820,6 +820,31 @@ const CARD_GENERATORS = [
   _genIntelligenceOrbit, _genConnectedCubes, _genFunnel,
 ]
 
+/* ── Section 3 — the funnel's orbs rearranged into a tall vertical helix ───────
+   No new particles: the last card's funnel buffer (cardBufs[6]) is lerped into
+   this helix target as Section 3 scrolls in. Tiled to N_ORB so it morphs 1:1. */
+const SEC3_DX = -1.55   // extra leftward world shift so the helix clears the cards
+const SEC3_OP = 0.42    // subtle opacity once the helix is fully formed
+const HELIX_TARGET = (() => {
+  const pts = []
+  const TURNS = 3.0, H = R * 2.35, RAD = R * 0.60, PER = 150
+  for (let s = 0; s < 2; s++) {
+    const phase = s * Math.PI
+    for (let i = 0; i < PER; i++) {
+      const t = i / (PER - 1)
+      const a = phase + t * TURNS * Math.PI * 2
+      const rr = RAD * (0.80 + 0.20 * Math.sin(t * Math.PI))
+      pts.push(Math.cos(a) * rr, (t - 0.5) * 2 * H, Math.sin(a) * rr)
+    }
+  }
+  // sparse axis shimmer so the core never looks hollow
+  for (let i = 0; i < 50; i++) {
+    const t = i / 49
+    pts.push((Math.random() - 0.5) * 0.22, (t - 0.5) * 2 * H, (Math.random() - 0.5) * 0.22)
+  }
+  return _padToBig(new Float32Array(pts), N_ORB)
+})()
+
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
 
@@ -1008,6 +1033,7 @@ function InteractiveMiniOrbs({ groupRef }) {
   const timerRef      = useRef(0)
   const targetAttrRef = useRef()
   const tagAttrRef    = useRef()
+  const lastSec3Ref   = useRef(-1)       // tracks the funnel→helix morph amount
 
   // Pre-generate all 7 card shapes (tiled to N_ORB). Generators return either a
   // plain Float32Array of positions, or { pos, tags } when they differentiate
@@ -1130,10 +1156,23 @@ function InteractiveMiniOrbs({ groupRef }) {
     // gear, code block, clock, sparkle, rings, funnel). For all other cards uSizeScale stays 1.0 → orbs revert.
     const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4 || activeRef.current === 5 || activeRef.current === 6
 
-    // Always fully opaque — the transform is purely positional, never fades
+    // Section 3: rearrange the funnel's exact orbs → helix and ease to a subtle
+    // ambient opacity. Gated by sec3 (>0 only past the carousel) and card 6.
+    const sec3 = scrollState.sec3
+    if (activeRef.current === 6 && sec3 !== lastSec3Ref.current) {
+      const e  = smoothstep(sec3)
+      const fn = cardBufs[6]
+      for (let k = 0; k < posTarget.length; k++) {
+        posTarget[k] = fn[k] + (HELIX_TARGET[k] - fn[k]) * e
+      }
+      if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
+      lastSec3Ref.current = sec3
+    }
+
+    // Card mode is fully opaque; Section 3 eases it down to a subtle ambient level
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
-    material.uniforms.uOpacity.value    = MAX_CARD_OP
+    material.uniforms.uOpacity.value    = MAX_CARD_OP + (SEC3_OP - MAX_CARD_OP) * smoothstep(sec3)
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
     material.uniforms.uSizeScale.value  = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
@@ -1612,6 +1651,8 @@ export default function HeroOrb() {
     const onScroll = () => {
       const max = window.innerHeight
       scrollState.progress = Math.min(1, Math.max(0, window.scrollY / max))
+      // sec3 climbs 0→1 across the snap from the carousel (1vh) into Section 3 (2vh)
+      scrollState.sec3 = Math.min(1, Math.max(0, window.scrollY / max - 1))
       if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false
         setShowHeavy(false)
@@ -1685,7 +1726,8 @@ export default function HeroOrb() {
   useFrame((state, delta) => {
     if (!groupRef.current) return
     const p = scrollState.progress
-    const targetX = ORB_X + (END_X - ORB_X) * p
+    const sec3 = scrollState.sec3
+    const targetX = ORB_X + (END_X - ORB_X) * p + SEC3_DX * sec3
     const targetY = ORB_Y + (0 - ORB_Y) * p
     const targetScale = 1.0 + (END_SCALE - 1.0) * p
     const lerpAmt = Math.min(1, delta * 8)
@@ -1696,7 +1738,14 @@ export default function HeroOrb() {
     groupRef.current.scale.setScalar(newS)
 
     if (isDragging.current) return
-    if (p < 0.85 || carouselState.activeCard === 0) {
+    if (sec3 > 0.01) {
+      // Section 3: gentle continuous spin of the helix around its own axis
+      enteredOsc.current = false
+      let y = groupRef.current.rotation.y + delta * 0.11
+      if (y > Math.PI)  y -= Math.PI * 2
+      if (y < -Math.PI) y += Math.PI * 2
+      groupRef.current.rotation.y = y
+    } else if (p < 0.85 || carouselState.activeCard === 0) {
       enteredOsc.current = false
       let y = groupRef.current.rotation.y + delta * 0.044
       if (y > Math.PI)  y -= Math.PI * 2

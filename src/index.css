@@ -1634,20 +1634,8 @@ h2 {
   margin: 0 auto;
 }
 
-/* ── Ambient orb-helix background object (far left, partially off-screen) ──── */
-.fp-helix {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -40px;
-  width: clamp(360px, 32vw, 560px);
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.6;        /* clearly subtler than the Section 2 objects */
-  -webkit-mask-image: linear-gradient(to right, #000 48%, transparent 92%);
-          mask-image: linear-gradient(to right, #000 48%, transparent 92%);
-}
-.fp-helix canvas { width: 100% !important; height: 100% !important; }
+/* The Section 3 ambient object is the carousel funnel's orbs rearranged into a
+   helix (see CarouselOverlay.jsx) — rendered on the shared 3D canvas, not here. */
 
 /* ── Heading block ────────────────────────────────────────────────────────── */
 .fp-head {
@@ -2014,7 +2002,6 @@ h2 {
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .fp-grid { grid-template-columns: repeat(2, 1fr); }
-  .fp-helix { display: none; }          /* hide ambient object below desktop */
   .fp-card-title { min-height: 0; }
 }
 
