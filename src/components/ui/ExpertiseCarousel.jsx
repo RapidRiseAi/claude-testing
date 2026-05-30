@@ -277,7 +277,7 @@ function PreviewContent({ card, onNavigate }) {
 
       {/* Title at bottom */}
       <motion.div className="ec-preview-footer"
-        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={RISE(0.08)}>
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.60, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}>
         <h3 className="ec-preview-title">{card.title}</h3>
       </motion.div>
     </div>
