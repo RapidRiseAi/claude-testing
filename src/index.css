@@ -1042,8 +1042,10 @@ h2 {
 
 /* ── Section heading ──────────────────────────────────────────────────────── */
 .expertise-heading-block {
+  padding-top: 40px;
   margin-bottom: 28px;
-  max-width: 760px;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .expertise-eyebrow {
@@ -1063,6 +1065,7 @@ h2 {
   letter-spacing: -0.040em;
   color: #F8FAFC;
   margin-bottom: 0;
+  white-space: nowrap;
 }
 
 .expertise-sub {
@@ -1070,7 +1073,7 @@ h2 {
   line-height: 1.64;
   color: rgba(170, 198, 230, 0.52);
   margin-top: 0.7rem;
-  max-width: 370px;
+  max-width: 100%;
 }
 
 /* ── Card carousel wrapper ────────────────────────────────────────────────── */
@@ -1451,7 +1454,7 @@ h2 {
 
 @media (max-width: 600px) {
   .expertise-section { padding: 56px 0 36px; }
-  .expertise-heading-block { margin-bottom: 20px; }
+  .expertise-heading-block { margin-bottom: 20px; padding-top: 0; width: auto; max-width: 100%; }
   .expertise-h2 { font-size: clamp(1.2rem, 5vw, 1.7rem); }
   .ec-carousel-wrap { height: auto; min-height: 440px; }
   .expertise-card {

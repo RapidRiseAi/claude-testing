@@ -512,7 +512,7 @@ function _genWorkflowPath() {
 
   // Overall scale — sized so the clock's diameter matches the neighbouring
   // Object 03 (code block, ~1.84R tall) rather than reading much smaller.
-  const S = 1.4
+  const S = 2.1
 
   // 3/4 tilt: rotate about Y then X so the disc shows depth, hands lift off the face.
   const ax = 0.34, ay = 0.20
@@ -603,7 +603,8 @@ function _genIntelligenceOrbit() {
   // Silhouette = 3D-puffed astroid  x = Rs·sin³t, y = Rs·cos³t.
   const pts = [], tags = []
 
-  const ax = 0.12, ay = 0.10
+  // Subtle 3/4 tilt — enough to read as 3D without hiding the silhouette.
+  const ax = 0.18, ay = 0.15
   const cax=Math.cos(ax), sax=Math.sin(ax), cay=Math.cos(ay), say=Math.sin(ay)
   const addPt = (x, y, z, jit, tag) => {
     x+=(Math.random()-.5)*jit; y+=(Math.random()-.5)*jit; z+=(Math.random()-.5)*jit
@@ -613,41 +614,42 @@ function _genIntelligenceOrbit() {
 
   const drawSparkle = (cx, cy, cz, Rs, d) => {
     const Rs23 = Math.pow(Rs, 2/3)
-    const nE = Math.max(Math.round(Rs * 168), 42)
+    const nE = Math.max(Math.round(Rs * 200), 50)
 
-    // Bright outer edge (tag-0): front rim (3 passes), back rim, two side bands
-    for (let pass = 0; pass < 3; pass++)
+    // Bright outer edge (tag-0): four passes on front rim, plus back rim & two side bands
+    for (let pass = 0; pass < 4; pass++)
       for (let i = 0; i < nE; i++) {
-        const t = (i/nE + pass/(3*nE)) * Math.PI*2
+        const t = (i/nE + pass/(4*nE)) * Math.PI*2
         const st=Math.sin(t), ct=Math.cos(t)
-        addPt(cx+Rs*st*st*st, cy+Rs*ct*ct*ct, cz+d*0.44, 0.006, 0)
+        addPt(cx+Rs*st*st*st, cy+Rs*ct*ct*ct, cz+d*0.44, 0.005, 0)
       }
     for (let i = 0; i < nE; i++) {
       const t = (i/nE)*Math.PI*2
       const ex=Rs*Math.sin(t)*Math.sin(t)*Math.sin(t)
       const ey=Rs*Math.cos(t)*Math.cos(t)*Math.cos(t)
-      addPt(cx+ex, cy+ey, cz-d*0.20, 0.006, 0)  // back rim
-      addPt(cx+ex, cy+ey, cz+d*0.10, 0.006, 0)  // mid side
-      addPt(cx+ex, cy+ey, cz+d*0.28, 0.006, 0)  // near-front side
+      addPt(cx+ex, cy+ey, cz-d*0.18, 0.005, 0)  // back rim
+      addPt(cx+ex, cy+ey, cz+d*0.12, 0.005, 0)  // mid side
+      addPt(cx+ex, cy+ey, cz+d*0.30, 0.005, 0)  // near-front side
     }
 
-    // Interior fill (tag-1): jittered grid, z follows dome profile
-    const step = Rs * 0.066
+    // Interior fill (tag-1): sparser grid for airy premium feel, z follows dome
+    const step = Rs * 0.082
     for (let gx = -Rs; gx <= Rs+0.001; gx += step)
       for (let gy = -Rs; gy <= Rs+0.001; gy += step) {
-        const jx = gx + (Math.random()-.5)*step*0.55
-        const jy = gy + (Math.random()-.5)*step*0.55
+        const jx = gx + (Math.random()-.5)*step*0.60
+        const jy = gy + (Math.random()-.5)*step*0.60
         const v = Math.pow(Math.abs(jx), 2/3) + Math.pow(Math.abs(jy), 2/3)
-        if (v <= Rs23*0.96) {
-          const zF = cz + d*Math.sqrt(Math.max(0, 1-v/Rs23))*0.72
-          addPt(cx+jx, cy+jy, zF, 0.010, 1)
+        if (v <= Rs23*0.94) {
+          const zF = cz + d*Math.sqrt(Math.max(0, 1-v/Rs23))*0.68
+          addPt(cx+jx, cy+jy, zF, 0.012, 1)
         }
       }
   }
 
-  drawSparkle(-R*0.18,  0,       0,   R*0.55, R*0.17)  // large (slightly left)
-  drawSparkle( R*0.50,  R*0.37,  0,   R*0.30, R*0.09)  // medium (upper-right)
-  drawSparkle( R*0.47, -R*0.33,  0,   R*0.20, R*0.06)  // small (lower-right)
+  // Scaled-up, recentred cluster: large dominant, medium & small well-separated.
+  drawSparkle(-R*0.12,  0,       0,   R*0.82, R*0.26)  // large — near-centred
+  drawSparkle( R*0.74,  R*0.56,  0,   R*0.44, R*0.14)  // medium — upper-right
+  drawSparkle( R*0.68, -R*0.50,  0,   R*0.28, R*0.09)  // small  — lower-right
 
   const out = _padToBigTagged(pts, tags, N_ORB, 0.035)
   out.normal = [0, 0, 1]
@@ -668,10 +670,10 @@ function _genConnectedCubes() {
     pts.push(x1, y*cax-z1*sax, y*sax+z1*cax); tags.push(tag)
   }
 
-  const Rmaj = R*0.50    // ring major radius — substantial, iconic
-  const tube = R*0.090   // tube thickness (reads solid, not thin)
-  const sep  = R*0.40    // each ring centre's distance from the shared centroid
-  const weave= R*0.100   // over/under weave depth that creates the interlock
+  const Rmaj = R*0.64    // ring major radius — scaled to match globe visual weight
+  const tube = R*0.115   // tube thickness (reads solid, not thin)
+  const sep  = R*0.51    // each ring centre's distance from the shared centroid
+  const weave= R*0.128   // over/under weave depth that creates the interlock
 
   // Volumetric torus with edge hierarchy: outer + inner rims bright (tag-0),
   // the front/back tube surfaces softer (tag-1). A sin(2θ) weave threads it
@@ -724,11 +726,11 @@ function _genFunnel() {
     pts.push(x1, y*cax-z1*sax, y*sax+z1*cax); tags.push(tag)
   }
 
-  const topR = R*0.86   // wide top opening radius
-  const neckR= R*0.13   // output neck radius
-  const topY = R*0.74   // top rim height
-  const coneB= -R*0.36  // where the cone meets the neck
-  const neckB= -R*0.66  // bottom of the neck
+  const topR = R*0.99   // wide top opening radius
+  const neckR= R*0.15   // output neck radius
+  const topY = R*0.85   // top rim height
+  const coneB= -R*0.41  // where the cone meets the neck
+  const neckB= -R*0.76  // bottom of the neck
 
   // A horizontal ring of orbs at height y, radius rad. brightRim → all tag-0.
   const ring = (y, rad, n, jit, brightRim) => {
@@ -772,10 +774,10 @@ function _genFunnel() {
 
   // ── Output stream — larger glowing orbs decreasing as they fall, centered ──
   const drops = [
-    [neckB - R*0.16, R*0.060],
-    [neckB - R*0.34, R*0.046],
-    [neckB - R*0.50, R*0.033],
-    [neckB - R*0.63, R*0.022],
+    [neckB - R*0.18, R*0.070],
+    [neckB - R*0.38, R*0.054],
+    [neckB - R*0.56, R*0.039],
+    [neckB - R*0.70, R*0.026],
   ]
   const gold = Math.PI*(3-Math.sqrt(5))
   for (const [dy, dr] of drops) {
@@ -784,6 +786,27 @@ function _genFunnel() {
       const fy=1-(i/(N-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i
       const rr=dr*(0.9+Math.random()*0.1)
       addPt(Math.cos(fa)*fr*rr, dy+fy*rr, Math.sin(fa)*fr*rr, 0.004, 0)
+    }
+  }
+
+  // ── Input scatter — glowing orbs above & around the mouth (incoming traffic) ──
+  // Each entry: [x_fraction_of_topR, y, z_fraction_of_topR, sphere_radius]
+  const inSpheres = [
+    [-0.68, topY + R*0.26,  0.42, R*0.052],
+    [ 0.52, topY + R*0.34, -0.55, R*0.044],
+    [ 0.88, topY + R*0.20,  0.18, R*0.038],
+    [-0.22, topY + R*0.54,  0.72, R*0.034],
+    [ 0.32, topY + R*0.58, -0.32, R*0.030],
+    [-0.78, topY + R*0.46, -0.48, R*0.026],
+    [ 0.58, topY + R*0.46,  0.58, R*0.022],
+    [-0.08, topY + R*0.80,  0.18, R*0.019],
+  ]
+  for (const [xf, iy, zf, ir] of inSpheres) {
+    const N=48, ix=xf*topR, iz=zf*topR
+    for (let i=0;i<N;i++){
+      const fy=1-(i/(N-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i
+      const rr=ir*(0.9+Math.random()*0.1)
+      addPt(ix+Math.cos(fa)*fr*rr, iy+fy*rr, iz+Math.sin(fa)*fr*rr, 0.006, 0)
     }
   }
 

@@ -314,7 +314,7 @@ export default function ExpertiseCarousel() {
       <div className="expertise-right">
         <div className="expertise-heading-block">
           <p className="expertise-eyebrow">OUR EXPERTISE</p>
-          <h2 className="expertise-h2">The systems behind<br />modern growth.</h2>
+          <h2 className="expertise-h2">The systems behind modern growth.</h2>
           <p className="expertise-sub">We design the digital layers that connect your website, workflows, data, AI, and operations into one smarter business stack.</p>
         </div>
 
