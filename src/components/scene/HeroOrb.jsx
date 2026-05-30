@@ -504,92 +504,91 @@ function _genCodeBlock() {
   return out
 }
 function _genWorkflowPath() {
-  // Redesigned to match mockup: 4 spheres (large-L, medium-T, medium-B, large-R)
-  // connected by thick volumetric particle tubes forming a diamond/loop shape.
+  // Premium 3D clock built from orbs — time symbol for Workflow Automation.
+  // Outer torus ring (with real tube thickness) + thin inner bezel ring + center
+  // hub + two tapered hands at a 10:10 luxury angle + four minimal markers.
+  // The whole form is tilted into a subtle 3/4 perspective so depth reads.
   const pts = [], tags = []
 
+  // 3/4 tilt: rotate about Y then X so the disc shows depth, hands lift off the face.
+  const ax = 0.34, ay = 0.20
+  const cax = Math.cos(ax), sax = Math.sin(ax), cay = Math.cos(ay), say = Math.sin(ay)
   const addPt = (x, y, z, jit, tag) => {
-    pts.push(x+(Math.random()-.5)*jit, y+(Math.random()-.5)*jit, z+(Math.random()-.5)*jit)
-    tags.push(tag)
+    x += (Math.random()-.5)*jit; y += (Math.random()-.5)*jit; z += (Math.random()-.5)*jit
+    const x1 = x*cay + z*say, z1 = -x*say + z*cay
+    const y2 = y*cax - z1*sax, z2 = y*sax + z1*cax
+    pts.push(x1, y2, z2); tags.push(tag)
   }
 
-  // 4 node positions — horizontal diamond layout
-  const NL = [-R*0.70,  0,      0]  // large left
-  const NT = [ 0,       R*0.38, 0]  // medium top
-  const NB = [ 0,      -R*0.38, 0]  // medium bottom
-  const NR = [ R*0.70,  0,      0]  // large right
-
-  // Dense fibonacci sphere: bright shell (tag-0) + interior fill (tag-1)
-  const addSphere = ([cx,cy,cz], r, N, passes) => {
+  // Solid orb sphere: bright shell (tag-0) + light interior fill (tag-1).
+  const addSphere = (cx, cy, cz, r, N, passes, shellTag=0) => {
     const gold = Math.PI*(3-Math.sqrt(5))
     for (let p=0; p<passes; p++)
       for (let i=0; i<N; i++) {
         const fy=1-(i/(N-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i
-        const rr=r*(0.93+Math.random()*0.07)
-        addPt(cx+Math.cos(fa)*fr*rr, cy+fy*rr, cz+Math.sin(fa)*fr*rr, 0.007, 0)
+        const rr=r*(0.92+Math.random()*0.08)
+        addPt(cx+Math.cos(fa)*fr*rr, cy+fy*rr, cz+Math.sin(fa)*fr*rr, 0.006, shellTag)
       }
-    const nI = Math.floor(N*0.55)
+    const nI=Math.floor(N*0.5)
     for (let i=0; i<nI; i++) {
       const fy=1-(i/(nI-1))*2, fr=Math.sqrt(1-fy*fy), fa=gold*i*1.7
-      const rr=r*Math.cbrt(Math.random())*0.82
-      addPt(cx+Math.cos(fa)*fr*rr, cy+fy*rr, cz+Math.sin(fa)*fr*rr, 0.007, 1)
+      const rr=r*Math.cbrt(Math.random())*0.8
+      addPt(cx+Math.cos(fa)*fr*rr, cy+fy*rr, cz+Math.sin(fa)*fr*rr, 0.006, 1)
     }
   }
 
-  // Cubic Bezier position + tangent (curves in XY plane, z=0)
-  const bez3 = (t, a, b, c, d) => {
-    const u=1-t
-    return [u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],
-            u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]]
-  }
-  const bez3T = (t, a, b, c, d) => {
-    const u=1-t
-    return [3*(u*u*(b[0]-a[0])+2*u*t*(c[0]-b[0])+t*t*(d[0]-c[0])),
-            3*(u*u*(b[1]-a[1])+2*u*t*(c[1]-b[1])+t*t*(d[1]-c[1]))]
-  }
-
-  // Volumetric particle tube along a cubic Bezier.
-  // Cross-section: circle perpendicular to tangent (XY-perp + Z depth).
-  // Bright outer ring = tag-0 (glowing edge), interior fill = tag-1.
-  const drawTube = (p0, cp1, cp2, p3, tubeR, nSeg, ringN, passes) => {
-    for (let s=0; s<=nSeg; s++) {
-      const t=s/nSeg
-      const [cx,cy]=bez3(t,p0,cp1,cp2,p3)
-      const [tx,ty]=bez3T(t,p0,cp1,cp2,p3)
-      const tl=Math.sqrt(tx*tx+ty*ty)+1e-9
-      const ux=-ty/tl, uy=tx/tl  // perpendicular to tangent in XY
-      // Outer ring: tag-0 (bright, creates glowing silhouette)
-      for (let p=0; p<passes; p++)
-        for (let j=0; j<ringN; j++) {
-          const ang=(j/ringN+p/(passes*ringN))*Math.PI*2
-          const rr=tubeR*(0.87+Math.random()*0.13)
-          addPt(cx+Math.cos(ang)*rr*ux, cy+Math.cos(ang)*rr*uy, Math.sin(ang)*rr, 0.009, 0)
-        }
-      // Interior fill: tag-1 (dense body)
-      const nF=Math.floor(ringN*0.9)
-      for (let j=0; j<nF; j++) {
-        const rr=tubeR*Math.sqrt(Math.random())*0.82, ang=Math.random()*Math.PI*2
-        addPt(cx+Math.cos(ang)*rr*ux, cy+Math.cos(ang)*rr*uy, Math.sin(ang)*rr, 0.009, 1)
+  // Torus ring: major circle radius Rmaj, tube thickness tubeR. Outward-facing
+  // cross-section orbs are tag-0 (bright crisp rim), inner-facing are tag-1.
+  const addTorus = (Rmaj, tubeR, Nmaj, Nmin, brightOuter=true) => {
+    for (let i=0; i<Nmaj; i++) {
+      const a=(i/Nmaj)*Math.PI*2, ca=Math.cos(a), sa=Math.sin(a)
+      for (let j=0; j<Nmin; j++) {
+        const b=(j/Nmin)*Math.PI*2
+        const rr=tubeR*(0.9+Math.random()*0.1)
+        const R0=Rmaj+Math.cos(b)*rr
+        const tag = brightOuter ? (Math.cos(b)>0.15 ? 0 : 1) : 1
+        addPt(ca*R0, sa*R0, Math.sin(b)*rr, 0.005, tag)
       }
     }
   }
 
-  // Spheres
-  addSphere(NL, R*0.200, 110, 3)
-  addSphere(NT, R*0.165, 78,  3)
-  addSphere(NB, R*0.165, 78,  3)
-  addSphere(NR, R*0.200, 110, 3)
+  // Tapered hand: volumetric tube from hub outward, lifted above the face in +z.
+  const drawHand = (ang, len, w0, w1, zLift) => {
+    const dx=Math.cos(ang), dy=Math.sin(ang)
+    const px=-dy, py=dx  // perpendicular in face plane
+    const nSeg=Math.max(Math.ceil(len/0.011), 14)
+    for (let s=0; s<=nSeg; s++) {
+      const t=s/nSeg
+      const cx=dx*len*t, cy=dy*len*t
+      const w=w0+(w1-w0)*t
+      const ringN=8
+      for (let k=0; k<ringN; k++) {
+        const b=(k/ringN)*Math.PI*2
+        const rr=w*(0.82+Math.random()*0.18)
+        addPt(cx+Math.cos(b)*rr*px, cy+Math.cos(b)*rr*py, zLift+Math.sin(b)*rr, 0.005, 0)
+      }
+    }
+  }
 
-  // Four curved tube paths forming the diamond loop.
-  // Large spheres: exit/enter at ±21° from horizontal (natural fork/merge).
-  // Medium spheres: enter/exit horizontally (smooth pass-through).
-  const tubeR=R*0.072, nSeg=30, ringN=10, passes=3
-  const Ty=R*0.38, By=-R*0.38
+  // Outer frame — substantial bright torus (the dominant, most readable silhouette).
+  addTorus(R*0.60, R*0.055, 210, 14, true)
+  // Inner bezel — thin subtle ring for the premium watch-face feel.
+  addTorus(R*0.485, R*0.018, 180, 7, false)
 
-  drawTube(NL, [-R*0.37, R*0.13, 0], [-R*0.28, Ty,      0], NT, tubeR, nSeg, ringN, passes)
-  drawTube(NL, [-R*0.37,-R*0.13, 0], [-R*0.28, By,      0], NB, tubeR, nSeg, ringN, passes)
-  drawTube(NT, [ R*0.28, Ty,     0], [ R*0.37,-R*0.13,  0], NR, tubeR, nSeg, ringN, passes)
-  drawTube(NB, [ R*0.28, By,     0], [ R*0.37, R*0.13,  0], NR, tubeR, nSeg, ringN, passes)
+  // Center hub — small dense bright orb, anchor of the hands.
+  addSphere(0, 0, R*0.055, R*0.062, 70, 3, 0)
+
+  // Two hands at a 10:10 luxury display angle (12 o'clock = +Y / 90°).
+  // Hour (short) → 10 o'clock = 150°; minute (long) → 2 o'clock = 30°.
+  // Minute hand lifted slightly higher so it layers above the hour hand.
+  drawHand(Math.PI*5/6, R*0.34, R*0.034, R*0.015, R*0.050)  // hour, 10 o'clock
+  drawHand(Math.PI/6,   R*0.46, R*0.030, R*0.012, R*0.075)  // minute, 2 o'clock
+
+  // Four minimal markers at 12 / 3 / 6 / 9.
+  const mR=R*0.475
+  for (const ma of [Math.PI/2, 0, -Math.PI/2, Math.PI]) {
+    addSphere(Math.cos(ma)*mR, Math.sin(ma)*mR, R*0.02, R*0.034, 30, 2, 0)
+  }
 
   const out = _padToBigTagged(pts, tags, N_ORB, 0.035)
   out.normal = [0, 0, 1]
