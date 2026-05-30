@@ -654,15 +654,59 @@ function _genIntelligenceOrbit() {
   return out
 }
 function _genConnectedCubes() {
-  const pts=[], cs=R*.26, ss=R*.18, dist=R*.80
-  _addCubeEdges(pts, 0,0,0, cs, 7, 0.018)
-  const sats=[[0,dist,R*.08],[0,-dist,-R*.08],[-dist,0,R*.10],[dist,0,-R*.10]]
-  for (const [sx,sy,sz] of sats) {
-    _addCubeEdges(pts, sx,sy,sz, ss, 5, 0.014)
-    const len=Math.sqrt(sx*sx+sy*sy+sz*sz)
-    _addLine(pts, sx/len*cs,sy/len*cs,sz/len*cs, sx-sx/len*ss,sy-sy/len*ss,sz-sz/len*ss, 10, 0.018)
+  // Premium interlocking network — three glowing orb rings woven into a trefoil.
+  // Each ring is a volumetric torus; a sin(2θ) z-weave makes them pass over/under
+  // so the form reads as connected systems, not flat stacked circles.
+  const pts = [], tags = []
+
+  // Subtle 3/4 tilt so the rings feel dimensional but stay front-readable.
+  const ax = 0.30, ay = 0.16
+  const cax=Math.cos(ax), sax=Math.sin(ax), cay=Math.cos(ay), say=Math.sin(ay)
+  const addPt = (x, y, z, jit, tag) => {
+    x+=(Math.random()-.5)*jit; y+=(Math.random()-.5)*jit; z+=(Math.random()-.5)*jit
+    const x1=x*cay+z*say, z1=-x*say+z*cay
+    pts.push(x1, y*cax-z1*sax, y*sax+z1*cax); tags.push(tag)
   }
-  return _padToBig(pts, N_ORB)
+
+  const Rmaj = R*0.50    // ring major radius — substantial, iconic
+  const tube = R*0.090   // tube thickness (reads solid, not thin)
+  const sep  = R*0.40    // each ring centre's distance from the shared centroid
+  const weave= R*0.100   // over/under weave depth that creates the interlock
+
+  // Volumetric torus with edge hierarchy: outer + inner rims bright (tag-0),
+  // the front/back tube surfaces softer (tag-1). A sin(2θ) weave threads it
+  // through the others so crossings alternate front/back.
+  const addRing = (cx, cy, phase) => {
+    const Nmaj = 256, Nmin = 16
+    for (let i=0; i<Nmaj; i++) {
+      const th=(i/Nmaj)*Math.PI*2, ct=Math.cos(th), st=Math.sin(th)
+      const zw = weave*Math.sin(2*th + phase)
+      for (let j=0; j<Nmin; j++) {
+        const ph=(j/Nmin)*Math.PI*2, cp=Math.cos(ph)
+        const rr=tube*(0.9+Math.random()*0.1)
+        const ring=Rmaj+cp*rr
+        // outer rim (cp≈1) and inner rim (cp≈-1) are the crisp bright edges
+        const tag = Math.abs(cp) > 0.45 ? 0 : 1
+        addPt(cx+ct*ring, cy+st*ring, zw+Math.sin(ph)*rr, 0.005, tag)
+      }
+    }
+    // Dedicated bright-rim passes — extra dense crisp edges on outer & inner contours.
+    for (let i=0; i<Nmaj; i++) {
+      const th=(i/Nmaj)*Math.PI*2, ct=Math.cos(th), st=Math.sin(th)
+      const zw = weave*Math.sin(2*th + phase)
+      addPt(cx+ct*(Rmaj+tube), cy+st*(Rmaj+tube), zw, 0.004, 0)  // outer rim
+      addPt(cx+ct*(Rmaj-tube), cy+st*(Rmaj-tube), zw, 0.004, 0)  // inner rim
+    }
+  }
+
+  // Trefoil arrangement: one ring up top, two lower-left / lower-right.
+  addRing(0,            sep,      0)             // top
+  addRing(-sep*0.866,  -sep*0.5,  Math.PI*2/3)   // lower-left
+  addRing( sep*0.866,  -sep*0.5,  Math.PI*4/3)   // lower-right
+
+  const out = _padToBigTagged(pts, tags, N_ORB, 0.035)
+  out.normal = [0, 0, 1]
+  return out
 }
 function _genFunnel() {
   const pts=[], topW=R*.82, botW=R*.12, topY=R*.70, botY=-R*.68, D=R*.30, H=topY-botY
@@ -996,8 +1040,8 @@ function InteractiveMiniOrbs({ groupRef }) {
     const usedCardMorph = p >= 0.38 ? finalCardMorph : 0.0
 
     // Edge-orb size boost applies only to cards that tag edge vs surface (globe,
-    // gear, code block, clock, sparkle). For all other cards uSizeScale stays 1.0 → orbs revert.
-    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4
+    // gear, code block, clock, sparkle, rings). For all other cards uSizeScale stays 1.0 → orbs revert.
+    const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4 || activeRef.current === 5
 
     // Always fully opaque — the transform is purely positional, never fades
     material.uniforms.uMorph.value      = collapseT
