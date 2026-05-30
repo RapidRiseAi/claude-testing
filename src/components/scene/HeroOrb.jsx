@@ -510,6 +510,10 @@ function _genWorkflowPath() {
   // The whole form is tilted into a subtle 3/4 perspective so depth reads.
   const pts = [], tags = []
 
+  // Overall scale — sized so the clock's diameter matches the neighbouring
+  // Object 03 (code block, ~1.84R tall) rather than reading much smaller.
+  const S = 1.4
+
   // 3/4 tilt: rotate about Y then X so the disc shows depth, hands lift off the face.
   const ax = 0.34, ay = 0.20
   const cax = Math.cos(ax), sax = Math.sin(ax), cay = Math.cos(ay), say = Math.sin(ay)
@@ -571,23 +575,23 @@ function _genWorkflowPath() {
   }
 
   // Outer frame — substantial bright torus (the dominant, most readable silhouette).
-  addTorus(R*0.60, R*0.055, 210, 14, true)
+  addTorus(R*0.60*S, R*0.055*S, 240, 14, true)
   // Inner bezel — thin subtle ring for the premium watch-face feel.
-  addTorus(R*0.485, R*0.018, 180, 7, false)
+  addTorus(R*0.485*S, R*0.018*S, 210, 7, false)
 
   // Center hub — small dense bright orb, anchor of the hands.
-  addSphere(0, 0, R*0.055, R*0.062, 70, 3, 0)
+  addSphere(0, 0, R*0.055*S, R*0.062*S, 70, 3, 0)
 
   // Two hands at a 10:10 luxury display angle (12 o'clock = +Y / 90°).
   // Hour (short) → 10 o'clock = 150°; minute (long) → 2 o'clock = 30°.
   // Minute hand lifted slightly higher so it layers above the hour hand.
-  drawHand(Math.PI*5/6, R*0.34, R*0.034, R*0.015, R*0.050)  // hour, 10 o'clock
-  drawHand(Math.PI/6,   R*0.46, R*0.030, R*0.012, R*0.075)  // minute, 2 o'clock
+  drawHand(Math.PI*5/6, R*0.34*S, R*0.034*S, R*0.015*S, R*0.050*S)  // hour, 10 o'clock
+  drawHand(Math.PI/6,   R*0.46*S, R*0.030*S, R*0.012*S, R*0.075*S)  // minute, 2 o'clock
 
   // Four minimal markers at 12 / 3 / 6 / 9.
-  const mR=R*0.475
+  const mR=R*0.475*S
   for (const ma of [Math.PI/2, 0, -Math.PI/2, Math.PI]) {
-    addSphere(Math.cos(ma)*mR, Math.sin(ma)*mR, R*0.02, R*0.034, 30, 2, 0)
+    addSphere(Math.cos(ma)*mR, Math.sin(ma)*mR, R*0.02*S, R*0.034*S, 30, 2, 0)
   }
 
   const out = _padToBigTagged(pts, tags, N_ORB, 0.035)
