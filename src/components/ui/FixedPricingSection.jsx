@@ -3,27 +3,31 @@ import { Link } from 'react-router-dom'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const MonitorCodeIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="3" width="20" height="14" rx="2" />
-    <path d="M8 21h8M12 17v4" />
-    <path d="M9.5 8 7.5 10l2 2M14.5 8l2 2-2 2" />
+  <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2.5" y="3.5" width="19" height="13" rx="2.2" />
+    <path d="M8.5 21h7M12 16.5V21" />
+    <path d="M10 8.6 8.2 10.25l1.8 1.65M14 8.6l1.8 1.65-1.8 1.65" />
+    <path d="M12.8 8.1 11.2 12.4" />
   </svg>
 )
 const UserPortalIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="8" r="3.4" />
+  <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="3.5" />
     <path d="M5.5 20a6.5 6.5 0 0 1 13 0" />
   </svg>
 )
 const DashboardIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 20V10M9.3 20V4M14.6 20v-7M20 20V8" />
+  <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 21V13.5M12 21V9M19 21V11" />
+    <circle cx="5" cy="10.6" r="1.35" fill="currentColor" stroke="none" />
+    <circle cx="12" cy="6" r="1.35" fill="currentColor" stroke="none" />
+    <circle cx="19" cy="8" r="1.35" fill="currentColor" stroke="none" />
   </svg>
 )
 const ChatAgentIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="29" height="29" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 15.5a2 2 0 0 1-2 2H9l-4 3v-3H6a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" />
-    <path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01" />
+    <path d="M8.5 10.8h.01M12 10.8h.01M15.5 10.8h.01" />
   </svg>
 )
 const ArrowIcon = () => (

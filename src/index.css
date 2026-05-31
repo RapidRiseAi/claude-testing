@@ -1716,18 +1716,18 @@ h2 {
   min-height: clamp(450px, 51vh, 500px);
   padding: 30px 24px 26px;
   border-radius: 22px;
-  background: linear-gradient(162deg,
-    rgba(7, 11, 21, 0.975) 0%,
-    rgba(4, 7, 14, 0.985) 52%,
-    rgba(2, 3, 8, 0.992) 100%);
-  border: 1px solid rgba(62, 120, 205, 0.30);
+  /* Gradient border: brighter blue at the top, fading to dark toward the
+     bottom (premium glass edge, lit from above) over a dark navy surface. */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(180deg, rgba(13, 21, 38, 0.92) 0%, rgba(6, 10, 20, 0.95) 56%, rgba(3, 5, 12, 0.975) 100%) padding-box,
+    linear-gradient(168deg, rgba(102, 162, 240, 0.55) 0%, rgba(58, 100, 166, 0.22) 44%, rgba(26, 50, 94, 0.10) 100%) border-box;
   overflow: hidden;
   will-change: transform;
   box-shadow:
-    0 0 0 1px rgba(58, 116, 215, 0.04),
-    0 20px 56px rgba(0, 0, 0, 0.62),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  transition: border-color 0.28s, box-shadow 0.28s, background 0.28s;
+    0 20px 54px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: box-shadow 0.28s;
 }
 /* Soft internal gradient — faint top sheen + soft lower-blue glow */
 .fp-card::before {
@@ -1757,15 +1757,10 @@ h2 {
 .fp-card > * { position: relative; z-index: 1; }
 
 .fp-card:hover {
-  border-color: rgba(74, 142, 230, 0.52);
-  background: linear-gradient(162deg,
-    rgba(11, 18, 33, 0.97) 0%,
-    rgba(6, 11, 21, 0.98) 52%,
-    rgba(3, 6, 12, 0.99) 100%);
   box-shadow:
-    0 0 0 1px rgba(70, 134, 225, 0.16),
-    0 26px 72px rgba(0, 0, 0, 0.66),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 0 0 1px rgba(92, 158, 246, 0.20),
+    0 26px 70px rgba(0, 0, 0, 0.66),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 .fp-card:hover::after { opacity: 0.5; }
 
