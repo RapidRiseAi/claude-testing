@@ -340,11 +340,16 @@ export default function ExpertiseCarousel() {
             const isActive  = pos === 0
             const isPreview = pos === 1
             const isVisible = pos >= 0 && pos <= 2
+            // Visual state by location: a card keeps the PRESENTED look for the
+            // presented slot AND while disappeared to the left, so sliding off
+            // (or coming back) never swaps content and never curtains. The
+            // curtain only fires when crossing the preview↔presented boundary.
+            const presented = pos <= 0
 
             return (
               <motion.div
                 key={card.number}
-                className={`expertise-card${isActive ? ' expertise-card--active' : ''}`}
+                className={`expertise-card${presented ? ' expertise-card--active' : ''}`}
                 style={{ zIndex: isActive ? 3 : isPreview ? 2 : isVisible ? 1 : 0 }}
                 animate={getCardAnim(pos, cardOffset)}
                 transition={SLIDE_TRANS}
@@ -378,7 +383,7 @@ export default function ExpertiseCarousel() {
                     bottom (preview) and top (active) as one continuous element */}
                 <motion.h3
                   layout
-                  className={`ec-card-title ${isActive
+                  className={`ec-card-title ${presented
                     ? 'ec-card-title--active ec-title'
                     : 'ec-card-title--preview ec-preview-title'}`}
                   style={{ margin: 0 }}
@@ -388,7 +393,7 @@ export default function ExpertiseCarousel() {
                 </motion.h3>
 
                 <AnimatePresence mode="popLayout" custom={direction} initial={false}>
-                  {isActive ? (
+                  {presented ? (
                     <motion.div
                       key={`a-${card.number}`}
                       className="ec-content-layer"

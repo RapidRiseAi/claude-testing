@@ -1654,7 +1654,7 @@ h2 {
   font-weight: 700;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #38B0FF;
+  color: #2f8ff2;
   margin-bottom: 0.95rem;
 }
 
@@ -1672,8 +1672,8 @@ h2 {
   color: #F6F9FD;
 }
 .fp-dot {
-  -webkit-text-fill-color: #38B0FF;
-  color: #38B0FF;
+  -webkit-text-fill-color: #2f8ff2;
+  color: #2f8ff2;
 }
 
 .fp-sub {
@@ -1691,16 +1691,14 @@ h2 {
   font-size: 0.82rem;
   font-weight: 500;
   letter-spacing: 0.004em;
-  color: rgba(200, 230, 255, 0.97);
-  background: rgba(48, 138, 250, 0.10);
-  border: 1px solid rgba(80, 164, 255, 0.38);
+  color: rgba(192, 222, 250, 0.96);
+  background: rgba(40, 116, 228, 0.09);
+  border: 1px solid rgba(68, 140, 230, 0.36);
   border-radius: 999px;
   padding: 9px 18px;
-  box-shadow:
-    0 0 30px rgba(30, 120, 242, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
-.fp-payment-pill svg { color: #5ab6ff; flex-shrink: 0; }
+.fp-payment-pill svg { color: #4f9ef2; flex-shrink: 0; }
 
 /* ── Product card grid ────────────────────────────────────────────────────── */
 .fp-grid {
@@ -1719,17 +1717,16 @@ h2 {
   padding: 30px 24px 26px;
   border-radius: 22px;
   background: linear-gradient(162deg,
-    rgba(8, 14, 27, 0.96) 0%,
-    rgba(4, 8, 17, 0.975) 52%,
-    rgba(2, 4, 10, 0.985) 100%);
-  border: 1px solid rgba(64, 142, 252, 0.34);
+    rgba(7, 11, 21, 0.975) 0%,
+    rgba(4, 7, 14, 0.985) 52%,
+    rgba(2, 3, 8, 0.992) 100%);
+  border: 1px solid rgba(62, 120, 205, 0.30);
   overflow: hidden;
   will-change: transform;
   box-shadow:
-    0 0 0 1px rgba(74, 150, 250, 0.06),
-    0 22px 64px rgba(0, 0, 0, 0.58),
-    0 0 46px rgba(34, 112, 232, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(58, 116, 215, 0.04),
+    0 20px 56px rgba(0, 0, 0, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition: border-color 0.28s, box-shadow 0.28s, background 0.28s;
 }
 /* Soft internal gradient — faint top sheen + soft lower-blue glow */
@@ -1740,8 +1737,8 @@ h2 {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 58% at 50% -14%, rgba(54, 130, 245, 0.08), transparent 62%),
-    radial-gradient(130% 60% at 50% 116%, rgba(26, 96, 215, 0.12), transparent 64%);
+    radial-gradient(120% 56% at 50% -14%, rgba(46, 112, 225, 0.05), transparent 62%),
+    radial-gradient(130% 58% at 50% 116%, rgba(20, 78, 190, 0.07), transparent 64%);
 }
 /* Very subtle dotted texture, masked to the bottom-right corner */
 .fp-card::after {
@@ -1760,16 +1757,15 @@ h2 {
 .fp-card > * { position: relative; z-index: 1; }
 
 .fp-card:hover {
-  border-color: rgba(78, 168, 255, 0.55);
+  border-color: rgba(74, 142, 230, 0.52);
   background: linear-gradient(162deg,
-    rgba(14, 23, 41, 0.95) 0%,
-    rgba(8, 13, 25, 0.96) 52%,
-    rgba(4, 8, 16, 0.98) 100%);
+    rgba(11, 18, 33, 0.97) 0%,
+    rgba(6, 11, 21, 0.98) 52%,
+    rgba(3, 6, 12, 0.99) 100%);
   box-shadow:
-    0 0 0 1px rgba(78, 162, 255, 0.22),
-    0 26px 76px rgba(0, 0, 0, 0.60),
-    0 0 62px rgba(42, 132, 250, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 0 0 1px rgba(70, 134, 225, 0.16),
+    0 26px 72px rgba(0, 0, 0, 0.66),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .fp-card:hover::after { opacity: 0.5; }
 
@@ -1795,20 +1791,17 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #66bdff;
-  background: rgba(46, 132, 250, 0.18);
-  border: 1px solid rgba(100, 178, 255, 0.42);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.10),
-    0 0 24px rgba(44, 128, 248, 0.20);
+  color: #4f9ff2;
+  background: rgba(38, 110, 228, 0.16);
+  border: 1px solid rgba(70, 138, 232, 0.42);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   margin-bottom: 24px;
-  transition: background 0.28s, border-color 0.28s, color 0.28s, box-shadow 0.28s;
+  transition: background 0.28s, border-color 0.28s, color 0.28s;
 }
 .fp-card:hover .fp-card-icon {
-  background: rgba(54, 146, 255, 0.26);
-  border-color: rgba(120, 192, 255, 0.58);
-  color: #8ed0ff;
-  box-shadow: 0 0 32px rgba(50, 148, 255, 0.34);
+  background: rgba(44, 122, 242, 0.24);
+  border-color: rgba(92, 162, 246, 0.58);
+  color: #6fb4f7;
 }
 
 .fp-card-title {
@@ -1836,7 +1829,7 @@ h2 {
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #5cb8ff;
+  color: #3f93ea;
   opacity: 1;
   margin-bottom: 5px;
 }
@@ -1862,7 +1855,7 @@ h2 {
   font-size: 1.04rem;
   font-weight: 750;
   letter-spacing: -0.01em;
-  color: #5cb8ff;
+  color: #3a93f5;
 }
 .fp-card-monthly-note {
   font-size: 0.78rem;
@@ -1879,16 +1872,13 @@ h2 {
   font-size: 0.73rem;
   font-weight: 650;
   letter-spacing: 0.002em;
-  color: rgba(190, 226, 255, 0.96);
-  background: rgba(50, 140, 250, 0.12);
-  border: 1px solid rgba(76, 162, 255, 0.36);
+  color: rgba(176, 212, 248, 0.94);
+  background: rgba(38, 110, 226, 0.11);
+  border: 1px solid rgba(64, 136, 228, 0.34);
   border-radius: 999px;
   padding: 7px 13px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 0 18px rgba(42, 124, 244, 0.10);
 }
-.fp-card-badge svg { color: #62bcff; flex-shrink: 0; }
+.fp-card-badge svg { color: #4f9ef2; flex-shrink: 0; }
 
 /* ── Card / custom CTA buttons ────────────────────────────────────────────── */
 .fp-card-btn {
@@ -1899,31 +1889,28 @@ h2 {
   width: 100%;
   padding: 14px 18px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #1c7df2 0%, #46a8ff 100%);
+  background: linear-gradient(135deg, #1666e2 0%, #2c84f2 100%);
   color: #ffffff;
   font-size: 0.92rem;
   font-weight: 680;
   letter-spacing: 0.004em;
   text-decoration: none;
-  border: 1px solid rgba(142, 206, 255, 0.38);
+  border: 1px solid rgba(96, 158, 240, 0.32);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    0 0 28px rgba(40, 142, 255, 0.42),
-    0 4px 16px rgba(18, 78, 200, 0.30);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 3px 12px rgba(8, 44, 130, 0.40);
   transition: box-shadow 0.25s, transform 0.2s, background 0.25s;
 }
 .fp-card-btn:hover {
-  background: linear-gradient(135deg, #2689ff 0%, #57b2ff 100%);
+  background: linear-gradient(135deg, #1b72ee 0%, #3690ff 100%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.30),
-    0 0 50px rgba(48, 162, 255, 0.64),
-    0 7px 22px rgba(20, 90, 210, 0.40);
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 5px 16px rgba(10, 52, 150, 0.48);
 }
 .fp-card:hover .fp-card-btn {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    0 0 44px rgba(44, 156, 255, 0.56),
-    0 6px 20px rgba(18, 84, 200, 0.36);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 4px 14px rgba(10, 50, 145, 0.46);
 }
 .fp-btn-arrow {
   flex-shrink: 0;
@@ -1942,13 +1929,12 @@ h2 {
   margin: clamp(22px, 3vh, 40px) auto 0;   /* centered + narrower than the card row */
   padding: 22px 32px;
   border-radius: 18px;
-  border: 1px solid rgba(86, 142, 210, 0.17);
-  background: linear-gradient(135deg, rgba(15, 25, 42, 0.82) 0%, rgba(6, 11, 22, 0.84) 100%);
+  border: 1px solid rgba(62, 120, 205, 0.26);
+  background: linear-gradient(135deg, rgba(9, 15, 27, 0.93) 0%, rgba(4, 8, 16, 0.95) 100%);
   overflow: hidden;
   box-shadow:
-    0 18px 52px rgba(0, 0, 0, 0.40),
-    0 0 44px rgba(22, 92, 205, 0.07),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    0 18px 50px rgba(0, 0, 0, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .fp-custom::before {
   content: '';
@@ -1956,7 +1942,7 @@ h2 {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(60% 140% at 4% 50%, rgba(34, 120, 240, 0.10), transparent 60%);
+  background: radial-gradient(60% 140% at 4% 50%, rgba(28, 100, 215, 0.06), transparent 60%);
 }
 .fp-custom > * { position: relative; z-index: 1; }
 
@@ -1968,10 +1954,10 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #3aa4ff;
-  background: rgba(47, 148, 255, 0.10);
-  border: 1px solid rgba(82, 160, 255, 0.20);
-  box-shadow: 0 0 24px rgba(30, 130, 240, 0.12);
+  color: #4f9ff2;
+  background: rgba(38, 110, 228, 0.14);
+  border: 1px solid rgba(70, 138, 232, 0.38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .fp-custom-text { flex: 1; min-width: 0; }
@@ -1996,26 +1982,24 @@ h2 {
   gap: 9px;
   padding: 13px 24px;
   border-radius: 999px;
-  background: linear-gradient(135deg, #1c7df2 0%, #46a8ff 100%);
+  background: linear-gradient(135deg, #1666e2 0%, #2c84f2 100%);
   color: #ffffff;
   font-size: 0.92rem;
   font-weight: 680;
   letter-spacing: 0.004em;
   text-decoration: none;
-  border: 1px solid rgba(142, 206, 255, 0.38);
+  border: 1px solid rgba(96, 158, 240, 0.32);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    0 0 30px rgba(40, 142, 255, 0.46),
-    0 4px 16px rgba(18, 78, 200, 0.30);
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 3px 12px rgba(8, 44, 130, 0.40);
   transition: box-shadow 0.25s, transform 0.18s, background 0.25s;
 }
 .fp-custom-btn:hover {
-  background: linear-gradient(135deg, #2689ff 0%, #57b2ff 100%);
+  background: linear-gradient(135deg, #1b72ee 0%, #3690ff 100%);
   transform: translateY(-1px);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.30),
-    0 0 52px rgba(48, 162, 255, 0.66),
-    0 7px 24px rgba(20, 90, 210, 0.40);
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    0 5px 16px rgba(10, 52, 150, 0.48);
 }
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
