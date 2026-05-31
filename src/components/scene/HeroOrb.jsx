@@ -820,33 +820,9 @@ const CARD_GENERATORS = [
   _genIntelligenceOrbit, _genConnectedCubes, _genFunnel,
 ]
 
-/* ── Section 3 — the funnel's orbs rearranged into a tall vertical helix ───────
-   No new particles: the last card's funnel buffer (cardBufs[6]) is lerped into
-   this helix target as Section 3 scrolls in. Tiled to N_ORB so it morphs 1:1. */
-const SEC3_DX   = -1.45   // leftward world shift — helix sits partly off-screen left
-const SEC3_OP   = 0.42    // subtle ambient opacity (was bright) once fully formed
-const SEC3_SIZE = 0.9     // finer atmospheric particles (was the 2× edge-boosted size)
-// Misty double-helix: scatter every orb in a soft gaussian cloud around the two
-// strands (instead of tight tiled clusters) so it reads as atmosphere, not a
-// hard dotted rope. Same overall helix shape, just diffuse.
-const HELIX_TARGET = (() => {
-  const out = new Float32Array(N_ORB * 3)
-  const TURNS = 3.0, H = R * 2.35, RAD = R * 0.62
-  const g = () => (Math.random() + Math.random() + Math.random() - 1.5) * 0.6667 // ~gaussian [-1,1]
-  for (let i = 0; i < N_ORB; i++) {
-    const strand = i % 2
-    const t  = Math.random()
-    const a  = strand * Math.PI + t * TURNS * Math.PI * 2
-    const rr = RAD * (0.78 + 0.22 * Math.sin(t * Math.PI))
-    // ~64% of orbs hug the two strands tightly (dense, defined helix); the rest
-    // diffuse outward (biased near the strand) into a soft mist around them.
-    const sp = Math.random() < 0.64 ? 0.07 : (0.3 + Math.random() * Math.random() * 0.95)
-    out[i * 3]     = Math.cos(a) * rr + g() * sp
-    out[i * 3 + 1] = (t - 0.5) * 2 * H + g() * sp * 1.3
-    out[i * 3 + 2] = Math.sin(a) * rr + g() * sp
-  }
-  return out
-})()
+/* Section 3 has its own decorative object (PricingWave). The shared hero /
+   carousel orb simply fades out as Section 3 scrolls in — see scrollState.sec3
+   (set in the scroll listener) used by the opacity + glow fades below. */
 
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
@@ -1036,7 +1012,6 @@ function InteractiveMiniOrbs({ groupRef }) {
   const timerRef      = useRef(0)
   const targetAttrRef = useRef()
   const tagAttrRef    = useRef()
-  const lastSec3Ref   = useRef(-1)       // tracks the funnel→helix morph amount
 
   // Pre-generate all 7 card shapes (tiled to N_ORB). Generators return either a
   // plain Float32Array of positions, or { pos, tags } when they differentiate
@@ -1159,28 +1134,15 @@ function InteractiveMiniOrbs({ groupRef }) {
     // gear, code block, clock, sparkle, rings, funnel). For all other cards uSizeScale stays 1.0 → orbs revert.
     const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4 || activeRef.current === 5 || activeRef.current === 6
 
-    // Section 3: rearrange the funnel's exact orbs → helix and ease to a subtle
-    // ambient opacity. Gated by sec3 (>0 only past the carousel) and card 6.
+    // The hero / carousel orb fades out as Section 3 scrolls in (Section 3 has
+    // its own PricingWave decoration). sec3: 0 in the carousel → 1 in Section 3.
     const sec3 = scrollState.sec3
-    if (activeRef.current === 6 && sec3 !== lastSec3Ref.current) {
-      const e  = smoothstep(sec3)
-      const fn = cardBufs[6]
-      for (let k = 0; k < posTarget.length; k++) {
-        posTarget[k] = fn[k] + (HELIX_TARGET[k] - fn[k]) * e
-      }
-      if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
-      lastSec3Ref.current = sec3
-    }
-
-    // Card mode is fully opaque; Section 3 eases it down to a subtle ambient level
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
-    material.uniforms.uOpacity.value    = MAX_CARD_OP + (SEC3_OP - MAX_CARD_OP) * smoothstep(sec3)
+    material.uniforms.uOpacity.value    = MAX_CARD_OP * (1 - smoothstep(sec3))
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
-    // Section 3 shrinks the orbs to fine particles (overrides the edge-size boost)
-    const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
-    material.uniforms.uSizeScale.value  = baseSize + (SEC3_SIZE - baseSize) * smoothstep(sec3)
+    material.uniforms.uSizeScale.value  = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
     material.uniforms.uRadius.value     = 0.58 * scale
 
     for (let i = 0; i < TRAIL_LEN; i++) {
@@ -1731,8 +1693,7 @@ export default function HeroOrb() {
   useFrame((state, delta) => {
     if (!groupRef.current) return
     const p = scrollState.progress
-    const sec3 = scrollState.sec3
-    const targetX = ORB_X + (END_X - ORB_X) * p + SEC3_DX * sec3
+    const targetX = ORB_X + (END_X - ORB_X) * p
     const targetY = ORB_Y + (0 - ORB_Y) * p
     const targetScale = 1.0 + (END_SCALE - 1.0) * p
     const lerpAmt = Math.min(1, delta * 8)
@@ -1743,14 +1704,7 @@ export default function HeroOrb() {
     groupRef.current.scale.setScalar(newS)
 
     if (isDragging.current) return
-    if (sec3 > 0.01) {
-      // Section 3: gentle continuous spin of the helix around its own axis
-      enteredOsc.current = false
-      let y = groupRef.current.rotation.y + delta * 0.11
-      if (y > Math.PI)  y -= Math.PI * 2
-      if (y < -Math.PI) y += Math.PI * 2
-      groupRef.current.rotation.y = y
-    } else if (p < 0.85 || carouselState.activeCard === 0) {
+    if (p < 0.85 || carouselState.activeCard === 0) {
       enteredOsc.current = false
       let y = groupRef.current.rotation.y + delta * 0.044
       if (y > Math.PI)  y -= Math.PI * 2

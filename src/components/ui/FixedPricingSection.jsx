@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import PricingWave from '../scene/PricingWave'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const MonitorCodeIcon = () => (
@@ -143,6 +144,8 @@ function ProductCard({ product, index }) {
 export default function FixedPricingSection() {
   return (
     <section className="fp-section" aria-label="Fixed pricing services">
+      <PricingWave />
+
       <div className="fp-container">
         {/* Heading block */}
         <motion.header

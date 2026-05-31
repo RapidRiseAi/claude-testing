@@ -1636,8 +1636,27 @@ h2 {
   margin: 0 auto;
 }
 
-/* The Section 3 ambient object is the carousel funnel's orbs rearranged into a
-   helix (see CarouselOverlay.jsx) — rendered on the shared 3D canvas, not here. */
+/* ── Section 3 decorative object: bottom-spanning particle wave (PricingWave) ──
+   Sits low and behind the content; masked to fade up into the section and
+   soften the left/right edges so it blends into the dark background. */
+.fp-wave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 64%;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image:
+    linear-gradient(to top, #000 0%, #000 40%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to top, #000 0%, #000 40%, transparent 100%),
+    linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+  mask-composite: intersect;
+}
+.fp-wave canvas { width: 100% !important; height: 100% !important; }
 
 /* ── Heading block ────────────────────────────────────────────────────────── */
 .fp-head {
