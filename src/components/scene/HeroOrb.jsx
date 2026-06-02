@@ -820,9 +820,37 @@ const CARD_GENERATORS = [
   _genIntelligenceOrbit, _genConnectedCubes, _genFunnel,
 ]
 
-/* Section 3 has its own decorative object (PricingWave). The shared hero /
-   carousel orb simply fades out as Section 3 scrolls in — see scrollState.sec3
-   (set in the scroll listener) used by the opacity + glow fades below. */
+/* ── Section 3 — the funnel's orbs rearranged into a wide bottom wave ──────────
+   No new particles: the last carousel card's funnel buffer (cardBufs[6]) is
+   lerped into this wave grid as Section 3 scrolls in (scrollState.sec3 0→1), and
+   the group drops low / recentres / scales up so the SAME orbs read as a wide
+   wave receding across the bottom of the viewport. Placement was dialled in with
+   scripts/wave-proto.mjs (projected through the real Scene camera). */
+const WAVE_COLS  = 192
+const WAVE_ROWS  = 72       // 192×72 = 13824 = N_ORB, so orbs map 1:1 to the grid
+const WAVE_HW    = 13.0     // local half-width (spans full viewport width when low)
+const WAVE_ZN    = 5.0      // near row z (toward camera, clipped below the viewport)
+const WAVE_ZF    = -6.0     // far row z (recedes up toward screen ~third)
+const WAVE_LIFT  = 1.4      // far L/R edges rise into the empty side gutters
+const WAVE_CX    = 0.0      // group recentres horizontally
+const WAVE_CY    = -1.9     // group drops to the bottom band
+const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
+const WAVE_OP    = 0.5      // subtle ambient opacity once the wave has formed
+const WAVE_SIZE  = 0.6      // fine wave dots (overrides the funnel's edge boost)
+// Static per-orb grid (local x, edge-lift y, z); the gentle undulation is added
+// on top per-frame in the render loop.
+const WAVE_GRID = (() => {
+  const out = new Float32Array(N_ORB * 3)
+  for (let i = 0; i < N_ORB; i++) {
+    const col = i % WAVE_COLS
+    const row = (i / WAVE_COLS) | 0
+    const nx  = col / (WAVE_COLS - 1) - 0.5            // -0.5 … 0.5
+    out[i * 3]     = nx * 2 * WAVE_HW
+    out[i * 3 + 1] = WAVE_LIFT * (nx * nx * 4)          // 0 centre → WAVE_LIFT edges
+    out[i * 3 + 2] = WAVE_ZN + (WAVE_ZF - WAVE_ZN) * (row / (WAVE_ROWS - 1))
+  }
+  return out
+})()
 
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
@@ -1134,15 +1162,40 @@ function InteractiveMiniOrbs({ groupRef }) {
     // gear, code block, clock, sparkle, rings, funnel). For all other cards uSizeScale stays 1.0 → orbs revert.
     const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4 || activeRef.current === 5 || activeRef.current === 6
 
-    // The hero / carousel orb fades out as Section 3 scrolls in (Section 3 has
-    // its own PricingWave decoration). sec3: 0 in the carousel → 1 in Section 3.
+    // Section 3: the funnel's exact orbs (cardBufs[6]) rearrange into the wide
+    // bottom wave, undulating gently, and ease to a subtle ambient opacity.
+    // Gated past the carousel (sec3>0) and to the funnel card (6). sec3: 0 in the
+    // carousel → 1 in Section 3.
     const sec3 = scrollState.sec3
+    if (activeRef.current === 6 && sec3 > 0.001) {
+      const e3 = smoothstep(sec3)
+      const t  = clock.getElapsedTime()
+      const fn = cardBufs[6]
+      for (let i = 0; i < N_ORB; i++) {
+        const ix = i * 3
+        const lx = WAVE_GRID[ix], by = WAVE_GRID[ix + 1], lz = WAVE_GRID[ix + 2]
+        // broad, slow, overlapping swells layered on the edge-lift base height —
+        // kept gentle so the wave stays low, calm and subtle
+        const wy = by
+          + 0.24 * Math.sin(lx * 0.45 + t * 0.5)
+          + 0.15 * Math.sin(lz * 0.6  - t * 0.4)
+          + 0.10 * Math.sin((lx + lz) * 0.4 + t * 0.65)
+        posTarget[ix]     = fn[ix]     + (lx - fn[ix])     * e3
+        posTarget[ix + 1] = fn[ix + 1] + (wy - fn[ix + 1]) * e3
+        posTarget[ix + 2] = fn[ix + 2] + (lz - fn[ix + 2]) * e3
+      }
+      if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
+    }
+
+    const wave = smoothstep(sec3)
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
-    material.uniforms.uOpacity.value    = MAX_CARD_OP * (1 - smoothstep(sec3))
+    // Stay visible in Section 3 (the wave) instead of fading to nothing.
+    material.uniforms.uOpacity.value    = MAX_CARD_OP + (WAVE_OP - MAX_CARD_OP) * wave
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
-    material.uniforms.uSizeScale.value  = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
+    const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
+    material.uniforms.uSizeScale.value  = baseSize + (WAVE_SIZE - baseSize) * wave
     material.uniforms.uRadius.value     = 0.58 * scale
 
     for (let i = 0; i < TRAIL_LEN; i++) {
@@ -1693,9 +1746,16 @@ export default function HeroOrb() {
   useFrame((state, delta) => {
     if (!groupRef.current) return
     const p = scrollState.progress
-    const targetX = ORB_X + (END_X - ORB_X) * p
-    const targetY = ORB_Y + (0 - ORB_Y) * p
-    const targetScale = 1.0 + (END_SCALE - 1.0) * p
+    const sec3 = scrollState.sec3
+    const e3 = smoothstep(sec3)
+    // Section 3: recentre (x→0), drop to the bottom band (y→WAVE_CY) and scale up
+    // so the funnel's orbs spread into a wide wave.
+    let targetX = ORB_X + (END_X - ORB_X) * p
+    let targetY = ORB_Y + (0 - ORB_Y) * p
+    let targetScale = 1.0 + (END_SCALE - 1.0) * p
+    targetX += (WAVE_CX - targetX) * e3
+    targetY += (WAVE_CY - targetY) * e3
+    targetScale += (WAVE_SCALE - targetScale) * e3
     const lerpAmt = Math.min(1, delta * 8)
     groupRef.current.position.x += (targetX - groupRef.current.position.x) * lerpAmt
     groupRef.current.position.y += (targetY - groupRef.current.position.y) * lerpAmt
@@ -1704,7 +1764,14 @@ export default function HeroOrb() {
     groupRef.current.scale.setScalar(newS)
 
     if (isDragging.current) return
-    if (p < 0.85 || carouselState.activeCard === 0) {
+    if (sec3 > 0.01) {
+      // Hold the wave flat and still — the orbs animate themselves (undulation).
+      enteredOsc.current = false
+      const k = Math.min(1, delta * 2.5)
+      groupRef.current.rotation.x += (0 - groupRef.current.rotation.x) * k
+      groupRef.current.rotation.y += (0 - groupRef.current.rotation.y) * k
+      groupRef.current.rotation.z += (0 - groupRef.current.rotation.z) * k
+    } else if (p < 0.85 || carouselState.activeCard === 0) {
       enteredOsc.current = false
       let y = groupRef.current.rotation.y + delta * 0.044
       if (y > Math.PI)  y -= Math.PI * 2

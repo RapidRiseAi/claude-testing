@@ -1613,9 +1613,10 @@ h2 {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    SECTION 3 — FIXED PRICING SERVICES
-   Premium fixed-price product cards + custom-build CTA, with an ambient
-   bottom-spanning particle wave (PricingWave) behind the content. Prefixed
-   `fp-` to stay isolated from the `.pricing-*` classes used on the Services page.
+   Premium fixed-price product cards + custom-build CTA. The ambient bottom wave
+   is the shared HeroOrb particle system (the funnel's orbs rearranged) on the
+   scene canvas — see HeroOrb's WAVE_* code. Prefixed `fp-` to stay isolated from
+   the `.pricing-*` classes used on the Services page.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .fp-section {
@@ -1636,27 +1637,9 @@ h2 {
   margin: 0 auto;
 }
 
-/* ── Section 3 decorative object: bottom-spanning particle wave (PricingWave) ──
-   Sits low and behind the content; masked to fade up into the section and
-   soften the left/right edges so it blends into the dark background. */
-.fp-wave {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 64%;
-  z-index: 0;
-  pointer-events: none;
-  -webkit-mask-image:
-    linear-gradient(to top, #000 0%, #000 40%, transparent 100%),
-    linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image:
-    linear-gradient(to top, #000 0%, #000 40%, transparent 100%),
-    linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
-  mask-composite: intersect;
-}
-.fp-wave canvas { width: 100% !important; height: 100% !important; }
+/* The Section-3 decorative wave is the shared HeroOrb particle system (the
+   funnel's orbs rearranged) rendered on the scene canvas — there is no
+   section-local canvas/element for it. */
 
 /* ── Heading block ────────────────────────────────────────────────────────── */
 .fp-head {

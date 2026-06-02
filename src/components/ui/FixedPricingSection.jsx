@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import PricingWave from '../scene/PricingWave'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const MonitorCodeIcon = () => (
@@ -144,8 +143,8 @@ function ProductCard({ product, index }) {
 export default function FixedPricingSection() {
   return (
     <section className="fp-section" aria-label="Fixed pricing services">
-      <PricingWave />
-
+      {/* The Section-3 wave is the shared HeroOrb particles (the funnel's orbs
+          rearranged) rendered on the scene canvas — not a separate element. */}
       <div className="fp-container">
         {/* Heading block */}
         <motion.header
