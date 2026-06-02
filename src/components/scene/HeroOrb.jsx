@@ -835,9 +835,11 @@ const WAVE_LIFT  = 1.4      // far L/R edges rise into the empty side gutters
 const WAVE_CX    = 0.0      // group recentres horizontally
 const WAVE_CY    = -1.9     // group drops to the bottom band
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 0.85     // bright, luminous dots (matches the mockup's glow)
-const WAVE_SIZE  = 0.68     // fine wave dots (overrides the funnel's edge boost)
-const WAVE_COLOR = new THREE.Color('#5ec8ff')   // vivid electric cyan-blue
+const WAVE_OP    = 1.25     // bright, luminous dots (additive — values >1 glow harder)
+const WAVE_SIZE  = 0.82     // wave dot size (overrides the funnel's edge boost)
+// Over-bright electric blue: raw RGB with blue > 1 so additive dots read as a
+// vivid electric blue glow (and it skips the sRGB→linear darkening of setStyle).
+const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.35; c.g = 0.70; c.b = 1.60; return c })()
 const _waveCol   = new THREE.Color()             // scratch for the per-frame tint
 // Static per-orb grid (local x, edge-lift y, z); the gentle undulation is added
 // on top per-frame in the render loop.
