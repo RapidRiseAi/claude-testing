@@ -835,8 +835,10 @@ const WAVE_LIFT  = 1.4      // far L/R edges rise into the empty side gutters
 const WAVE_CX    = 0.0      // group recentres horizontally
 const WAVE_CY    = -1.9     // group drops to the bottom band
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 0.5      // subtle ambient opacity once the wave has formed
-const WAVE_SIZE  = 0.6      // fine wave dots (overrides the funnel's edge boost)
+const WAVE_OP    = 0.85     // bright, luminous dots (matches the mockup's glow)
+const WAVE_SIZE  = 0.68     // fine wave dots (overrides the funnel's edge boost)
+const WAVE_COLOR = new THREE.Color('#5ec8ff')   // vivid electric cyan-blue
+const _waveCol   = new THREE.Color()             // scratch for the per-frame tint
 // Static per-orb grid (local x, edge-lift y, z); the gentle undulation is added
 // on top per-frame in the render loop.
 const WAVE_GRID = (() => {
@@ -1174,12 +1176,13 @@ function InteractiveMiniOrbs({ groupRef }) {
       for (let i = 0; i < N_ORB; i++) {
         const ix = i * 3
         const lx = WAVE_GRID[ix], by = WAVE_GRID[ix + 1], lz = WAVE_GRID[ix + 2]
-        // broad, slow, overlapping swells layered on the edge-lift base height —
-        // kept gentle so the wave stays low, calm and subtle
+        // many short-wavelength swells layered on the edge-lift base height — a
+        // finer, busier ripple field (closer to the mockup) but still low + calm
         const wy = by
-          + 0.24 * Math.sin(lx * 0.45 + t * 0.5)
-          + 0.15 * Math.sin(lz * 0.6  - t * 0.4)
-          + 0.10 * Math.sin((lx + lz) * 0.4 + t * 0.65)
+          + 0.16 * Math.sin(lx * 1.7 + t * 0.5)
+          + 0.12 * Math.sin(lx * 2.9 - lz * 0.9 + t * 0.8)
+          + 0.12 * Math.sin(lz * 1.5 + t * 0.45)
+          + 0.07 * Math.sin((lx * 3.4 + lz * 1.7) + t * 1.05)
         posTarget[ix]     = fn[ix]     + (lx - fn[ix])     * e3
         posTarget[ix + 1] = fn[ix + 1] + (wy - fn[ix + 1]) * e3
         posTarget[ix + 2] = fn[ix + 2] + (lz - fn[ix + 2]) * e3
@@ -1188,6 +1191,10 @@ function InteractiveMiniOrbs({ groupRef }) {
     }
 
     const wave = smoothstep(sec3)
+    // Brighten the dots toward a vivid cyan-blue as the wave forms (and revert
+    // for the carousel, since this recomputes from the active card colour).
+    _waveCol.setStyle(CARD_COLORS[activeRef.current]).lerp(WAVE_COLOR, wave)
+    material.uniforms.uColorCard.value.copy(_waveCol)
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
     // Stay visible in Section 3 (the wave) instead of fading to nothing.
