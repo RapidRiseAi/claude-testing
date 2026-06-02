@@ -21,8 +21,8 @@ import * as THREE from 'three'
 import { getGlowDotTexture } from '../../utils/iconTextures'
 
 /* Grid resolution — modest; the glow texture does the visual heavy lifting */
-const COLS  = 132   // particles across (width)
-const ROWS  = 30    // particles deep (perspective rows)
+const COLS  = 150   // particles across (width)
+const ROWS  = 40    // particles deep (perspective rows)
 const WIDTH = 34    // world units across
 const NEAR  = 5.0   // nearest row z (toward camera)
 const FAR   = -22.0 // farthest row z (recedes to the horizon)
@@ -47,7 +47,7 @@ const VERT = `
     y += 0.40 * sin(x * 0.26 - z * 0.34 + uTime * 0.34);
     y += 0.30 * sin(z * 0.50 + uTime * 0.40);
     y += 0.18 * sin((x + z) * 0.60 - uTime * 0.27);
-    y += 0.55 * (x * x) / ${(WIDTH * WIDTH).toFixed(1)};
+    y += 0.16 * (x * x) / ${(WIDTH * WIDTH).toFixed(1)};   // gentle lift at the far L/R edges
     p.y = y;
 
     float depth = clamp((z - (${FAR.toFixed(1)})) / (${(NEAR - FAR).toFixed(1)}), 0.0, 1.0); // 0 far -> 1 near
@@ -57,7 +57,9 @@ const VERT = `
 
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = uSize * (0.45 + aRand * 0.9) * (0.5 + depth) * (uScale / -mv.z);
+    // Small, defined dots: standard perspective shrink with distance, then a
+    // hard cap so no near particle ever balloons into a big soft bloom.
+    gl_PointSize = clamp(uSize * (0.55 + aRand * 0.8) * (uScale / -mv.z), 1.0, 22.0);
   }
 `
 
@@ -72,8 +74,10 @@ const FRAG = `
   void main() {
     vec4 tex = texture2D(uTex, gl_PointCoord);
     vec3 col = mix(uColorDim, uColorHot, vBright);
-    float a = tex.a * uOpacity * vFade * (0.32 + vBright * 0.95);
-    gl_FragColor = vec4(col * (0.7 + vBright * 0.8), a);
+    // Brightness rides on alpha, NOT an over-1 colour multiply, so stacked
+    // additive dots stay within the blue palette instead of clipping to white.
+    float a = tex.a * uOpacity * vFade * (0.18 + vBright * 0.55);
+    gl_FragColor = vec4(col, a);
   }
 `
 
@@ -99,10 +103,10 @@ function WaveField() {
 
   const uniforms = useMemo(() => ({
     uTime:     { value: 0 },
-    uSize:     { value: 24 },
+    uSize:     { value: 0.42 },          // world-size scale for the perspective dots
     uScale:    { value: size.height / 2 },
     uTex:      { value: getGlowDotTexture() },
-    uOpacity:  { value: 0.95 },
+    uOpacity:  { value: 0.6 },
     uColorDim: { value: new THREE.Color('#1763c8') },  // deep electric blue
     uColorHot: { value: new THREE.Color('#7fdcff') },  // cyan-blue highlight
   }), [size.height])
