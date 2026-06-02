@@ -1614,8 +1614,8 @@ h2 {
 /* ═══════════════════════════════════════════════════════════════════════════
    SECTION 3 — FIXED PRICING SERVICES
    Premium fixed-price product cards + custom-build CTA, with an ambient
-   orb-helix background object on the far left. Prefixed `fp-` to stay isolated
-   from the existing `.pricing-*` classes used on the Services page.
+   bottom-spanning particle wave (PricingWave) behind the content. Prefixed
+   `fp-` to stay isolated from the `.pricing-*` classes used on the Services page.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .fp-section {
@@ -1630,9 +1630,9 @@ h2 {
 
 .fp-container {
   position: relative;
-  z-index: 1;          /* above the helix background object */
+  z-index: 1;          /* above the wave background object */
   width: 100%;
-  max-width: 1180px;   /* narrower cards + clear gap from the left helix */
+  max-width: 1180px;   /* keeps the cards centered and comfortably readable */
   margin: 0 auto;
 }
 
