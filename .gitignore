@@ -3,3 +3,11 @@ dist/
 .env
 .env.local
 .DS_Store
+
+# Regenerable screenshot-harness verification captures (scripts/shoot-*.mjs)
+shots/wave.png
+shots/wave_crop.png
+shots/cards.png
+shots/card_crop.png
+shots/hover.png
+shots/test_funnel.png
