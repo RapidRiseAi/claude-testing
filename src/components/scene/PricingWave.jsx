@@ -103,12 +103,13 @@ function WaveField() {
 
   const uniforms = useMemo(() => ({
     uTime:     { value: 0 },
-    uSize:     { value: 0.5 },
+    uSize:     { value: 0.26 },   // small, crisp dots (a little glow, not a blur)
     uScale:    { value: size.height / 2 },
     uTex:      { value: getGlowDotTexture() },
-    uColor:    { value: (() => { const c = new THREE.Color(); c.r = 0.12; c.g = 0.36; c.b = 1.5; return c })() },
+    // Vivid, contrasty electric blue (low green so dense spots stay blue, never white).
+    uColor:    { value: (() => { const c = new THREE.Color(); c.r = 0.10; c.g = 0.30; c.b = 1.35; return c })() },
     uHot:      { value: (() => { const c = new THREE.Color(); c.r = 0.6; c.g = 0.9; c.b = 1.8; return c })() },
-    uOpacity:  { value: 1.5 },
+    uOpacity:  { value: 0.8 },    // calmer — not overwhelming
     uCursor:   { value: new THREE.Vector2(0, 0) },
     uCursorOn: { value: 0 },
     uAspect:   { value: size.width / size.height },
