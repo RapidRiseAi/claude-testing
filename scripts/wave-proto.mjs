@@ -72,7 +72,7 @@ function render(label, params) {
   console.log(`onscreen ${onscreen}/${total} (${(100 * onscreen / total).toFixed(0)}%)  ndcY[${yMin.toFixed(2)},${yMax.toFixed(2)}]  ndcX[${xMin.toFixed(2)},${xMax.toFixed(2)}]`)
 }
 
-// Refined: keep the band low (below the cards), edges lifted into the gutters.
-render('E: y=-1.9 HW13 z[5,-6] lift1.4',  { groupY: -1.9, scale: 1.0, HW: 13, zNear: 5, zFar: -6, edgeLift: 1.4 })
-render('F: y=-2.0 HW14 z[5,-7] lift1.7',  { groupY: -2.0, scale: 1.0, HW: 14, zNear: 5, zFar: -7, edgeLift: 1.7 })
-render('G: y=-1.8 HW12 z[4,-5] lift1.2',  { groupY: -1.8, scale: 1.0, HW: 12, zNear: 4, zFar: -5, edgeLift: 1.2 })
+// Tilt the wave up toward the camera (more head-on / face-on) while keeping it
+// low. rotX raises the far edge; lower groupY to keep it out of the cards.
+render('S1: tilt.10 y=-2.0 z[5,-6.5]',    { groupY: -2.0, scale: 1.0, HW: 13, zNear: 5, zFar: -6.5, edgeLift: 1.4, rotX: 0.10 })
+render('S2: tilt.13 y=-2.1 z[5,-6.5]',    { groupY: -2.1, scale: 1.0, HW: 13, zNear: 5, zFar: -6.5, edgeLift: 1.4, rotX: 0.13 })

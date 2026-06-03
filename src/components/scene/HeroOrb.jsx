@@ -830,13 +830,14 @@ const WAVE_COLS  = 192
 const WAVE_ROWS  = 72       // 192×72 = 13824 = N_ORB, so orbs map 1:1 to the grid
 const WAVE_HW    = 13.0     // local half-width (spans full viewport width when low)
 const WAVE_ZN    = 5.0      // near row z (toward camera, clipped below the viewport)
-const WAVE_ZF    = -6.0     // far row z (recedes up toward screen ~third)
+const WAVE_ZF    = -6.5     // far row z (recedes up toward screen ~third)
 const WAVE_LIFT  = 1.4      // far L/R edges rise into the empty side gutters
+const WAVE_TILT  = 0.10     // slight tilt toward camera — more head-on + perspective
 const WAVE_CX    = 0.0      // group recentres horizontally
-const WAVE_CY    = -1.9     // group drops to the bottom band
+const WAVE_CY    = -2.0     // group drops to the bottom band
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 1.25     // bright, luminous dots (additive — values >1 glow harder)
-const WAVE_SIZE  = 0.82     // wave dot size (overrides the funnel's edge boost)
+const WAVE_OP    = 1.4      // bright, luminous dots (additive — values >1 glow harder)
+const WAVE_SIZE  = 1.15     // larger soft glow halos → bloom/haze from additive overlap
 // Over-bright electric blue: raw RGB with blue > 1 so additive dots read as a
 // vivid electric blue glow (and it skips the sRGB→linear darkening of setStyle).
 const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.35; c.g = 0.70; c.b = 1.60; return c })()
@@ -1774,10 +1775,11 @@ export default function HeroOrb() {
 
     if (isDragging.current) return
     if (sec3 > 0.01) {
-      // Hold the wave flat and still — the orbs animate themselves (undulation).
+      // Tilt the wave slightly toward the camera (head-on + perspective) and hold
+      // it still — the orbs animate themselves (undulation).
       enteredOsc.current = false
       const k = Math.min(1, delta * 2.5)
-      groupRef.current.rotation.x += (0 - groupRef.current.rotation.x) * k
+      groupRef.current.rotation.x += (WAVE_TILT - groupRef.current.rotation.x) * k
       groupRef.current.rotation.y += (0 - groupRef.current.rotation.y) * k
       groupRef.current.rotation.z += (0 - groupRef.current.rotation.z) * k
     } else if (p < 0.85 || carouselState.activeCard === 0) {
