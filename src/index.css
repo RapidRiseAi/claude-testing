@@ -1628,11 +1628,12 @@ h2 {
 .fp-section {
   position: relative;
   min-height: 100vh;
-  /* TRANSPARENT background so the wave layer behind shows through; the black
-     comes from the body. Only a faint blue tint at the very bottom — the wave's
-     own glow is the atmosphere now (keeps the scene clean black like the mockup). */
+  /* TRANSPARENT base so the wave layer behind shows through (black comes from the
+     body). A soft blue bottom bloom + a gentle blue tint rising from the bottom
+     give the scene a dark blue-black atmosphere like the mockup — not plain black. */
   background:
-    radial-gradient(130% 34% at 50% 122%, rgba(30, 88, 196, 0.10) 0%, transparent 60%);
+    radial-gradient(150% 58% at 50% 122%, rgba(32, 96, 208, 0.24) 0%, rgba(18, 56, 140, 0.11) 36%, transparent 66%),
+    linear-gradient(to top, rgba(12, 30, 70, 0.34) 0%, rgba(8, 18, 44, 0.12) 26%, transparent 52%);
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -1738,7 +1739,7 @@ h2 {
      (a near-black fill made the cards blend into the bg and read as transparent).
      Lit glass rim on top. */
   background:
-    linear-gradient(180deg, #090f1a 0%, #060a13 100%) padding-box,
+    linear-gradient(180deg, #05080f 0%, #03050b 100%) padding-box,
     linear-gradient(168deg, rgba(126, 186, 255, 0.82) 0%, rgba(66, 116, 190, 0.32) 42%, rgba(34, 64, 116, 0.16) 100%) border-box;
   overflow: hidden;
   will-change: transform;
@@ -1956,7 +1957,7 @@ h2 {
   /* Matches the product cards: OPAQUE dark surface + lit glass rim + glow. */
   border: 1px solid transparent;
   background:
-    linear-gradient(135deg, #090f1a 0%, #060a13 100%) padding-box,
+    linear-gradient(135deg, #05080f 0%, #03050b 100%) padding-box,
     linear-gradient(150deg, rgba(126, 186, 255, 0.62) 0%, rgba(54, 96, 162, 0.24) 60%, rgba(30, 58, 108, 0.14) 100%) border-box;
   overflow: hidden;
   box-shadow:

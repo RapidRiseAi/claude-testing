@@ -73,8 +73,11 @@ const FRAG = `
 
   void main() {
     vec4 tex = texture2D(uTex, gl_PointCoord);
+    // sharpen the soft glow-dot falloff so each orb has a defined core (crisp,
+    // not a blur) while keeping a little glow halo
+    float core = pow(tex.a, 1.8);
     vec3 col = mix(uColor, uHot, clamp(vHover, 0.0, 1.0));
-    float a = tex.a * uOpacity * vBright * (1.0 + vHover * 2.2);
+    float a = core * uOpacity * vBright * (1.0 + vHover * 2.2);
     gl_FragColor = vec4(col, a);
   }
 `
@@ -103,7 +106,7 @@ function WaveField() {
 
   const uniforms = useMemo(() => ({
     uTime:     { value: 0 },
-    uSize:     { value: 0.26 },   // small, crisp dots (a little glow, not a blur)
+    uSize:     { value: 0.19 },   // small, crisp dots (a little glow, not a blur)
     uScale:    { value: size.height / 2 },
     uTex:      { value: getGlowDotTexture() },
     // Vivid, contrasty electric blue (low green so dense spots stay blue, never white).
