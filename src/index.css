@@ -26,12 +26,9 @@ body {
    Re-assert `none` so clicks fall through as intended. Safe: the 3D objects are
    non-interactive via the canvas — HeroOrb's drag listens on `window`. */
 #canvas-container * { pointer-events: none !important; }
-
-/* Section-3 wave layer — fixed, BEHIND the content (z-index 1 < scroll-content's
-   2), so the opaque pricing cards always render in front of the wave. Only the
-   transparent Section-3+ backgrounds let it show through. */
-#wave-container { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-#wave-container * { pointer-events: none !important; }
+/* In Section 3+ the scroll handler drops #canvas-container to z-index 1 (behind
+   #scroll-content) so the wave — the funnel's actual morphed orbs — renders
+   behind the pricing cards. The transparent Section-3+ backgrounds let it show. */
 
 /* ── Electric blue corner glow ───────────────────────────────────────────── */
 .corner-glow {

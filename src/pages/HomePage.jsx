@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import Scene from '../components/scene/Scene'
-import PricingWave from '../components/scene/PricingWave'
 import Navbar from '../components/ui/Navbar'
 import HeroSection from '../components/ui/HeroSection'
 import ScrollSection from '../components/ui/ScrollSection'
@@ -20,10 +19,6 @@ export default function HomePage() {
       <LoadingScreen onDone={handleDone} />
 
       <Navbar loaded={loaded} />
-
-      {/* Section-3 wave on its own layer BEHIND the content (z-index 1) so the
-          opaque cards always sit in front of it. */}
-      <PricingWave />
 
       <div id="canvas-container">
         <Scene />

@@ -836,8 +836,8 @@ const WAVE_TILT  = 0.0      // flat (no tilt) so the back edge stays low, like t
 const WAVE_CX    = 0.0      // group recentres horizontally
 const WAVE_CY    = -2.6     // group drops low so the wave sits in the bottom band, below cards
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 1.5      // bright (electric) — low green keeps it from going white
-const WAVE_SIZE  = 0.8      // crisp wave dots during the morph (matches PricingWave)
+const WAVE_OP    = 1.3      // wave brightness in Section 3 (calm, vivid blue — not white)
+const WAVE_SIZE  = 0.72     // crisp wave dots (the funnel's actual orbs)
 // Vivid electric blue: raw RGB, blue-dominant with a LOW green so additive
 // overlap stays a saturated electric blue instead of clipping toward white.
 const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.10; c.g = 0.30; c.b = 1.35; return c })()
@@ -1182,10 +1182,10 @@ function InteractiveMiniOrbs({ groupRef }) {
     // gear, code block, clock, sparkle, rings, funnel). For all other cards uSizeScale stays 1.0 → orbs revert.
     const usesEdgeBoost = activeRef.current === 0 || activeRef.current === 1 || activeRef.current === 2 || activeRef.current === 3 || activeRef.current === 4 || activeRef.current === 5 || activeRef.current === 6
 
-    // Section 3 transition: the funnel's exact orbs (cardBufs[6]) morph into the
-    // wave grid (SAME orbs — the reuse you want), undulating. This top-layer copy
-    // is what you SEE form during the scroll; once Section 3 settles it fades out
-    // and hands off to the behind-the-cards PricingWave (so cards stay solid).
+    // Section 3: the funnel's exact orbs (cardBufs[6]) morph into the wave grid
+    // (the SAME orbs — no copy) and stay as the wave, undulating. The scene canvas
+    // drops behind the content in Section 3 (scroll handler) so these real orbs
+    // render behind the cards.
     const sec3 = scrollState.sec3
     const wave = smoothstep(sec3)
     if (activeRef.current === 6 && sec3 > 0.001) {
@@ -1205,15 +1205,15 @@ function InteractiveMiniOrbs({ groupRef }) {
       }
       if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
     }
-    // hand-off: full while the orbs morph (sec3 ≤ 0.5), then fade out by ~0.85 as
-    // the behind-content PricingWave fades in at the same spot.
-    const handoff = 1.0 - smoothstep(Math.max(0, Math.min(1, (sec3 - 0.5) / 0.35)))
+    // The funnel's ACTUAL orbs stay as the wave in Section 3 (no hand-off). The
+    // scene canvas drops behind the content (see the scroll handler) so these
+    // real orbs render behind the cards.
     _waveCol.setStyle(CARD_COLORS[activeRef.current]).lerp(WAVE_COLOR, wave)
     material.uniforms.uColorCard.value.copy(_waveCol)
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
     material.uniforms.uWaveFade.value   = wave
-    material.uniforms.uOpacity.value    = MAX_CARD_OP * handoff
+    material.uniforms.uOpacity.value    = MAX_CARD_OP + (WAVE_OP - MAX_CARD_OP) * wave
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
     const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
@@ -1700,6 +1700,7 @@ export default function HeroOrb() {
 
   const [showHeavy, setShowHeavy] = useState(true)
   const heavyRef = useRef(true)
+  const behindRef = useRef(false)
 
   useEffect(() => {
     const onScroll = () => {
@@ -1707,6 +1708,15 @@ export default function HeroOrb() {
       scrollState.progress = Math.min(1, Math.max(0, window.scrollY / max))
       // sec3 climbs 0→1 across the snap from the carousel (1vh) into Section 3 (2vh)
       scrollState.sec3 = Math.min(1, Math.max(0, window.scrollY / max - 1))
+      // Section 3+: drop the scene canvas BEHIND the page content so the wave —
+      // the funnel's ACTUAL orbs, morphed — renders behind the cards (which keeps
+      // them solid). On top again for the hero/carousel.
+      const behind = scrollState.sec3 > 0.5
+      if (behind !== behindRef.current) {
+        behindRef.current = behind
+        const cc = document.getElementById('canvas-container')
+        if (cc) cc.style.zIndex = behind ? '1' : '3'
+      }
       if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false
         setShowHeavy(false)
