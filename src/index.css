@@ -1622,10 +1622,12 @@ h2 {
 .fp-section {
   position: relative;
   min-height: 100vh;
-  /* Soft blue atmospheric haze rising from the bottom — the "light smoke" the
-     wave glows into. Sits behind the content; the wave (scene canvas) is above. */
+  /* Blue atmospheric bloom rising from the bottom — the "light smoke" the wave
+     glows into. A wide bottom band plus a soft central rise, on pure black.
+     Sits behind the content; the wave (scene canvas) is above. */
   background:
-    radial-gradient(125% 62% at 50% 124%, rgba(30, 92, 205, 0.20) 0%, rgba(16, 52, 134, 0.09) 32%, transparent 62%),
+    radial-gradient(150% 46% at 50% 118%, rgba(34, 104, 224, 0.30) 0%, rgba(20, 64, 160, 0.14) 38%, transparent 70%),
+    radial-gradient(80% 38% at 50% 122%, rgba(60, 140, 255, 0.22) 0%, transparent 60%),
     #000000;
   display: flex;
   align-items: center;
@@ -1728,10 +1730,12 @@ h2 {
   /* Gradient border: brighter blue at the top, fading to dark toward the
      bottom (premium glass edge, lit from above) over a dark navy surface. */
   border: 1px solid transparent;
-  /* Fully OPAQUE dark surface (no see-through) with a lit glass edge on top. */
+  /* SOLID, uniform dark-navy panel — clearly distinct from the black background
+     (a near-black fill made the cards blend into the bg and read as transparent).
+     Lit glass rim on top. */
   background:
-    linear-gradient(180deg, #070c18 0%, #04070f 56%, #02030a 100%) padding-box,
-    linear-gradient(168deg, rgba(126, 186, 255, 0.82) 0%, rgba(66, 116, 190, 0.32) 42%, rgba(30, 58, 108, 0.12) 100%) border-box;
+    linear-gradient(180deg, #0e1827 0%, #0b1320 100%) padding-box,
+    linear-gradient(168deg, rgba(126, 186, 255, 0.82) 0%, rgba(66, 116, 190, 0.32) 42%, rgba(34, 64, 116, 0.16) 100%) border-box;
   overflow: hidden;
   will-change: transform;
   box-shadow:
@@ -1948,8 +1952,8 @@ h2 {
   /* Matches the product cards: OPAQUE dark surface + lit glass rim + glow. */
   border: 1px solid transparent;
   background:
-    linear-gradient(135deg, #080d1a 0%, #03060e 100%) padding-box,
-    linear-gradient(150deg, rgba(126, 186, 255, 0.62) 0%, rgba(54, 96, 162, 0.24) 60%, rgba(28, 54, 100, 0.10) 100%) border-box;
+    linear-gradient(135deg, #0e1827 0%, #0b1320 100%) padding-box,
+    linear-gradient(150deg, rgba(126, 186, 255, 0.62) 0%, rgba(54, 96, 162, 0.24) 60%, rgba(30, 58, 108, 0.14) 100%) border-box;
   overflow: hidden;
   box-shadow:
     0 0 0 1px rgba(70, 132, 224, 0.08),

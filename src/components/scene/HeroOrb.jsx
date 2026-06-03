@@ -836,8 +836,8 @@ const WAVE_TILT  = 0.0      // flat (no tilt) so the back edge stays low, like t
 const WAVE_CX    = 0.0      // group recentres horizontally
 const WAVE_CY    = -2.6     // group drops low so the wave sits in the bottom band, below cards
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 1.45     // bright (electric) — low green keeps it from going white
-const WAVE_SIZE  = 1.25     // larger soft halos → bloom/glow around the dots
+const WAVE_OP    = 1.5      // bright (electric) — low green keeps it from going white
+const WAVE_SIZE  = 1.55     // big soft halos → strong bloom/glow around the dots
 // Vivid electric blue: raw RGB, blue-dominant with a LOW green so additive
 // overlap stays a saturated electric blue instead of clipping toward white.
 const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.12; c.g = 0.36; c.b = 1.5; return c })()
@@ -863,7 +863,7 @@ const TRAIL_LIFETIME = 1.0
 // only light up if that orb is within HOVER_HIT (world units) of the ray. The
 // Section-3 wave is far wider than the section-2 objects, so sample densely
 // enough that the nearest sample is still close on the spread-out wave.
-const HOVER_STEP = 6
+const HOVER_STEP = 3        // dense sample → the anchor sits right under the cursor
 const HOVER_HIT2 = 0.40     // (~0.63 world units)²
 
 /* ── Surface-orb shader ─────────────────────────────────────────────────────────
@@ -1222,9 +1222,9 @@ function InteractiveMiniOrbs({ groupRef }) {
     material.uniforms.uScale.value      = size.height / 2
     const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
     material.uniforms.uSizeScale.value  = baseSize + (WAVE_SIZE - baseSize) * wave
-    // Bigger hover-glow radius on the wide Section-3 wave so the cluster under
-    // the cursor reads clearly (section-2 objects keep the tighter radius).
-    material.uniforms.uRadius.value     = 0.58 * scale * (1.0 + wave * 0.9)
+    // Bigger hover-glow radius so the cluster under the cursor reads clearly —
+    // and bigger still on the wide Section-3 wave.
+    material.uniforms.uRadius.value     = 0.82 * scale * (1.0 + wave * 0.8)
 
     for (let i = 0; i < TRAIL_LEN; i++) {
       trail[i].w = Math.min(trail[i].w + delta, TRAIL_LIFETIME + 1)
