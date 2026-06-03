@@ -1945,12 +1945,17 @@ h2 {
   margin: clamp(22px, 3vh, 40px) auto 0;   /* centered + narrower than the card row */
   padding: 22px 32px;
   border-radius: 18px;
-  border: 1px solid rgba(62, 120, 205, 0.26);
-  background: linear-gradient(135deg, rgba(9, 15, 27, 0.93) 0%, rgba(4, 8, 16, 0.95) 100%);
+  /* Matches the product cards: OPAQUE dark surface + lit glass rim + glow. */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(135deg, #080d1a 0%, #03060e 100%) padding-box,
+    linear-gradient(150deg, rgba(126, 186, 255, 0.62) 0%, rgba(54, 96, 162, 0.24) 60%, rgba(28, 54, 100, 0.10) 100%) border-box;
   overflow: hidden;
   box-shadow:
-    0 18px 50px rgba(0, 0, 0, 0.50),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 0 0 1px rgba(70, 132, 224, 0.08),
+    0 0 26px rgba(44, 116, 230, 0.10),
+    0 18px 50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .fp-custom::before {
   content: '';

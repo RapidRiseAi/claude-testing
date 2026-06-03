@@ -74,8 +74,7 @@ function render(label, params) {
 
 // Tilt the wave up toward the camera (more head-on / face-on) while keeping it
 // low. rotX raises the far edge; lower groupY to keep it out of the cards.
-// Back must sit LOW: no tilt, bring the far row closer (less negative z) and drop
-// the group so the far edge projects into the bottom quarter.
-render('L1: y=-2.2 z[5,-1]  lift1.1',  { groupY: -2.2, scale: 1.0, HW: 13, zNear: 5, zFar: -1,   edgeLift: 1.1 })
-render('L2: y=-2.3 z[5,-2.5] lift1.0', { groupY: -2.3, scale: 1.0, HW: 13, zNear: 5, zFar: -2.5, edgeLift: 1.0 })
-render('L3: y=-2.5 z[6,-4]  lift1.2',  { groupY: -2.5, scale: 1.0, HW: 14, zNear: 6, zFar: -4,   edgeLift: 1.2 })
+// Lower the back even more — keep the band in the very bottom of the screen.
+render('N1: y=-2.7 z[3,-2.5] lift0.9', { groupY: -2.7, scale: 1.0, HW: 14, zNear: 3, zFar: -2.5, edgeLift: 0.9 })
+render('N2: y=-2.7 z[2,-2]   lift0.9', { groupY: -2.7, scale: 1.0, HW: 14, zNear: 2, zFar: -2,   edgeLift: 0.9 })
+render('N3: y=-2.6 z[2,-2.5] lift0.9', { groupY: -2.6, scale: 1.0, HW: 14, zNear: 2, zFar: -2.5, edgeLift: 0.9 })

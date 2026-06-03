@@ -829,15 +829,15 @@ const CARD_GENERATORS = [
 const WAVE_COLS  = 192
 const WAVE_ROWS  = 72       // 192×72 = 13824 = N_ORB, so orbs map 1:1 to the grid
 const WAVE_HW    = 14.0     // local half-width (spans full viewport width when low)
-const WAVE_ZN    = 6.0      // near row z (toward camera, clipped below the viewport)
-const WAVE_ZF    = -4.0     // far row z — kept close so the BACK projects low on screen
-const WAVE_LIFT  = 1.2      // far L/R edges rise into the empty side gutters
+const WAVE_ZN    = 2.0      // near row z (toward camera, clipped just below the viewport)
+const WAVE_ZF    = -2.5     // far row z — close so the BACK projects very low on screen
+const WAVE_LIFT  = 0.9      // far L/R edges rise into the empty side gutters
 const WAVE_TILT  = 0.0      // flat (no tilt) so the back edge stays low, like the mockup
 const WAVE_CX    = 0.0      // group recentres horizontally
-const WAVE_CY    = -2.5     // group drops low so the wave sits in the bottom quarter
+const WAVE_CY    = -2.6     // group drops low so the wave sits in the bottom band, below cards
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 1.25     // bright (electric) — low green below keeps it from going white
-const WAVE_SIZE  = 0.95     // crisp dots — more contrast / less overlap bloom
+const WAVE_OP    = 1.45     // bright (electric) — low green keeps it from going white
+const WAVE_SIZE  = 1.25     // larger soft halos → bloom/glow around the dots
 // Vivid electric blue: raw RGB, blue-dominant with a LOW green so additive
 // overlap stays a saturated electric blue instead of clipping toward white.
 const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.12; c.g = 0.36; c.b = 1.5; return c })()
@@ -883,18 +883,25 @@ const MINI_VERT = `
   uniform float uCursorActive;
   uniform float uMorph;
   uniform float uMorphCard;
+  uniform float uWaveFade;
   attribute float aSize;
   attribute float aSeed;
   attribute float aSizeTag;
   attribute vec3 aPosTarget;
   varying float vGlow;
   varying float vCardBlend;
+  varying float vWaveFade;
 
   void main() {
     /* Phase 1: collapse sphere toward centre (uMorph 0→0.5) */
     vec3 collapsedPos = position * (1.0 - uMorph);
     /* Phase 2: rearrange from collapsed position to card shape (uMorphCard 0→1) */
     vec3 basePos = mix(collapsedPos, aPosTarget, uMorphCard);
+
+    /* Section-3 wave only: fade the far/back rows toward dark so the wave recedes
+       and barely touches the cards (front = bottom of screen stays bright). */
+    float wDepth = clamp((aPosTarget.z - (${WAVE_ZF.toFixed(1)})) / (${(WAVE_ZN - WAVE_ZF).toFixed(1)}), 0.0, 1.0);
+    vWaveFade = mix(1.0, 0.06 + 0.94 * wDepth, uWaveFade);
 
     float cursorOff = 1.0 - uMorphCard;
     vec3 worldPos = (modelMatrix * vec4(basePos, 1.0)).xyz;
@@ -941,6 +948,7 @@ const MINI_FRAG = `
   uniform float uMorph;
   varying float vGlow;
   varying float vCardBlend;
+  varying float vWaveFade;
 
   void main() {
     vec4 tex = texture2D(uMap, gl_PointCoord);
@@ -948,7 +956,7 @@ const MINI_FRAG = `
     vec3 sphereCol = mix(uColorBase, uColorHot, vGlow);
     vec3 col = mix(sphereCol, uColorCard, vCardBlend);
     float opMult = mix(mix(0.8, 1.0, uMorph), 1.0, vCardBlend);
-    float a = tex.a * uOpacity * opMult * (1.0 + vGlow * 1.4);
+    float a = tex.a * uOpacity * opMult * (1.0 + vGlow * 1.4) * vWaveFade;
     gl_FragColor = vec4(col * (1.0 + vGlow * 1.0), a);
   }
 `
@@ -1089,6 +1097,7 @@ function InteractiveMiniOrbs({ groupRef }) {
       uCursorActive:  { value: 0.0 },
       uMorph:         { value: 0.0 },
       uMorphCard:     { value: 0.0 },
+      uWaveFade:      { value: 0.0 },   // Section-3 only: dim the wave's far/back rows
     },
     vertexShader: MINI_VERT,
     fragmentShader: MINI_FRAG,
@@ -1206,13 +1215,16 @@ function InteractiveMiniOrbs({ groupRef }) {
     material.uniforms.uColorCard.value.copy(_waveCol)
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
+    material.uniforms.uWaveFade.value   = wave    // dim the wave's back rows in Section 3
     // Stay visible in Section 3 (the wave) instead of fading to nothing.
     material.uniforms.uOpacity.value    = MAX_CARD_OP + (WAVE_OP - MAX_CARD_OP) * wave
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
     const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
     material.uniforms.uSizeScale.value  = baseSize + (WAVE_SIZE - baseSize) * wave
-    material.uniforms.uRadius.value     = 0.58 * scale
+    // Bigger hover-glow radius on the wide Section-3 wave so the cluster under
+    // the cursor reads clearly (section-2 objects keep the tighter radius).
+    material.uniforms.uRadius.value     = 0.58 * scale * (1.0 + wave * 0.9)
 
     for (let i = 0; i < TRAIL_LEN; i++) {
       trail[i].w = Math.min(trail[i].w + delta, TRAIL_LIFETIME + 1)
@@ -1225,23 +1237,25 @@ function InteractiveMiniOrbs({ groupRef }) {
       invMat.copy(groupRef.current.matrixWorld).invert()
       localRay.copy(raycaster.ray).applyMatrix4(invMat)
       if (p >= 0.85) {
-        // Card / wave mode: anchor the hover on the orb nearest the cursor ray so
-        // it tracks the real surface of ANY shape (globe, gear, funnel, the wave)
-        // at every angle — not a single plane/sphere that misses most orbs.
+        // Card / wave mode: anchor the hover on the FRONT-MOST orb under the
+        // cursor — i.e. among orbs close to the ray, the one nearest the camera —
+        // so the glow lands on the visible orbs directly behind the cursor for
+        // ANY shape (globe, gear, funnel, the wave), not a back-facing one.
         localRay.direction.normalize()
         const lo = localRay.origin, ld = localRay.direction
-        let bestD2 = Infinity
+        const sc = groupRef.current.scale.x
+        const hit2Local = HOVER_HIT2 / (sc * sc)   // ray-proximity threshold, local²
+        let bestT = Infinity
         for (let i = 0; i < N_ORB; i += HOVER_STEP) {
           const ix = i * 3
           const ox = posTarget[ix] - lo.x, oy = posTarget[ix + 1] - lo.y, oz = posTarget[ix + 2] - lo.z
-          const t = ox * ld.x + oy * ld.y + oz * ld.z   // projection onto the ray
-          if (t < 0) continue
+          const t = ox * ld.x + oy * ld.y + oz * ld.z   // distance along the ray
+          if (t < 0 || t >= bestT) continue
           const cx = ox - t * ld.x, cy = oy - t * ld.y, cz = oz - t * ld.z
           const d2 = cx * cx + cy * cy + cz * cz          // perpendicular dist²
-          if (d2 < bestD2) { bestD2 = d2; localHit.set(posTarget[ix], posTarget[ix + 1], posTarget[ix + 2]) }
+          if (d2 < hit2Local) { bestT = t; localHit.set(posTarget[ix], posTarget[ix + 1], posTarget[ix + 2]) }
         }
-        const sc = groupRef.current.scale.x
-        if (bestD2 * sc * sc < HOVER_HIT2) {
+        if (bestT < Infinity) {
           hit.copy(localHit).applyMatrix4(groupRef.current.matrixWorld)
           hasHit = true
         }
