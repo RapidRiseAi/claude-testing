@@ -30,6 +30,22 @@ body {
    #scroll-content) so the wave — the funnel's actual morphed orbs — renders
    behind the pricing cards. The transparent Section-3+ backgrounds let it show. */
 
+/* Atmospheric glow — a FIXED background layer behind the wave (z-index 0, below
+   the wave canvas's z1). Persistent + eased so it stays constant while scrolling
+   and fades slowly/softly (not a harsh, flickering section filter). */
+#scene-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+  background:
+    radial-gradient(150% 56% at 50% 122%, rgba(30, 92, 202, 0.32) 0%, rgba(16, 50, 130, 0.14) 38%, transparent 68%),
+    linear-gradient(to top, rgba(12, 30, 70, 0.34) 0%, rgba(8, 18, 44, 0.12) 26%, transparent 52%);
+}
+#scene-atmosphere.is-visible { opacity: 1; }
+
 /* ── Electric blue corner glow ───────────────────────────────────────────── */
 .corner-glow {
   position: absolute;
@@ -1625,12 +1641,9 @@ h2 {
 .fp-section {
   position: relative;
   min-height: 100vh;
-  /* TRANSPARENT base so the wave layer behind shows through (black comes from the
-     body). A soft blue bottom bloom + a gentle blue tint rising from the bottom
-     give the scene a dark blue-black atmosphere like the mockup — not plain black. */
-  background:
-    radial-gradient(150% 58% at 50% 122%, rgba(32, 96, 208, 0.24) 0%, rgba(18, 56, 140, 0.11) 36%, transparent 66%),
-    linear-gradient(to top, rgba(12, 30, 70, 0.34) 0%, rgba(8, 18, 44, 0.12) 26%, transparent 52%);
+  /* Fully TRANSPARENT — the wave (behind) and the fixed #scene-atmosphere glow
+     show through; the black comes from the body. No section-level glow filter. */
+  background: transparent;
   display: flex;
   align-items: center;
   overflow: hidden;

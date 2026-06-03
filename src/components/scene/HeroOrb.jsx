@@ -1701,6 +1701,7 @@ export default function HeroOrb() {
   const [showHeavy, setShowHeavy] = useState(true)
   const heavyRef = useRef(true)
   const behindRef = useRef(false)
+  const atmosRef = useRef(false)
 
   useEffect(() => {
     const onScroll = () => {
@@ -1709,13 +1710,28 @@ export default function HeroOrb() {
       // sec3 climbs 0→1 across the snap from the carousel (1vh) into Section 3 (2vh)
       scrollState.sec3 = Math.min(1, Math.max(0, window.scrollY / max - 1))
       // Section 3+: drop the scene canvas BEHIND the page content so the wave —
-      // the funnel's ACTUAL orbs, morphed — renders behind the cards (which keeps
-      // them solid). On top again for the hero/carousel.
-      const behind = scrollState.sec3 > 0.5
+      // the funnel's ACTUAL orbs, morphed — renders behind the cards (keeps them
+      // solid). On top again for the hero/carousel. Hysteresis avoids flicker if
+      // the scroll position hovers around the threshold.
+      const s3 = scrollState.sec3
+      let behind = behindRef.current
+      if (!behind && s3 > 0.55) behind = true
+      else if (behind && s3 < 0.45) behind = false
       if (behind !== behindRef.current) {
         behindRef.current = behind
         const cc = document.getElementById('canvas-container')
         if (cc) cc.style.zIndex = behind ? '1' : '3'
+      }
+      // Fixed atmospheric glow: ease it on once Section 3 is approaching and keep
+      // it on for the rest of the page (constant). Hysteresis + the CSS opacity
+      // transition give the soft, slow fade.
+      let atmos = atmosRef.current
+      if (!atmos && s3 > 0.25) atmos = true
+      else if (atmos && s3 < 0.08) atmos = false
+      if (atmos !== atmosRef.current) {
+        atmosRef.current = atmos
+        const el = document.getElementById('scene-atmosphere')
+        if (el) el.classList.toggle('is-visible', atmos)
       }
       if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false

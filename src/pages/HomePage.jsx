@@ -20,6 +20,11 @@ export default function HomePage() {
 
       <Navbar loaded={loaded} />
 
+      {/* Fixed atmospheric glow that lives BEHIND the wave (z-index 0). Eased in/
+          out by the scroll handler so it's a calm, persistent background — not a
+          foreground filter on the section. */}
+      <div id="scene-atmosphere" aria-hidden="true" />
+
       <div id="canvas-container">
         <Scene />
       </div>
