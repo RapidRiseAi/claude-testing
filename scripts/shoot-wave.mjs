@@ -60,25 +60,29 @@ try {
   const canvas = await page.$('canvas')
   await canvas.screenshot({ path: 'shots/wave.png' })
   console.log('✓ saved shots/wave.png')
-  // High-res crop of the bottom band (wave detail) via the canvas element.
-  await canvas.screenshot({ path: 'shots/wave_crop.png', clip: { x: 120, y: 470, width: 1360, height: 420 } })
-  console.log('✓ saved shots/wave_crop.png')
+  // High-res crop of the bottom band (wave detail). page.screenshot supports
+  // clip; it can hang while compositing live WebGL, so guard it.
+  try {
+    await page.screenshot({ path: 'shots/wave_crop.png', clip: { x: 120, y: 470, width: 1360, height: 420 }, timeout: 18000 })
+    console.log('✓ saved shots/wave_crop.png')
+  } catch (e) { console.log('wave_crop FAILED:', e.message.split('\n')[0]) }
 
-  // 2) Cards only — hide the WebGL canvas, then a normal page screenshot of the DOM.
+  // 2) Cards only — hide the WebGL canvas, then DOM screenshots. Each is
+  // independent (the full-page one can flake) and the small clips go first.
   await page.evaluate(() => {
     const c = document.getElementById('canvas-container')
     if (c) c.style.display = 'none'
   })
   await wait(400)
-  try {
-    await page.screenshot({ path: 'shots/cards.png', timeout: 20000, animations: 'disabled' })
-    console.log('✓ saved shots/cards.png')
-    // High-res crop of the first two card tops (icons + rim detail).
-    await page.screenshot({ path: 'shots/card_crop.png', clip: { x: 350, y: 250, width: 720, height: 320 }, timeout: 20000, animations: 'disabled' })
-    console.log('✓ saved shots/card_crop.png')
-  } catch (e) {
-    console.log('cards.png FAILED:', e.message.split('\n')[0])
+  const shot = async (name, opts) => {
+    try { await page.screenshot({ path: `shots/${name}`, timeout: 18000, animations: 'disabled', ...opts }); console.log(`✓ saved shots/${name}`) }
+    catch (e) { console.log(`${name} FAILED:`, e.message.split('\n')[0]) }
   }
+  // Heading crop — check the "g" descender in "Pricing" isn't clipped.
+  await shot('heading_crop.png', { clip: { x: 560, y: 50, width: 820, height: 130 } })
+  // High-res crop of the first two card tops (icons + rim detail).
+  await shot('card_crop.png', { clip: { x: 350, y: 250, width: 720, height: 320 } })
+  await shot('cards.png', {})
 } finally {
   if (browser) await browser.close()
   server.kill('SIGTERM')

@@ -828,19 +828,19 @@ const CARD_GENERATORS = [
    scripts/wave-proto.mjs (projected through the real Scene camera). */
 const WAVE_COLS  = 192
 const WAVE_ROWS  = 72       // 192×72 = 13824 = N_ORB, so orbs map 1:1 to the grid
-const WAVE_HW    = 13.0     // local half-width (spans full viewport width when low)
-const WAVE_ZN    = 5.0      // near row z (toward camera, clipped below the viewport)
-const WAVE_ZF    = -6.5     // far row z (recedes up toward screen ~third)
-const WAVE_LIFT  = 1.4      // far L/R edges rise into the empty side gutters
-const WAVE_TILT  = 0.10     // slight tilt toward camera — more head-on + perspective
+const WAVE_HW    = 14.0     // local half-width (spans full viewport width when low)
+const WAVE_ZN    = 6.0      // near row z (toward camera, clipped below the viewport)
+const WAVE_ZF    = -4.0     // far row z — kept close so the BACK projects low on screen
+const WAVE_LIFT  = 1.2      // far L/R edges rise into the empty side gutters
+const WAVE_TILT  = 0.0      // flat (no tilt) so the back edge stays low, like the mockup
 const WAVE_CX    = 0.0      // group recentres horizontally
-const WAVE_CY    = -2.0     // group drops to the bottom band
+const WAVE_CY    = -2.5     // group drops low so the wave sits in the bottom quarter
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
-const WAVE_OP    = 1.4      // bright, luminous dots (additive — values >1 glow harder)
-const WAVE_SIZE  = 1.15     // larger soft glow halos → bloom/haze from additive overlap
-// Over-bright electric blue: raw RGB with blue > 1 so additive dots read as a
-// vivid electric blue glow (and it skips the sRGB→linear darkening of setStyle).
-const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.35; c.g = 0.70; c.b = 1.60; return c })()
+const WAVE_OP    = 1.25     // bright (electric) — low green below keeps it from going white
+const WAVE_SIZE  = 0.95     // crisp dots — more contrast / less overlap bloom
+// Vivid electric blue: raw RGB, blue-dominant with a LOW green so additive
+// overlap stays a saturated electric blue instead of clipping toward white.
+const WAVE_COLOR = (() => { const c = new THREE.Color(); c.r = 0.12; c.g = 0.36; c.b = 1.5; return c })()
 const _waveCol   = new THREE.Color()             // scratch for the per-frame tint
 // Static per-orb grid (local x, edge-lift y, z); the gentle undulation is added
 // on top per-frame in the render loop.
@@ -860,9 +860,11 @@ const WAVE_GRID = (() => {
 const TRAIL_LEN = 24
 const TRAIL_LIFETIME = 1.0
 // Hover: sample every Nth orb when finding the one nearest the cursor ray, and
-// only light up if that orb is within HOVER_HIT (world units) of the ray.
-const HOVER_STEP = 24
-const HOVER_HIT2 = 0.25     // (0.5 world units)²
+// only light up if that orb is within HOVER_HIT (world units) of the ray. The
+// Section-3 wave is far wider than the section-2 objects, so sample densely
+// enough that the nearest sample is still close on the spread-out wave.
+const HOVER_STEP = 6
+const HOVER_HIT2 = 0.40     // (~0.63 world units)²
 
 /* ── Surface-orb shader ─────────────────────────────────────────────────────────
    uMorph = 0  →  sphere surface (full size, full opacity)
