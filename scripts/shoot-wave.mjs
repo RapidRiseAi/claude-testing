@@ -54,24 +54,24 @@ try {
     window.scrollTo(0, sec ? sec.offsetTop : Math.round(window.innerHeight * 2))
     window.dispatchEvent(new Event('scroll'))
   })
-  await wait(4500) // funnel → wave morph settle
+  await wait(4500) // settle
 
-  // 1) Wave only — read the canvas directly (this is the path that works headless).
-  const canvas = await page.$('canvas')
-  await canvas.screenshot({ path: 'shots/wave.png' })
-  console.log('✓ saved shots/wave.png')
-  // High-res crop of the bottom band (wave detail). page.screenshot supports
-  // clip; it can hang while compositing live WebGL, so guard it.
-  try {
-    await page.screenshot({ path: 'shots/wave_crop.png', clip: { x: 120, y: 470, width: 1360, height: 420 }, timeout: 18000 })
-    console.log('✓ saved shots/wave_crop.png')
-  } catch (e) { console.log('wave_crop FAILED:', e.message.split('\n')[0]) }
+  const shot0 = async (name, opts) => {
+    try { await page.screenshot({ path: `shots/${name}`, timeout: 22000, ...opts }); console.log(`✓ saved shots/${name}`) }
+    catch (e) { console.log(`${name} FAILED:`, e.message.split('\n')[0]) }
+  }
+  // 1) Composite — the REAL look: opaque cards (z2) over the wave layer (z1).
+  await shot0('wave.png', {})
+  await shot0('wave_crop.png', { clip: { x: 120, y: 470, width: 1360, height: 420 } })
+  // Wave layer on its own (behind-content canvas), to judge the wave itself.
+  const wc = await page.$('#wave-container canvas')
+  if (wc) { await wc.screenshot({ path: 'shots/wave_only.png' }); console.log('✓ saved shots/wave_only.png') }
 
-  // 2) Cards only — hide the WebGL canvas, then DOM screenshots. Each is
-  // independent (the full-page one can flake) and the small clips go first.
+  // 2) Cards only — hide BOTH canvases, then DOM screenshots.
   await page.evaluate(() => {
-    const c = document.getElementById('canvas-container')
-    if (c) c.style.display = 'none'
+    for (const id of ['canvas-container', 'wave-container']) {
+      const c = document.getElementById(id); if (c) c.style.display = 'none'
+    }
   })
   await wait(400)
   const shot = async (name, opts) => {

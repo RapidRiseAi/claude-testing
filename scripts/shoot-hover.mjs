@@ -39,7 +39,7 @@ try {
   // Report the object's bright centroid so I know where to aim (and after hover).
   const aimS2 = { x: 300, y: 235 }
   await sweep(aimS2.x, aimS2.y)
-  await (await page.$('canvas')).screenshot({ path: 'shots/hover_s2.png' })
+  await page.screenshot({ path: 'shots/hover_s2.png', timeout: 22000 })
   console.log(`✓ saved shots/hover_s2.png (cursor ${aimS2.x},${aimS2.y})`)
 
   // ---- Section 3: scroll to the wave, hover over the bottom band ----
@@ -49,9 +49,9 @@ try {
     window.dispatchEvent(new Event('scroll'))
   })
   await wait(4000)
-  await sweep(800, 800)
-  await (await page.$('canvas')).screenshot({ path: 'shots/hover_s3.png' })
-  console.log('✓ saved shots/hover_s3.png (cursor 800,800)')
+  await sweep(320, 855)
+  await page.screenshot({ path: 'shots/hover_s3.png', timeout: 22000 })
+  console.log('✓ saved shots/hover_s3.png (cursor 320,855)')
 } finally {
   if (browser) await browser.close()
   server.kill('SIGTERM')

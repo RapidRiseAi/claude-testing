@@ -27,6 +27,12 @@ body {
    non-interactive via the canvas — HeroOrb's drag listens on `window`. */
 #canvas-container * { pointer-events: none !important; }
 
+/* Section-3 wave layer — fixed, BEHIND the content (z-index 1 < scroll-content's
+   2), so the opaque pricing cards always render in front of the wave. Only the
+   transparent Section-3+ backgrounds let it show through. */
+#wave-container { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+#wave-container * { pointer-events: none !important; }
+
 /* ── Electric blue corner glow ───────────────────────────────────────────── */
 .corner-glow {
   position: absolute;
@@ -1622,13 +1628,12 @@ h2 {
 .fp-section {
   position: relative;
   min-height: 100vh;
-  /* Blue atmospheric bloom rising from the bottom — the "light smoke" the wave
-     glows into. A wide bottom band plus a soft central rise, on pure black.
-     Sits behind the content; the wave (scene canvas) is above. */
+  /* TRANSPARENT background (no opaque black) so the wave layer behind shows
+     through — only a blue atmospheric bloom tint rising from the bottom (the
+     "light smoke" the wave glows into). The black comes from the body below. */
   background:
-    radial-gradient(150% 46% at 50% 118%, rgba(34, 104, 224, 0.30) 0%, rgba(20, 64, 160, 0.14) 38%, transparent 70%),
-    radial-gradient(80% 38% at 50% 122%, rgba(60, 140, 255, 0.22) 0%, transparent 60%),
-    #000000;
+    radial-gradient(150% 46% at 50% 118%, rgba(34, 104, 224, 0.26) 0%, rgba(20, 64, 160, 0.12) 38%, transparent 70%),
+    radial-gradient(80% 38% at 50% 122%, rgba(60, 140, 255, 0.18) 0%, transparent 60%);
   display: flex;
   align-items: center;
   overflow: hidden;

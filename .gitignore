@@ -6,6 +6,7 @@ dist/
 
 # Regenerable screenshot-harness verification captures (scripts/shoot-*.mjs)
 shots/wave.png
+shots/wave_only.png
 shots/wave_crop.png
 shots/cards.png
 shots/card_crop.png

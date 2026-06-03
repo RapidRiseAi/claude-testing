@@ -863,8 +863,8 @@ const TRAIL_LIFETIME = 1.0
 // only light up if that orb is within HOVER_HIT (world units) of the ray. The
 // Section-3 wave is far wider than the section-2 objects, so sample densely
 // enough that the nearest sample is still close on the spread-out wave.
-const HOVER_STEP = 3        // dense sample → the anchor sits right under the cursor
-const HOVER_HIT2 = 0.40     // (~0.63 world units)²
+const HOVER_STEP = 24       // sample stride for the nearest-orb hover (Section 2)
+const HOVER_HIT2 = 0.25     // (0.5 world units)²
 
 /* ── Surface-orb shader ─────────────────────────────────────────────────────────
    uMorph = 0  →  sphere surface (full size, full opacity)
@@ -1186,76 +1186,49 @@ function InteractiveMiniOrbs({ groupRef }) {
     // bottom wave, undulating gently, and ease to a subtle ambient opacity.
     // Gated past the carousel (sec3>0) and to the funnel card (6). sec3: 0 in the
     // carousel → 1 in Section 3.
+    // Section 3's wave is now its own behind-content layer (PricingWave). Here
+    // the shared hero/carousel orb (the funnel) simply fades out as Section 3
+    // scrolls in, so nothing is parked on the top canvas over the cards.
     const sec3 = scrollState.sec3
-    if (activeRef.current === 6 && sec3 > 0.001) {
-      const e3 = smoothstep(sec3)
-      const t  = clock.getElapsedTime()
-      const fn = cardBufs[6]
-      for (let i = 0; i < N_ORB; i++) {
-        const ix = i * 3
-        const lx = WAVE_GRID[ix], by = WAVE_GRID[ix + 1], lz = WAVE_GRID[ix + 2]
-        // many short-wavelength swells layered on the edge-lift base height — a
-        // finer, busier ripple field (closer to the mockup) but still low + calm
-        const wy = by
-          + 0.16 * Math.sin(lx * 1.7 + t * 0.5)
-          + 0.12 * Math.sin(lx * 2.9 - lz * 0.9 + t * 0.8)
-          + 0.12 * Math.sin(lz * 1.5 + t * 0.45)
-          + 0.07 * Math.sin((lx * 3.4 + lz * 1.7) + t * 1.05)
-        posTarget[ix]     = fn[ix]     + (lx - fn[ix])     * e3
-        posTarget[ix + 1] = fn[ix + 1] + (wy - fn[ix + 1]) * e3
-        posTarget[ix + 2] = fn[ix + 2] + (lz - fn[ix + 2]) * e3
-      }
-      if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
-    }
-
     const wave = smoothstep(sec3)
-    // Brighten the dots toward a vivid cyan-blue as the wave forms (and revert
-    // for the carousel, since this recomputes from the active card colour).
-    _waveCol.setStyle(CARD_COLORS[activeRef.current]).lerp(WAVE_COLOR, wave)
-    material.uniforms.uColorCard.value.copy(_waveCol)
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
-    material.uniforms.uWaveFade.value   = wave    // dim the wave's back rows in Section 3
-    // Stay visible in Section 3 (the wave) instead of fading to nothing.
-    material.uniforms.uOpacity.value    = MAX_CARD_OP + (WAVE_OP - MAX_CARD_OP) * wave
+    material.uniforms.uWaveFade.value   = 0.0
+    material.uniforms.uOpacity.value    = MAX_CARD_OP * (1.0 - wave)
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
-    const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
-    material.uniforms.uSizeScale.value  = baseSize + (WAVE_SIZE - baseSize) * wave
-    // Bigger hover-glow radius so the cluster under the cursor reads clearly —
-    // and bigger still on the wide Section-3 wave.
-    material.uniforms.uRadius.value     = 0.82 * scale * (1.0 + wave * 0.8)
+    material.uniforms.uSizeScale.value  = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
+    material.uniforms.uRadius.value     = 0.58 * scale
 
     for (let i = 0; i < TRAIL_LEN; i++) {
       trail[i].w = Math.min(trail[i].w + delta, TRAIL_LIFETIME + 1)
     }
 
-    // Cursor interaction in sphere mode and card mode
+    // Cursor interaction — hero sphere + Section-2 card objects only. The hover
+    // effect is intentionally OFF in Section 3 onward (sec3 ≥ 0.5).
     raycaster.setFromCamera(ndc, camera)
     let hasHit = false
-    if (groupRef?.current && (p < 0.62 || p >= 0.85)) {
+    if (groupRef?.current && (p < 0.62 || (p >= 0.85 && scrollState.sec3 < 0.5))) {
       invMat.copy(groupRef.current.matrixWorld).invert()
       localRay.copy(raycaster.ray).applyMatrix4(invMat)
       if (p >= 0.85) {
-        // Card / wave mode: anchor the hover on the FRONT-MOST orb under the
-        // cursor — i.e. among orbs close to the ray, the one nearest the camera —
-        // so the glow lands on the visible orbs directly behind the cursor for
-        // ANY shape (globe, gear, funnel, the wave), not a back-facing one.
+        // Section-2 card object: anchor the hover on the orb nearest the cursor
+        // ray (the orb directly under the cursor) so the glow tracks the surface
+        // of any shape at every angle.
         localRay.direction.normalize()
         const lo = localRay.origin, ld = localRay.direction
-        const sc = groupRef.current.scale.x
-        const hit2Local = HOVER_HIT2 / (sc * sc)   // ray-proximity threshold, local²
-        let bestT = Infinity
+        let bestD2 = Infinity
         for (let i = 0; i < N_ORB; i += HOVER_STEP) {
           const ix = i * 3
           const ox = posTarget[ix] - lo.x, oy = posTarget[ix + 1] - lo.y, oz = posTarget[ix + 2] - lo.z
-          const t = ox * ld.x + oy * ld.y + oz * ld.z   // distance along the ray
-          if (t < 0 || t >= bestT) continue
+          const t = ox * ld.x + oy * ld.y + oz * ld.z
+          if (t < 0) continue
           const cx = ox - t * ld.x, cy = oy - t * ld.y, cz = oz - t * ld.z
           const d2 = cx * cx + cy * cy + cz * cz          // perpendicular dist²
-          if (d2 < hit2Local) { bestT = t; localHit.set(posTarget[ix], posTarget[ix + 1], posTarget[ix + 2]) }
+          if (d2 < bestD2) { bestD2 = d2; localHit.set(posTarget[ix], posTarget[ix + 1], posTarget[ix + 2]) }
         }
-        if (bestT < Infinity) {
+        const sc = groupRef.current.scale.x
+        if (bestD2 * sc * sc < HOVER_HIT2) {
           hit.copy(localHit).applyMatrix4(groupRef.current.matrixWorld)
           hasHit = true
         }
