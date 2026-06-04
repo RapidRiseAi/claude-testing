@@ -14,6 +14,7 @@ const END_X = -3.3
 const END_SCALE = 0.715   // carousel/card-mode group scale (+30% — Section-2 object size)
 
 const scrollState = { progress: 0, sec3: 0 }
+let shotRotY = null   // ?shot harness: force a card-object rotation for capture
 
 const { vertices, edges, hexCenters } = buildSoccerBall()
 
@@ -614,36 +615,30 @@ function _genIntelligenceOrbit() {
 
   const drawSparkle = (cx, cy, cz, Rs, d) => {
     const Rs23 = Math.pow(Rs, 2/3)
-    const nE = Math.max(Math.round(Rs * 200), 50)
+    const nE = Math.max(Math.round(Rs * 240), 60)
 
-    // Bright outer edge (tag-0): four passes on front rim, plus back rim & two side bands
-    for (let pass = 0; pass < 4; pass++)
+    // Bright rim (tag-0): the astroid silhouette as ONE ring at z=0 — the equator
+    // where the two faces meet. A single edge, no stacked layers.
+    for (let pass = 0; pass < 3; pass++)
       for (let i = 0; i < nE; i++) {
-        const t = (i/nE + pass/(4*nE)) * Math.PI*2
+        const t = (i/nE + pass/(3*nE)) * Math.PI*2
         const st=Math.sin(t), ct=Math.cos(t)
-        addPt(cx+Rs*st*st*st, cy+Rs*ct*ct*ct, cz+d*0.44, 0.005, 0)
+        addPt(cx+Rs*st*st*st, cy+Rs*ct*ct*ct, cz, 0.006, 0)
       }
-    for (let i = 0; i < nE; i++) {
-      const t = (i/nE)*Math.PI*2
-      const ex=Rs*Math.sin(t)*Math.sin(t)*Math.sin(t)
-      const ey=Rs*Math.cos(t)*Math.cos(t)*Math.cos(t)
-      addPt(cx+ex, cy+ey, cz-d*0.18, 0.005, 0)  // back rim
-      addPt(cx+ex, cy+ey, cz+d*0.12, 0.005, 0)  // mid side
-      addPt(cx+ex, cy+ey, cz+d*0.30, 0.005, 0)  // near-front side
-    }
 
-    // Interior fill (tag-1): a rounded 3D PUFF — a dome on BOTH faces (front and
-    // back) so the sparkle reads as a plump volume, not a flat outline.
-    const step = Rs * 0.075
+    // Body (tag-1): front + back domes that BOTH taper to z=0 at the rim, so the
+    // whole sparkle is ONE continuous rounded surface (a pillow), not separate
+    // sheets/layers. Filled densely + smoothly.
+    const step = Rs * 0.06
     for (let gx = -Rs; gx <= Rs+0.001; gx += step)
       for (let gy = -Rs; gy <= Rs+0.001; gy += step) {
-        const jx = gx + (Math.random()-.5)*step*0.60
-        const jy = gy + (Math.random()-.5)*step*0.60
+        const jx = gx + (Math.random()-.5)*step*0.55
+        const jy = gy + (Math.random()-.5)*step*0.55
         const v = Math.pow(Math.abs(jx), 2/3) + Math.pow(Math.abs(jy), 2/3)
-        if (v <= Rs23*0.94) {
-          const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))
-          addPt(cx+jx, cy+jy, cz + dome,        0.012, 1)  // front face
-          addPt(cx+jx, cy+jy, cz - dome*0.82,   0.012, 1)  // back face (rounded both sides)
+        if (v <= Rs23) {
+          const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))  // smooth, 0 at the rim
+          addPt(cx+jx, cy+jy, cz + dome, 0.009, 1)   // front face
+          addPt(cx+jx, cy+jy, cz - dome, 0.009, 1)   // back face (mirror → seamless pillow)
         }
       }
   }
@@ -1757,7 +1752,8 @@ export default function HeroOrb() {
         heavyRef.current = heavy
         setShowHeavy(heavy)
       }
-      cleanupShot = () => { delete window.__wfSetProgress }
+      window.__wfSetRotY = (y) => { shotRotY = y }
+      cleanupShot = () => { delete window.__wfSetProgress; delete window.__wfSetRotY; shotRotY = null }
     }
     return () => { window.removeEventListener('scroll', onScroll); cleanupShot && cleanupShot() }
   }, [])
@@ -1827,6 +1823,7 @@ export default function HeroOrb() {
     groupRef.current.scale.setScalar(newS)
 
     if (isDragging.current) return
+    if (shotRotY !== null) { groupRef.current.rotation.set(0.2, shotRotY, 0); return }
     if (sec3 > 0.01) {
       // Tilt the wave slightly toward the camera (head-on + perspective) and hold
       // it still — the orbs animate themselves (undulation).
