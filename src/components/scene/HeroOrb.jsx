@@ -11,7 +11,7 @@ const R = 1.70
 const ORB_X = 2.45
 const ORB_Y = 0.18
 const END_X = -3.3
-const END_SCALE = 0.55
+const END_SCALE = 0.715   // carousel/card-mode group scale (+30% — Section-2 object size)
 
 const scrollState = { progress: 0, sec3: 0 }
 
@@ -603,8 +603,8 @@ function _genIntelligenceOrbit() {
   // Silhouette = 3D-puffed astroid  x = Rs·sin³t, y = Rs·cos³t.
   const pts = [], tags = []
 
-  // Subtle 3/4 tilt — enough to read as 3D without hiding the silhouette.
-  const ax = 0.18, ay = 0.15
+  // 3/4 tilt — enough to read the rounded 3D volume (not a flat outline).
+  const ax = 0.26, ay = 0.40
   const cax=Math.cos(ax), sax=Math.sin(ax), cay=Math.cos(ay), say=Math.sin(ay)
   const addPt = (x, y, z, jit, tag) => {
     x+=(Math.random()-.5)*jit; y+=(Math.random()-.5)*jit; z+=(Math.random()-.5)*jit
@@ -632,24 +632,27 @@ function _genIntelligenceOrbit() {
       addPt(cx+ex, cy+ey, cz+d*0.30, 0.005, 0)  // near-front side
     }
 
-    // Interior fill (tag-1): sparser grid for airy premium feel, z follows dome
-    const step = Rs * 0.082
+    // Interior fill (tag-1): a rounded 3D PUFF — a dome on BOTH faces (front and
+    // back) so the sparkle reads as a plump volume, not a flat outline.
+    const step = Rs * 0.075
     for (let gx = -Rs; gx <= Rs+0.001; gx += step)
       for (let gy = -Rs; gy <= Rs+0.001; gy += step) {
         const jx = gx + (Math.random()-.5)*step*0.60
         const jy = gy + (Math.random()-.5)*step*0.60
         const v = Math.pow(Math.abs(jx), 2/3) + Math.pow(Math.abs(jy), 2/3)
         if (v <= Rs23*0.94) {
-          const zF = cz + d*Math.sqrt(Math.max(0, 1-v/Rs23))*0.68
-          addPt(cx+jx, cy+jy, zF, 0.012, 1)
+          const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))
+          addPt(cx+jx, cy+jy, cz + dome,        0.012, 1)  // front face
+          addPt(cx+jx, cy+jy, cz - dome*0.82,   0.012, 1)  // back face (rounded both sides)
         }
       }
   }
 
-  // Scaled-up, recentred cluster: large dominant, medium & small well-separated.
-  drawSparkle(-R*0.12,  0,       0,   R*0.82, R*0.26)  // large — near-centred
-  drawSparkle( R*0.74,  R*0.56,  0,   R*0.44, R*0.14)  // medium — upper-right
-  drawSparkle( R*0.68, -R*0.50,  0,   R*0.28, R*0.09)  // small  — lower-right
+  // Compact cluster sized to MATCH the other objects (~2R footprint): one big
+  // centred sparkle with two smaller ones close by. Deeper d → plump, rounded 3D.
+  drawSparkle( 0,        0,        0,  R*1.02, R*0.60)  // large — centred
+  drawSparkle( R*0.70,   R*0.54,   0,  R*0.45, R*0.27)  // medium — upper-right
+  drawSparkle( R*0.62,  -R*0.47,   0,  R*0.32, R*0.19)  // small  — lower-right
 
   const out = _padToBigTagged(pts, tags, N_ORB, 0.035)
   out.normal = [0, 0, 1]
@@ -935,7 +938,7 @@ const MINI_VERT = `
     vec4 mv = modelViewMatrix * vec4(displacedPos, 1.0);
     float globeFactor = max(0.0, uSizeScale - 1.0);
     float effectiveScale = uSizeScale * (1.0 - aSizeTag * globeFactor * 0.50);
-    gl_PointSize = aSize * effectiveScale * 2.0 * (1.0 + vGlow * 6.6) * (uScale / -mv.z);
+    gl_PointSize = aSize * effectiveScale * 2.0 * (1.0 + vGlow * 3.2) * (uScale / -mv.z);
     gl_Position = projectionMatrix * mv;
   }
 `
@@ -956,8 +959,8 @@ const MINI_FRAG = `
     vec3 sphereCol = mix(uColorBase, uColorHot, vGlow);
     vec3 col = mix(sphereCol, uColorCard, vCardBlend);
     float opMult = mix(mix(0.8, 1.0, uMorph), 1.0, vCardBlend);
-    float a = tex.a * uOpacity * opMult * (1.0 + vGlow * 1.4) * vWaveFade;
-    gl_FragColor = vec4(col * (1.0 + vGlow * 1.0), a);
+    float a = tex.a * uOpacity * opMult * (1.0 + vGlow * 0.8) * vWaveFade;
+    gl_FragColor = vec4(col * (1.0 + vGlow * 0.5), a);
   }
 `
 
