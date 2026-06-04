@@ -613,41 +613,30 @@ function _genIntelligenceOrbit() {
     pts.push(x1, y*cax-z1*sax, y*sax+z1*cax); tags.push(tag)
   }
 
+  // Uniform, edge-less 3D star: NO rim. Orbs fill a front + back dome (meeting
+  // smoothly at z=0) at a FIXED spacing, so every star has the SAME orb density
+  // (the small star's density) regardless of size — bigger stars just get more
+  // orbs. One smooth 3D object, no edges.
+  const STEP = R * 0.018
   const drawSparkle = (cx, cy, cz, Rs, d) => {
     const Rs23 = Math.pow(Rs, 2/3)
-    const nE = Math.max(Math.round(Rs * 240), 60)
-
-    // Bright rim (tag-0): the astroid silhouette as ONE ring at z=0 — the equator
-    // where the two faces meet. A single edge, no stacked layers.
-    for (let pass = 0; pass < 3; pass++)
-      for (let i = 0; i < nE; i++) {
-        const t = (i/nE + pass/(3*nE)) * Math.PI*2
-        const st=Math.sin(t), ct=Math.cos(t)
-        addPt(cx+Rs*st*st*st, cy+Rs*ct*ct*ct, cz, 0.006, 0)
-      }
-
-    // Body (tag-1): front + back domes that BOTH taper to z=0 at the rim, so the
-    // whole sparkle is ONE continuous rounded surface (a pillow), not separate
-    // sheets/layers. Filled densely + smoothly.
-    const step = Rs * 0.06
-    for (let gx = -Rs; gx <= Rs+0.001; gx += step)
-      for (let gy = -Rs; gy <= Rs+0.001; gy += step) {
-        const jx = gx + (Math.random()-.5)*step*0.55
-        const jy = gy + (Math.random()-.5)*step*0.55
+    for (let gx = -Rs; gx <= Rs+0.001; gx += STEP)
+      for (let gy = -Rs; gy <= Rs+0.001; gy += STEP) {
+        const jx = gx + (Math.random()-.5)*STEP*0.5
+        const jy = gy + (Math.random()-.5)*STEP*0.5
         const v = Math.pow(Math.abs(jx), 2/3) + Math.pow(Math.abs(jy), 2/3)
         if (v <= Rs23) {
-          const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))  // smooth, 0 at the rim
-          addPt(cx+jx, cy+jy, cz + dome, 0.009, 1)   // front face
-          addPt(cx+jx, cy+jy, cz - dome, 0.009, 1)   // back face (mirror → seamless pillow)
+          const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))  // smooth, 0 at the silhouette
+          addPt(cx+jx, cy+jy, cz + dome, 0.007, 1)   // front face
+          addPt(cx+jx, cy+jy, cz - dome, 0.007, 1)   // back face → seamless pillow
         }
       }
   }
 
-  // Compact cluster sized to MATCH the other objects (~2R footprint): one big
-  // centred sparkle with two smaller ones close by. Deeper d → plump, rounded 3D.
-  drawSparkle( 0,        0,        0,  R*1.02, R*0.60)  // large — centred
-  drawSparkle( R*0.70,   R*0.54,   0,  R*0.45, R*0.27)  // medium — upper-right
-  drawSparkle( R*0.62,  -R*0.47,   0,  R*0.32, R*0.19)  // small  — lower-right
+  // Spaced cluster (a clear gap between the three) sized to match the others.
+  drawSparkle( 0,        0,        0,  R*0.88, R*0.56)  // large — centred
+  drawSparkle( R*0.92,   R*0.70,   0,  R*0.38, R*0.24)  // medium — upper-right
+  drawSparkle( R*0.80,  -R*0.60,   0,  R*0.27, R*0.18)  // small  — lower-right
 
   const out = _padToBigTagged(pts, tags, N_ORB, 0.035)
   out.normal = [0, 0, 1]
