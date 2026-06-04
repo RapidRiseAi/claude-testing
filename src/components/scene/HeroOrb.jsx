@@ -613,22 +613,22 @@ function _genIntelligenceOrbit() {
     pts.push(x1, y*cax-z1*sax, y*sax+z1*cax); tags.push(tag)
   }
 
-  // Uniform, edge-less 3D star: NO rim. Orbs fill a front + back dome (meeting
-  // smoothly at z=0) at a FIXED spacing, so every star has the SAME orb density
-  // (the small star's density) regardless of size — bigger stars just get more
-  // orbs. One smooth 3D object, no edges.
-  const STEP = R * 0.018
+  // Uniform, edge-less SOLID 3D star: NO rim, and FILLED through the whole volume
+  // (not a hollow front/back shell) so it never looks empty when rotated. A fixed
+  // 3D spacing means every star shares the same orb density regardless of size.
+  const STEP = R * 0.042
   const drawSparkle = (cx, cy, cz, Rs, d) => {
     const Rs23 = Math.pow(Rs, 2/3)
     for (let gx = -Rs; gx <= Rs+0.001; gx += STEP)
       for (let gy = -Rs; gy <= Rs+0.001; gy += STEP) {
-        const jx = gx + (Math.random()-.5)*STEP*0.5
-        const jy = gy + (Math.random()-.5)*STEP*0.5
-        const v = Math.pow(Math.abs(jx), 2/3) + Math.pow(Math.abs(jy), 2/3)
-        if (v <= Rs23) {
-          const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))  // smooth, 0 at the silhouette
-          addPt(cx+jx, cy+jy, cz + dome, 0.007, 1)   // front face
-          addPt(cx+jx, cy+jy, cz - dome, 0.007, 1)   // back face → seamless pillow
+        const v = Math.pow(Math.abs(gx), 2/3) + Math.pow(Math.abs(gy), 2/3)
+        if (v > Rs23) continue
+        const dome = d * Math.sqrt(Math.max(0, 1 - v/Rs23))  // half-thickness at (gx,gy)
+        for (let gz = -dome; gz <= dome+0.001; gz += STEP) {
+          const jx = gx + (Math.random()-.5)*STEP*0.6
+          const jy = gy + (Math.random()-.5)*STEP*0.6
+          const jz = gz + (Math.random()-.5)*STEP*0.6
+          addPt(cx+jx, cy+jy, cz+jz, 0.006, 1)   // solid fill
         }
       }
   }
