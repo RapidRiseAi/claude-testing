@@ -1011,14 +1011,28 @@ h2 {
    EXPERTISE CAROUSEL SECTION
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* The carousel section is made TALL (height set inline from scrollLayout) so it
+   carries real scroll distance — one budget per card — letting the scrollbar
+   scrub through the cards. The visible layout is pinned inside via .expertise-pin
+   so it stays put while that distance is scrolled. */
 .expertise-section {
   min-height: 100vh;
+  position: relative;
+  padding: 0;
+}
+
+/* Sticky pin — holds the original row layout and stays fixed in the viewport for
+   the section's scroll length. (overflow lives here, NOT on the section, or the
+   section would become its own scroll container and sticky would never pin.) */
+.expertise-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
-  position: relative;
   overflow: hidden;
-  padding: 0;
 }
 
 .expertise-left {
@@ -1049,7 +1063,7 @@ h2 {
 
    Gradient: pure solid #000 from the left edge all the way across, then a single
    fade on the right side only — same ~12% fade width as the approved design. */
-.expertise-section::before {
+.expertise-pin::before {
   content: '';
   position: absolute;
   left: 0;
@@ -1590,11 +1604,19 @@ h2 {
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
+  /* Narrow screens keep the original single-viewport, normal-flow carousel
+     (cards switch by tap) — no pin, no extra scroll length. */
   .expertise-section {
+    height: auto !important;
+    min-height: 100vh;
+    padding: 72px 0 48px;
+  }
+  .expertise-pin {
+    position: static;
+    height: auto;
+    overflow: hidden;
     flex-direction: column;
     align-items: flex-start;
-    padding: 72px 0 48px;
-    overflow: hidden;
   }
   .expertise-left { display: none; }
   .expertise-right {
@@ -1603,7 +1625,7 @@ h2 {
     min-height: unset;
   }
   /* No fade-edge pseudo on mobile — left column is hidden, no gap to mask */
-  .expertise-section::before { content: none; }
+  .expertise-pin::before { content: none; }
   .expertise-h2 { white-space: normal; }
   .ec-carousel-wrap { height: clamp(430px, 56vh, 560px); }
   .expertise-card {

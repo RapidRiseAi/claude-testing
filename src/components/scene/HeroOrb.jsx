@@ -6,6 +6,7 @@ import {
 } from '../../utils/soccerBall'
 import { createIconTexture, getGlowDotTexture } from '../../utils/iconTextures'
 import { carouselState } from '../../utils/carouselState'
+import { deriveScroll } from '../../utils/scrollLayout'
 
 const R = 1.70
 const ORB_X = 2.45
@@ -1706,8 +1707,11 @@ export default function HeroOrb() {
     const onScroll = () => {
       const max = window.innerHeight
       scrollState.progress = Math.min(1, Math.max(0, window.scrollY / max))
-      // sec3 climbs 0→1 across the snap from the carousel (1vh) into Section 3 (2vh)
-      scrollState.sec3 = Math.min(1, Math.max(0, window.scrollY / max - 1))
+      // The carousel now has real scroll distance (its cards are scroll-driven —
+      // see scrollLayout), so sec3 only climbs 0→1 AFTER the last card, across
+      // the scroll-out into Section 3. progress stays clamped at 1 throughout, so
+      // the collapse/card-mode visuals are unchanged.
+      scrollState.sec3 = deriveScroll(window.scrollY).sec3
       // Section 3+: drop the scene canvas BEHIND the page content so the wave —
       // the funnel's ACTUAL orbs, morphed — renders behind the cards (keeps them
       // solid). On top again for the hero/carousel. Hysteresis avoids flicker if
@@ -1754,7 +1758,11 @@ export default function HeroOrb() {
         setShowHeavy(heavy)
       }
       window.__wfSetRotY = (y) => { shotRotY = y }
-      cleanupShot = () => { delete window.__wfSetProgress; delete window.__wfSetRotY; shotRotY = null }
+      window.__wfSetSec3 = (v) => { scrollState.sec3 = Math.min(1, Math.max(0, v)) }
+      cleanupShot = () => {
+        delete window.__wfSetProgress; delete window.__wfSetRotY; delete window.__wfSetSec3
+        shotRotY = null
+      }
     }
     return () => { window.removeEventListener('scroll', onScroll); cleanupShot && cleanupShot() }
   }, [])

@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { registerCarousel } from '../../utils/carouselControl'
 import { carouselState } from '../../utils/carouselState'
+import { carouselSectionVH, deriveScroll, getStopsPx, isDesktopLayout } from '../../utils/scrollLayout'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const GlobeIcon = () => (
@@ -286,6 +286,7 @@ export default function ExpertiseCarousel() {
   const [activeCard, setActiveCard] = useState(0)
   const [direction, setDirection]   = useState(1)
   const [cardOffset, setCardOffset] = useState(() => computeOffset())
+  const [sectionH, setSectionH]     = useState(() => carouselSectionVH() * 100)
   const activeCardRef = useRef(0)
   const navigate = useNavigate()
 
@@ -295,7 +296,7 @@ export default function ExpertiseCarousel() {
     carouselState.activeCard = activeCard
   }, [activeCard])
 
-  /* screenshot harness hook */
+  /* screenshot harness hook — drives the card directly (bypasses scroll) */
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (!new URLSearchParams(window.location.search).has('shot')) return
@@ -308,27 +309,57 @@ export default function ExpertiseCarousel() {
   }, [])
 
   useEffect(() => {
-    const onResize = () => setCardOffset(computeOffset())
+    const onResize = () => {
+      setCardOffset(computeOffset())
+      setSectionH(carouselSectionVH() * 100)
+    }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
+  /* Scroll-driven cards: on the desktop pinned layout the active card is a pure
+     function of scroll position, so the wheel, the scrollbar and middle-click
+     autoscroll all cycle the cards identically. (Disabled under ?shot so the
+     capture harness can address cards directly; on mobile cards switch by tap.) */
   useEffect(() => {
-    registerCarousel({
-      onAdvance: (dir) => {
-        setDirection(dir)
-        setActiveCard(prev => Math.max(0, Math.min(CARDS.length - 1, prev + dir)))
-      },
-      activeRef: activeCardRef,
-      total: CARDS.length,
-    })
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).has('shot')) return
+    if (!isDesktopLayout()) return
+    const onScroll = () => {
+      const { card } = deriveScroll(window.scrollY)
+      if (card == null) return
+      setActiveCard(prev => {
+        if (card !== prev) setDirection(card > prev ? 1 : -1)
+        return card
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    onScroll()
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  return (
-    <section className="expertise-section" data-carousel="" aria-label="Our expertise">
-      <div className="expertise-left" aria-hidden="true" />
+  /* Jump to a card. On desktop scroll to its stop so scroll stays the single
+     source of truth; on mobile switch directly (tap). */
+  const goToCard = (i) => {
+    if (isDesktopLayout()) {
+      window.scrollTo({ top: getStopsPx()[1 + i], behavior: 'smooth' })
+    } else {
+      setDirection(i > activeCardRef.current ? 1 : -1)
+      setActiveCard(i)
+    }
+  }
 
-      <div className="expertise-right">
+  return (
+    <section
+      className="expertise-section"
+      data-carousel=""
+      aria-label="Our expertise"
+      style={{ height: `${sectionH}vh` }}
+    >
+      <div className="expertise-pin">
+        <div className="expertise-left" aria-hidden="true" />
+
+        <div className="expertise-right">
         <div className="expertise-heading-block">
           <p className="expertise-eyebrow">OUR EXPERTISE</p>
           <h2 className="expertise-h2">The systems behind modern growth.</h2>
@@ -354,20 +385,14 @@ export default function ExpertiseCarousel() {
                 style={{ zIndex: isActive ? 3 : isPreview ? 2 : isVisible ? 1 : 0 }}
                 animate={getCardAnim(pos, cardOffset)}
                 transition={SLIDE_TRANS}
-                onClick={() => {
-                  if (isPreview) {
-                    setDirection(i > activeCardRef.current ? 1 : -1)
-                    setActiveCard(i)
-                  }
-                }}
+                onClick={() => { if (isPreview) goToCard(i) }}
                 role={isPreview ? 'button' : undefined}
                 aria-label={isPreview ? `Show ${card.title}` : undefined}
                 tabIndex={isVisible ? 0 : -1}
                 onKeyDown={(e) => {
                   if ((e.key === 'Enter' || e.key === ' ') && isPreview) {
                     e.preventDefault()
-                    setDirection(i > activeCardRef.current ? 1 : -1)
-                    setActiveCard(i)
+                    goToCard(i)
                   }
                 }}
               >
@@ -423,6 +448,7 @@ export default function ExpertiseCarousel() {
               </motion.div>
             )
           })}
+        </div>
         </div>
       </div>
     </section>
