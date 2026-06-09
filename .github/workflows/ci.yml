@@ -1,0 +1,60 @@
+name: CI
+
+# Runs on every PR and on pushes to main. This is the "test before it merges"
+# safety net that mirrors what you'd run locally before pushing.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Cancel an in-progress run when a newer commit is pushed to the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      # The check-*.mjs scripts drive a headless WebGL browser (SwiftShader), so
+      # Chromium and its system libraries must be present.
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      # SKIP_BUILD reuses the dist/ produced by the Build step above; the scripts
+      # then boot `vite preview` against it and assert scroll-snap / wheel behaviour.
+      #
+      # These drive a software-rendered (SwiftShader) browser, whose first cold
+      # render can be slow enough to trip the scripts' fixed timing waits. Retry a
+      # few times so a one-off cold-start flake doesn't fail the build — a genuine
+      # regression fails consistently and still goes red after all attempts.
+      - name: Run verification tests
+        run: |
+          for attempt in 1 2 3; do
+            echo "::group::verification attempt $attempt"
+            if npm test; then echo "::endgroup::"; exit 0; fi
+            echo "::endgroup::"
+            echo "attempt $attempt failed; retrying..."
+          done
+          echo "verification tests failed after 3 attempts"
+          exit 1
+        env:
+          SKIP_BUILD: '1'
