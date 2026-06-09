@@ -1719,7 +1719,7 @@ export default function HeroOrb() {
       const s3 = scrollState.sec3
       let behind = behindRef.current
       if (!behind && s3 > 0.55) behind = true
-      else if (behind && s3 < 0.45) behind = false
+      else if (behind && s3 < 0.10) behind = false
       if (behind !== behindRef.current) {
         behindRef.current = behind
         const cc = document.getElementById('canvas-container')
