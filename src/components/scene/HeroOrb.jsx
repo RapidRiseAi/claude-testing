@@ -1730,11 +1730,15 @@ export default function HeroOrb() {
       // transition give the soft, slow fade.
       let atmos = atmosRef.current
       if (!atmos && s3 > 0.25) atmos = true
-      else if (atmos && s3 < 0.08) atmos = false
+      else if (atmos && s3 < 0.15) atmos = false
       if (atmos !== atmosRef.current) {
         atmosRef.current = atmos
         const el = document.getElementById('scene-atmosphere')
-        if (el) el.classList.toggle('is-visible', atmos)
+        if (el) {
+          // Fade in slowly (CSS 1.8s), fade out quickly so glow is gone before Section 2
+          el.style.transition = atmos ? '' : 'opacity 0.3s ease'
+          el.classList.toggle('is-visible', atmos)
+        }
       }
       if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false
