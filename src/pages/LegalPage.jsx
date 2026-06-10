@@ -1,35 +1,68 @@
-import { useParams, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { Fragment } from 'react'
 import PageLayout from '../components/ui/PageLayout'
+import { LEGAL_DOCS, LEGAL_EMAIL, LEGAL_LAST_UPDATED } from '../data/legalContent'
 
-/* Placeholder pages for the footer's legal links. The real documents must be
-   written/reviewed before publishing — this page only reserves the routes so
-   no footer link dead-ends. Add slugs here as new documents are planned. */
-const LEGAL_DOCS = {
-  'privacy-policy': 'Privacy Policy',
-  'terms-of-service': 'Terms of Service',
-  'paia-manual': 'PAIA Manual',
-  'cookie-notice': 'Cookie Notice',
-  'popia-notice': 'POPIA Notice',
-  'refund-policy': 'Refund / Cancellation Policy',
+/* Render a content string, turning occurrences of the contact email into
+   mailto links so the data file can stay plain text. */
+function LegalText({ text }) {
+  const parts = text.split(LEGAL_EMAIL)
+  if (parts.length === 1) return text
+  return parts.map((part, i) => (
+    <Fragment key={i}>
+      {part}
+      {i < parts.length - 1 && <a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a>}
+    </Fragment>
+  ))
 }
 
-export default function LegalPage() {
-  const { slug } = useParams()
-  const title = LEGAL_DOCS[slug] ?? 'Legal Document'
+/* One legal document page. `slug` comes from the route definition in App.jsx;
+   the content lives in src/data/legalContent.js. */
+export default function LegalPage({ slug }) {
+  const doc = LEGAL_DOCS[slug]
+  if (!doc) return null
 
   return (
     <PageLayout>
-      <section className="legal-page">
-        <p className="legal-eyebrow">Legal</p>
-        <h1 className="legal-title">{title}</h1>
-        <p className="legal-body">
-          This document is being prepared and will be published here. If you need
-          this information in the meantime, contact us at{' '}
-          <a href="mailto:team@rapidriseai.com">team@rapidriseai.com</a> and we
-          will assist you directly.
-        </p>
+      <article className="legal-page">
+        <header className="legal-head">
+          <p className="legal-eyebrow">Legal</p>
+          <h1 className="legal-title">{doc.title}</h1>
+          <p className="legal-updated">{LEGAL_LAST_UPDATED}</p>
+          <p className="legal-intro"><LegalText text={doc.intro} /></p>
+          {doc.note && <p className="legal-note"><LegalText text={doc.note} /></p>}
+        </header>
+
+        <div className="legal-sections">
+          {doc.sections.map((section, i) => (
+            <section className="legal-section" key={section.heading}>
+              <h2>
+                <span className="legal-section-num">{i + 1}.</span>
+                {section.heading}
+              </h2>
+              {section.body.map((block, j) =>
+                Array.isArray(block) ? (
+                  <ul key={j}>
+                    {block.map((item) => <li key={item}><LegalText text={item} /></li>)}
+                  </ul>
+                ) : (
+                  <p key={j}><LegalText text={block} /></p>
+                )
+              )}
+            </section>
+          ))}
+        </div>
+
+        <aside className="legal-cta">
+          <h2>Need help or have questions?</h2>
+          <p>
+            Contact Rapid Rise AI at{' '}
+            <a href={`mailto:${LEGAL_EMAIL}`}>{LEGAL_EMAIL}</a>
+          </p>
+        </aside>
+
         <Link className="legal-back" to="/">← Back to home</Link>
-      </section>
+      </article>
     </PageLayout>
   )
 }

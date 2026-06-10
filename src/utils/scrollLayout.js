@@ -37,20 +37,24 @@ export function getStops() {
   for (let k = 0; k < N_CARDS; k++) stops.push(1 + k * CARD_VH) // cards 0..6
   stops.push(cycleEnd + 1)                            // fixed-pricing (wave)
   stops.push(cycleEnd + 2)                            // our work (proof & builds)
-  stops.push(cycleEnd + 3)                            // custom possibilities
+  stops.push(cycleEnd + 3)                            // custom possibilities (top)
+  stops.push(cycleEnd + 4)                            // custom possibilities (groups/CTA)
   return stops
 }
 
 export function getStopsPx() {
   const vh = window.innerHeight
   const px = getStops().map((v) => Math.round(v * vh))
-  // The footer sits below the last full-viewport section, so the document
-  // scrolls past the last vh-based stop. Give the document bottom its own
-  // stop so one more wheel step reveals the footer (and the idle snap can
-  // rest there) instead of the snap pulling the page back up.
+  // The footer sits below the last vh-based stop (and the custom-possibilities
+  // section is taller than one viewport). Give the document bottom its own
+  // stop so the last wheel steps walk through the section and land on the
+  // footer instead of the snap pulling the page back up.
   const bottom = Math.max(0, document.documentElement.scrollHeight - vh)
   if (bottom > px[px.length - 1] + 2) px.push(bottom)
-  return px
+  // On tall viewports the section may fit in fewer viewports than the stop
+  // list assumes; drop any stop that lands within a third of a viewport of
+  // the next one so there are no dead near-duplicate steps.
+  return px.filter((v, i) => i === px.length - 1 || px[i + 1] - v > vh * 0.34)
 }
 
 // Derive the scroll-driven state (active card + Section-3 wave progress) from a
