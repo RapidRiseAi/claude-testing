@@ -5,6 +5,7 @@ import HeroSection from '../components/ui/HeroSection'
 import ScrollSection from '../components/ui/ScrollSection'
 import ExpertiseCarousel from '../components/ui/ExpertiseCarousel'
 import FixedPricingSection from '../components/ui/FixedPricingSection'
+import OurWorkSection from '../components/ui/OurWorkSection'
 import LoadingScreen from '../components/ui/LoadingScreen'
 import useScrollSnap from '../hooks/useScrollSnap'
 
@@ -33,6 +34,7 @@ export default function HomePage() {
         <HeroSection loaded={loaded} />
         <ExpertiseCarousel />
         <FixedPricingSection />
+        <OurWorkSection />
         <ScrollSection
           index={1}
           title="Real-Time Automation"

@@ -1,7 +1,8 @@
 // Single source of truth for the scroll journey.
 //
 // The page is a sequence of "stops": the hero, then one stop per carousel card,
-// then the fixed-pricing (wave) section, then the two scroll sections. Scroll
+// then the fixed-pricing (wave) section, then Our Work (proof & builds), then
+// the two scroll sections. Scroll
 // position drives EVERYTHING — the active carousel card and the scene's wave
 // morph are pure functions of window.scrollY — so the wheel, the scrollbar, the
 // middle-click autoscroll and touch all behave identically and always resolve
@@ -30,13 +31,14 @@ export function carouselSectionVH() {
 
 // Snap targets in viewport units (multiply by innerHeight for px).
 export function getStops() {
-  if (!isDesktopLayout()) return [0, 1, 2, 3, 4]
+  if (!isDesktopLayout()) return [0, 1, 2, 3, 4, 5]
   const cycleEnd = cycleEndVH()
   const stops = [0]                                   // hero
   for (let k = 0; k < N_CARDS; k++) stops.push(1 + k * CARD_VH) // cards 0..6
   stops.push(cycleEnd + 1)                            // fixed-pricing (wave)
-  stops.push(cycleEnd + 2)                            // scroll section 1
-  stops.push(cycleEnd + 3)                            // scroll section 2
+  stops.push(cycleEnd + 2)                            // our work (proof & builds)
+  stops.push(cycleEnd + 3)                            // scroll section 1
+  stops.push(cycleEnd + 4)                            // scroll section 2
   return stops
 }
 
