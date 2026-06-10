@@ -1,4 +1,5 @@
 import Navbar from './Navbar'
+import SiteFooter from './SiteFooter'
 
 export default function PageLayout({ children }) {
   return (
@@ -7,6 +8,7 @@ export default function PageLayout({ children }) {
       <main className="page-root">
         {children}
       </main>
+      <SiteFooter />
     </>
   )
 }

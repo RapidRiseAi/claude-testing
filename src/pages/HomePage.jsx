@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react'
 import Scene from '../components/scene/Scene'
 import Navbar from '../components/ui/Navbar'
 import HeroSection from '../components/ui/HeroSection'
-import ScrollSection from '../components/ui/ScrollSection'
 import ExpertiseCarousel from '../components/ui/ExpertiseCarousel'
 import FixedPricingSection from '../components/ui/FixedPricingSection'
 import OurWorkSection from '../components/ui/OurWorkSection'
+import CustomPossibilitiesSection from '../components/ui/CustomPossibilitiesSection'
+import SiteFooter from '../components/ui/SiteFooter'
 import LoadingScreen from '../components/ui/LoadingScreen'
 import useScrollSnap from '../hooks/useScrollSnap'
 
@@ -35,16 +36,8 @@ export default function HomePage() {
         <ExpertiseCarousel />
         <FixedPricingSection />
         <OurWorkSection />
-        <ScrollSection
-          index={1}
-          title="Real-Time Automation"
-          body="Triggers, workflows, and intelligent agents respond to your data as it moves, removing the friction between insight and action."
-        />
-        <ScrollSection
-          index={2}
-          title="Built to Scale"
-          body="The ecosystem grows with you. Add new tools, services, and integrations without breaking what's already working."
-        />
+        <CustomPossibilitiesSection />
+        <SiteFooter />
       </div>
     </>
   )

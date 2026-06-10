@@ -4,6 +4,7 @@ import ServicesPage from './pages/ServicesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
 import ProofPage from './pages/ProofPage'
 import AboutPage from './pages/AboutPage'
+import LegalPage from './pages/LegalPage'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Route path="/pricing" element={<Navigate to="/services" replace />} />
       <Route path="/proof" element={<ProofPage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/legal/:slug" element={<LegalPage />} />
     </Routes>
   )
 }

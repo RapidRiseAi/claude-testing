@@ -2,7 +2,7 @@
 //
 // The page is a sequence of "stops": the hero, then one stop per carousel card,
 // then the fixed-pricing (wave) section, then Our Work (proof & builds), then
-// the two scroll sections. Scroll
+// Custom Possibilities, then the footer (a document-bottom stop). Scroll
 // position drives EVERYTHING — the active carousel card and the scene's wave
 // morph are pure functions of window.scrollY — so the wheel, the scrollbar, the
 // middle-click autoscroll and touch all behave identically and always resolve
@@ -31,20 +31,26 @@ export function carouselSectionVH() {
 
 // Snap targets in viewport units (multiply by innerHeight for px).
 export function getStops() {
-  if (!isDesktopLayout()) return [0, 1, 2, 3, 4, 5]
+  if (!isDesktopLayout()) return [0, 1, 2, 3, 4]
   const cycleEnd = cycleEndVH()
   const stops = [0]                                   // hero
   for (let k = 0; k < N_CARDS; k++) stops.push(1 + k * CARD_VH) // cards 0..6
   stops.push(cycleEnd + 1)                            // fixed-pricing (wave)
   stops.push(cycleEnd + 2)                            // our work (proof & builds)
-  stops.push(cycleEnd + 3)                            // scroll section 1
-  stops.push(cycleEnd + 4)                            // scroll section 2
+  stops.push(cycleEnd + 3)                            // custom possibilities
   return stops
 }
 
 export function getStopsPx() {
   const vh = window.innerHeight
-  return getStops().map((v) => Math.round(v * vh))
+  const px = getStops().map((v) => Math.round(v * vh))
+  // The footer sits below the last full-viewport section, so the document
+  // scrolls past the last vh-based stop. Give the document bottom its own
+  // stop so one more wheel step reveals the footer (and the idle snap can
+  // rest there) instead of the snap pulling the page back up.
+  const bottom = Math.max(0, document.documentElement.scrollHeight - vh)
+  if (bottom > px[px.length - 1] + 2) px.push(bottom)
+  return px
 }
 
 // Derive the scroll-driven state (active card + Section-3 wave progress) from a
