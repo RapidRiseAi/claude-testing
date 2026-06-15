@@ -121,12 +121,13 @@ export default function Navbar({ loaded }) {
       className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}
       style={{ opacity: 0 }}
     >
-      <div className="navbar-inner">
-        {/* Glass on a separate layer so the dropdown (a descendant) can run its
-            own backdrop-filter — a nested backdrop-filter is disabled by an
-            ancestor that also has one. */}
-        <span className="navbar-glass" aria-hidden="true" />
+      {/* Full-bleed glass on its own layer (sibling of the inner row, NOT an
+          ancestor of the dropdown) so the dropdown can run its own
+          backdrop-filter — a nested backdrop-filter is disabled by an ancestor
+          that also has one. Spans the whole screen width; fades in on scroll. */}
+      <span className="navbar-glass" aria-hidden="true" />
 
+      <div className="navbar-inner">
         <Link to="/" className="navbar-brand">
           <RRMark />
           <span className="navbar-logo">Rapid Rise AI</span>

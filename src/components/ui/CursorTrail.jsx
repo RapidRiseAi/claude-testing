@@ -42,11 +42,18 @@ export default function CursorTrail() {
     let moved = false
     let lastEmit = 0
     let frame = 0
+    let fade = 1            // eased master alpha — drops near text so it stays readable
+    let targetFade = 1
+
+    // Reading text where the glow would hurt legibility (not every span/button).
+    const TEXT_SEL = 'h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,label,dt,dd,.section-kicker'
 
     const onMove = (e) => {
       mouse.x = e.clientX
       mouse.y = e.clientY
       moved = true
+      // When the pointer is over reading text, fade the effect to barely-there.
+      targetFade = e.target?.closest?.(TEXT_SEL) ? 0.12 : 1
     }
     window.addEventListener('mousemove', onMove, { passive: true })
 
@@ -54,6 +61,9 @@ export default function CursorTrail() {
     const loop = () => {
       frame++
       ctx.clearRect(0, 0, W, H)
+
+      // Ease the master alpha toward its target (full away from text, faint over it)
+      fade += (targetFade - fade) * 0.12
 
       // Ease the glowing core toward the real pointer
       core.x += (mouse.x - core.x) * 0.2
@@ -66,6 +76,7 @@ export default function CursorTrail() {
       if (trail.length > 20) trail.shift()
 
       ctx.globalCompositeOperation = 'lighter'
+      ctx.globalAlpha = fade
 
       // Tapering glow streak through the trail history
       for (let i = 1; i < trail.length; i++) {
@@ -132,6 +143,7 @@ export default function CursorTrail() {
       ctx.arc(core.x, core.y, 22, 0, Math.PI * 2)
       ctx.fill()
 
+      ctx.globalAlpha = 1
       ctx.globalCompositeOperation = 'source-over'
       raf = requestAnimationFrame(loop)
     }

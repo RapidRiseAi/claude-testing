@@ -7,7 +7,7 @@ import { useEffect } from 'react'
    cursor is and fades as it leaves. Independent of the 3D tilt — both read the
    pointer, neither touches the other. Pointer-fine only (no touch). */
 
-const SEL = '.glass-card, .sd2-pkg, .ct2-form-panel'
+const SEL = '.glass-card, .sd2-pkg, .ct2-form-panel, .nav-dd-item'
 
 export default function EdgeSpotlight() {
   useEffect(() => {

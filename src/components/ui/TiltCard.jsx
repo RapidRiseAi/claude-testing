@@ -35,7 +35,10 @@ export default function TiltCard({
   const rotateY = useTransform(sx, [0, 1], [-max, max])
   const glareX = useTransform(sx, [0, 1], ['0%', '100%'])
   const glareY = useTransform(sy, [0, 1], ['0%', '100%'])
-  const glareBg = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, rgba(160,214,255,0.18), transparent 46%)`
+  // Colour + spread are CSS vars so pages can recolour/soften the glare (e.g.
+  // inner pages use a deeper, dimmer, more diffuse blue). Defaults keep the
+  // original light-blue highlight.
+  const glareBg = useMotionTemplate`radial-gradient(circle at ${glareX} ${glareY}, var(--glare-color, rgba(160,214,255,0.18)), transparent var(--glare-spread, 46%))`
 
   const onMove = (e) => {
     const r = ref.current.getBoundingClientRect()

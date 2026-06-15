@@ -1,0 +1,217 @@
+/* ── Floating Google Reviews widget ──────────────────────────────────────────
+   Pinned bottom-right, below the cookie banner (z 9000) so it never covers it.
+   Reuses .glass-card (navy panel + gradient-edge glow) for a native look. */
+
+.grw {
+  position: fixed;
+  left: max(16px, 8vw); /* in line with the home-page hero text (.hero-left-content) */
+  bottom: clamp(14px, 2.2vw, 26px);
+  z-index: 8500;
+  display: flex;
+  justify-content: flex-start; /* pill/card hug the left edge */
+  pointer-events: none; /* re-enabled on the card/pill so the gutter stays click-through */
+}
+
+.grw-card {
+  pointer-events: auto;
+  position: relative;
+  width: min(326px, calc(100vw - 28px));
+  border-radius: 18px;
+  padding: 16px 18px 14px;
+}
+
+/* ── Collapsed pill (the minimized state) ──────────────────────────────────── */
+.grw-mini {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px 9px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  color: inherit;
+  background: linear-gradient(180deg, rgba(10, 16, 32, 0.92) 0%, rgba(4, 8, 18, 0.92) 100%);
+  border: 1px solid rgba(120, 175, 250, 0.28);
+  box-shadow:
+    0 14px 34px -14px rgba(0, 0, 0, 0.7),
+    0 0 22px -10px rgba(40, 120, 255, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.16s;
+}
+.grw-mini:hover {
+  border-color: rgba(120, 175, 250, 0.5);
+  box-shadow:
+    0 16px 38px -14px rgba(0, 0, 0, 0.72),
+    0 0 30px -8px rgba(48, 130, 255, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+.grw-mini:focus-visible { outline: 2px solid #5fb0f8; outline-offset: 3px; }
+.grw-mini-score {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+  color: #f3f8fe;
+  line-height: 1;
+}
+.grw-mini-expand { color: rgba(150, 185, 235, 0.7); margin-left: 1px; }
+.grw-mini:hover .grw-mini-expand { color: #8cc6ff; }
+
+/* Anything interactive sits above the .glass-card::before gradient ring (z 0). */
+.grw-head,
+.grw-review,
+.grw-dots,
+.grw-more,
+.grw-close { position: relative; z-index: 1; }
+
+/* ── Header: logo + overall score (links to the profile) ───────────────────── */
+.grw-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  padding-right: 26px; /* clear the close button */
+}
+.grw-g { flex-shrink: 0; }
+
+.grw-head-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.grw-label {
+  font-size: 0.72rem;
+  font-weight: 640;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: rgba(170, 196, 232, 0.7);
+}
+
+.grw-rating-row { display: flex; align-items: center; gap: 8px; }
+
+.grw-score {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 1.18rem;
+  font-weight: 780;
+  letter-spacing: -0.02em;
+  color: #f3f8fe;
+  line-height: 1;
+}
+
+.grw-count { font-size: 0.78rem; color: rgba(186, 206, 234, 0.62); }
+
+/* Stars: a gold layer clipped over a muted base layer = clean fractional fill */
+.grw-stars { position: relative; display: inline-block; line-height: 0; }
+.grw-stars-base { display: inline-flex; }
+.grw-stars-fill {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.grw-stars svg { display: block; }
+
+/* ── Featured review (rotates through the top 3) ───────────────────────────── */
+.grw-review {
+  margin: 13px 0 0;
+  padding-top: 13px;
+  border-top: 1px solid rgba(120, 180, 255, 0.12);
+}
+.grw-review-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+
+.grw-avatar {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 720;
+  color: #dbe9ff;
+  background: linear-gradient(180deg, rgba(59, 150, 255, 0.5), rgba(26, 119, 242, 0.35));
+  border: 1px solid rgba(140, 196, 255, 0.4);
+}
+.grw-review-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.grw-review-author {
+  font-size: 0.84rem;
+  font-weight: 660;
+  color: #eaf2fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.grw-review-sub { display: inline-flex; align-items: center; gap: 6px; }
+.grw-review-when { font-size: 0.72rem; color: rgba(178, 200, 230, 0.6); }
+
+.grw-review-text {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(214, 228, 248, 0.86);
+}
+
+/* ── Rotation dots ─────────────────────────────────────────────────────────── */
+.grw-dots { display: flex; gap: 6px; margin-top: 12px; }
+.grw-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: rgba(140, 175, 220, 0.3);
+  border: none;
+  transition: background 0.2s, transform 0.2s;
+}
+.grw-dot:hover { background: rgba(140, 175, 220, 0.55); }
+.grw-dot.is-active { background: #5fb0f8; transform: scale(1.15); }
+.grw-dot:focus-visible { outline: 2px solid #5fb0f8; outline-offset: 2px; }
+
+/* ── "See more reviews on Google" link ─────────────────────────────────────── */
+.grw-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  font-weight: 640;
+  color: #5fb0f8;
+  text-decoration: none;
+  transition: gap 0.18s, color 0.18s;
+}
+.grw-more:hover { gap: 8px; color: #8cc6ff; }
+
+/* ── Close button ──────────────────────────────────────────────────────────── */
+.grw-close {
+  position: absolute;
+  top: 9px;
+  right: 9px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(190, 210, 238, 0.7);
+  background: rgba(22, 40, 74, 0.45);
+  border: 1px solid rgba(116, 176, 252, 0.22);
+  transition: color 0.18s, background 0.18s, border-color 0.18s;
+}
+.grw-close:hover {
+  color: #fff;
+  background: rgba(28, 54, 98, 0.6);
+  border-color: rgba(116, 176, 252, 0.55);
+}
+.grw-close:focus-visible { outline: 2px solid #5fb0f8; outline-offset: 2px; }
+
+/* ── Small screens: keep it compact, never block the whole viewport ──────────── */
+@media (max-width: 480px) {
+  .grw { width: calc(100vw - 24px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grw-more, .grw-dot { transition: none; }
+}

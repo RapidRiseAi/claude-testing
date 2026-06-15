@@ -3,6 +3,7 @@ import CursorTrail from './components/ui/CursorTrail'
 import EdgeSpotlight from './components/ui/EdgeSpotlight'
 import ScrollToTop from './components/ScrollToTop'
 import CookieConsent from './components/ui/CookieConsent'
+import GoogleReviewsWidget from './components/ui/GoogleReviewsWidget'
 import HomePage from './pages/HomePage'
 import ServicesPage from './pages/ServicesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
@@ -38,6 +39,7 @@ export default function App() {
       {/* Catch-all: mistyped URLs render a real 404 page, never a blank screen */}
       <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <GoogleReviewsWidget />
       <CookieConsent />
     </>
   )
