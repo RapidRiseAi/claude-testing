@@ -7,6 +7,7 @@ import {
 import { createIconTexture, getGlowDotTexture } from '../../utils/iconTextures'
 import { carouselState } from '../../utils/carouselState'
 import { deriveScroll } from '../../utils/scrollLayout'
+import { transitionState } from '../transition/transitionState'
 
 const R = 1.70
 const ORB_X = 2.45
@@ -1747,6 +1748,7 @@ export default function HeroOrb() {
   const dragLocalRay = useMemo(() => new THREE.Ray(), [])
   const dragInvMat = useMemo(() => new THREE.Matrix4(), [])
   const tmpNdc = useMemo(() => new THREE.Vector2(), [])
+  const screenVec = useMemo(() => new THREE.Vector3(), [])   // reused for the home-orb screen anchor
 
   const [showHeavy, setShowHeavy] = useState(true)
   const heavyRef = useRef(true)
@@ -1885,6 +1887,16 @@ export default function HeroOrb() {
     const curS = groupRef.current.scale.x
     const newS = curS + (targetScale - curS) * lerpAmt
     groupRef.current.scale.setScalar(newS)
+
+    // Publish the live on-screen position of the home orb so a page transition
+    // leaving/entering home can anchor the morph to the real object. Done before
+    // the drag/shot early-returns so it stays current every frame.
+    groupRef.current.getWorldPosition(screenVec).project(camera)
+    const cw = gl.domElement.clientWidth, ch = gl.domElement.clientHeight
+    transitionState.homeOrbScreen = {
+      x: (screenVec.x * 0.5 + 0.5) * cw,
+      y: (1 - (screenVec.y * 0.5 + 0.5)) * ch,
+    }
 
     if (isDragging.current) return
     if (shotRotY !== null) { groupRef.current.rotation.set(0.2, shotRotY, 0); return }

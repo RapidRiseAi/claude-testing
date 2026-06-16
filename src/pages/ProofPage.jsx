@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import PageLayout from '../components/ui/PageLayout'
 import ConceptPreview from '../components/ui/ConceptPreview'
+import Lightbox from '../components/ui/Lightbox'
 import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
 import Parallax from '../components/ui/Parallax'
@@ -56,11 +58,15 @@ const STANDARDS = [
   'Built to connect: every build has an upgrade path',
 ]
 
+const statusSlug = (s) => s.toLowerCase().replace(/\s+/g, '-')
+
 export default function ProofPage() {
   usePageMeta(
     'Proof of What We Can Build | Rapid Rise AI',
     'Explore Rapid Rise AI concept previews, demo builds and example systems across websites, client portals, smart dashboards, AI agents and connected business ecosystems.',
   )
+
+  const [gallery, setGallery] = useState(null) // { images, title } | null
 
   return (
     <PageLayout>
@@ -72,14 +78,14 @@ export default function ProofPage() {
           <p className="pg-eyebrow">Proof &amp; Builds</p>
           <h1 className="pg-h1">Proof of what we can build.</h1>
           <p className="pg-sub">
-            Explore example systems, interface previews, and solution concepts
-            that show how Rapid Rise AI connects websites, portals, dashboards,
-            AI assistants, automations, and business tools into practical
-            digital ecosystems.
+            Live client websites and fully functional showcase systems —
+            websites, portals, dashboards, AI assistants, automations, and
+            connected ecosystems that show how Rapid Rise AI works in practice.
           </p>
           <p className="prf-disclaimer">
-            These are demo builds, prototypes, and concept previews. We label
-            work honestly: nothing here is presented as a paid client project.
+            Some of these are live client websites you can visit. The rest are
+            fully functional showcase products built with sample data, never real
+            client information. Every build is labelled honestly.
           </p>
           <div className="pg-hero-actions">
             <Link className="pg-btn-primary" to="/contact">Start Your Project</Link>
@@ -91,10 +97,11 @@ export default function ProofPage() {
         <section className="prf-section" aria-label="Featured builds and concepts">
           <Reveal className="prf-head" variant="up">
             <span className="kicker">The Gallery</span>
-            <h2 className="prf-h2">Featured builds and concepts</h2>
+            <h2 className="prf-h2">Featured work</h2>
             <p className="prf-lead">
-              Each preview is a working concept of a real system we build, from
-              the first marketing site to a fully connected operations stack.
+              Live client sites and working showcases of the systems we build —
+              from a first booking-ready website to a fully connected operations
+              stack. Click any card to browse its screens.
             </p>
           </Reveal>
 
@@ -104,8 +111,23 @@ export default function ProofPage() {
                 <TiltCard className="prf-card glass-card" max={7}>
                   <article id={item.id} className="prf-card-inner">
                     <div className="prf-media">
-                      <ConceptPreview kind={item.mockKind} label={item.mediaAlt} />
-                      <span className="prf-status">{item.status}</span>
+                      {item.mediaType === 'image' && item.mediaSrc ? (
+                        <button
+                          type="button"
+                          className="media-shot-btn"
+                          onClick={() => setGallery({ images: item.gallery ?? [item.mediaSrc], title: item.title })}
+                          aria-label={`View the ${item.title} gallery`}
+                        >
+                          <img className="media-shot" src={item.mediaSrc} alt={item.mediaAlt} loading="lazy" />
+                          <span className="media-shot-zoom" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+                            View {item.gallery ? item.gallery.length : 1} screens
+                          </span>
+                        </button>
+                      ) : (
+                        <ConceptPreview kind={item.mockKind} label={item.mediaAlt} />
+                      )}
+                      <span className={`prf-status prf-status--${statusSlug(item.status)}`}>{item.status}</span>
                     </div>
                     <div className="prf-body">
                       <h3 className="prf-title tilt-pop-sm">{item.title}</h3>
@@ -115,9 +137,21 @@ export default function ProofPage() {
                           <span className="prf-tag" key={t}>{t}</span>
                         ))}
                       </div>
-                      <Link className="prf-link" to={item.href}>
-                        Explore this service <ArrowIcon />
-                      </Link>
+                      {item.note && (
+                        <p className="prf-note">
+                          <span className="prf-note-tag">Starter tier</span>
+                          {item.note}
+                        </p>
+                      )}
+                      {item.external ? (
+                        <a className="prf-link" href={item.href} target="_blank" rel="noreferrer">
+                          {item.ctaLabel ?? 'Visit live site'} <ArrowIcon />
+                        </a>
+                      ) : (
+                        <Link className="prf-link" to={item.href}>
+                          {item.ctaLabel ?? 'Explore this service'} <ArrowIcon />
+                        </Link>
+                      )}
                     </div>
                   </article>
                 </TiltCard>
@@ -193,6 +227,9 @@ export default function ProofPage() {
           </Reveal>
         </section>
       </div>
+      {gallery && (
+        <Lightbox images={gallery.images} title={gallery.title} onClose={() => setGallery(null)} />
+      )}
     </PageLayout>
   )
 }

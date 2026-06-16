@@ -3,21 +3,6 @@ import { Link } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { FIXED_PRICE, CUSTOM_SERVICES } from '../../data/services'
 
-function RRMark() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 30 30" fill="none" className="navbar-rr-mark" aria-hidden="true">
-      <rect width="30" height="30" rx="7" fill="url(#navbar-rr-g)"/>
-      <text x="4" y="21" fontFamily="Inter, system-ui, sans-serif" fontSize="14" fontWeight="800" fill="white" letterSpacing="-0.5">RR</text>
-      <defs>
-        <linearGradient id="navbar-rr-g" x1="0" y1="0" x2="30" y2="30" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#1055cc"/>
-          <stop offset="1" stopColor="#0da8ec"/>
-        </linearGradient>
-      </defs>
-    </svg>
-  )
-}
-
 /* ── Line icons (24×24, round caps) — one per service slug ──────────────────── */
 const I = {
   window: <><rect x="3" y="4.5" width="18" height="15" rx="2.4" /><path d="M3 8.5h18M6.5 6.4h.01" /></>,
@@ -129,9 +114,15 @@ export default function Navbar({ loaded }) {
 
       <div className="navbar-inner">
         <Link to="/" className="navbar-brand">
-          <RRMark />
+          <img
+            className="navbar-rr-mark"
+            src="/brand/logo.png"
+            alt="Rapid Rise AI"
+            width="30"
+            height="30"
+            style={{ borderRadius: 7, objectFit: 'cover' }}
+          />
           <span className="navbar-logo">Rapid Rise AI</span>
-          <span style={{ fontSize: '9px', opacity: 0.4, marginLeft: 6, letterSpacing: '0.05em', color: '#fff' }}>v0.001</span>
         </Link>
 
         <div className="navbar-links">

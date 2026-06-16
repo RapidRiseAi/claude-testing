@@ -6,15 +6,16 @@ import {
   useScroll,
   useTransform,
 } from 'framer-motion'
-import { useEffect, useRef, useState, useCallback, Fragment } from 'react'
+import { useEffect, useRef, useCallback, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const EXPO = [0.16, 1, 0.30, 1]
 
+// Honest, verifiable trust badges (no count-up — these aren't tally numbers).
 const STATS = [
-  { num: 50,  unit: '+',  label: 'Projects',    sub: 'Delivered' },
-  { num: 100, unit: '%',  label: 'Client',       sub: 'Satisfaction' },
-  { num: 24,  unit: '/7', label: 'Support',      sub: 'Available' },
+  { value: '5.0★', label: 'Rated',       sub: 'on Google' },
+  { value: '1 hr', label: 'Response',    sub: 'or faster' },
+  { value: '100%', label: 'Transparent', sub: 'ZAR pricing' },
 ]
 
 const H1_LINES = [
@@ -58,7 +59,6 @@ export default function HeroSection({ loaded }) {
   const controls   = useAnimation()
   const sectionRef = useRef()
   const navigate   = useNavigate()
-  const [counts, setCounts] = useState([0, 0, 0])
 
   /* Scroll-driven exit */
   const { scrollYProgress } = useScroll({
@@ -71,23 +71,6 @@ export default function HeroSection({ loaded }) {
   useEffect(() => {
     if (!loaded) return
     controls.start('visible')
-
-    const id = setTimeout(() => {
-      STATS.forEach(({ num }, i) => {
-        const FRAMES = 55
-        let f = 0
-        const tick = () => {
-          f++
-          const t      = f / FRAMES
-          const eased  = 1 - Math.pow(1 - t, 3)
-          setCounts(prev => { const n = [...prev]; n[i] = Math.round(eased * num); return n })
-          if (f < FRAMES) requestAnimationFrame(tick)
-        }
-        setTimeout(() => requestAnimationFrame(tick), i * 90)
-      })
-    }, 1500)
-
-    return () => clearTimeout(id)
   }, [loaded, controls])
 
   return (
@@ -187,9 +170,7 @@ export default function HeroSection({ loaded }) {
               <Fragment key={i}>
                 {i > 0 && <div className="stat-sep" aria-hidden="true" />}
                 <div className="stat">
-                  <span className="stat-num">
-                    {counts[i]}<span className="stat-unit">{s.unit}</span>
-                  </span>
+                  <span className="stat-num">{s.value}</span>
                   <span className="stat-label">{s.label}<br />{s.sub}</span>
                 </div>
               </Fragment>

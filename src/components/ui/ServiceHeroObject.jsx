@@ -17,7 +17,7 @@ import { getGlowDotTexture } from '../../utils/iconTextures'
    Object indices (home carousel order):
      0 globe · 1 gear · 2 code block · 3 workflow path
      4 intelligence orbit · 5 connected cubes · 6 funnel */
-const SLUG_TO_OBJECT = {
+export const SLUG_TO_OBJECT = {
   'website-development': 0,
   'software-development': 1,
   'web-app-development': 2,

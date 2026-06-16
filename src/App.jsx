@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import CursorTrail from './components/ui/CursorTrail'
 import EdgeSpotlight from './components/ui/EdgeSpotlight'
 import ScrollToTop from './components/ScrollToTop'
+import TransitionProvider from './components/transition/TransitionProvider'
 import CookieConsent from './components/ui/CookieConsent'
 import GoogleReviewsWidget from './components/ui/GoogleReviewsWidget'
 import HomePage from './pages/HomePage'
@@ -22,6 +23,7 @@ export default function App() {
       <ScrollToTop />
       <CursorTrail />
       <EdgeSpotlight />
+      <TransitionProvider>
       <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/services" element={<ServicesPage />} />
@@ -39,6 +41,7 @@ export default function App() {
       {/* Catch-all: mistyped URLs render a real 404 page, never a blank screen */}
       <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      </TransitionProvider>
       <GoogleReviewsWidget />
       <CookieConsent />
     </>

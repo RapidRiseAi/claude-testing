@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { WORK_ITEMS, WORK_SECTION_COPY } from '../../data/workItems'
 import ConceptPreview from './ConceptPreview'
+import Lightbox from './Lightbox'
 
 /* ── Icons (line style matches the rest of the site: thin, round caps) ─────── */
 const ArrowUpRight = () => (
@@ -142,7 +143,7 @@ function MediaFallback({ item, num }) {
   )
 }
 
-function WorkPreview({ item, num }) {
+function WorkPreview({ item, num, onOpenGallery }) {
   const [mediaFailed, setMediaFailed] = useState(false)
   const showMedia = item.mediaType !== 'mock' && item.mediaSrc && !mediaFailed
   return (
@@ -165,7 +166,18 @@ function WorkPreview({ item, num }) {
             onError={() => setMediaFailed(true)}
           />
         ) : showMedia ? (
-          <img src={item.mediaSrc} alt={item.mediaAlt} onError={() => setMediaFailed(true)} />
+          <button
+            type="button"
+            className="media-shot-btn"
+            onClick={() => onOpenGallery?.(item)}
+            aria-label={`View the ${item.title} gallery`}
+          >
+            <img className="media-shot" src={item.mediaSrc} alt={item.mediaAlt} onError={() => setMediaFailed(true)} loading="lazy" />
+            <span className="media-shot-zoom" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>
+              View {item.gallery ? item.gallery.length : 1} screens
+            </span>
+          </button>
         ) : item.mediaType === 'mock' ? (
           <ConceptPreview kind={item.mockKind} label={item.mediaAlt} />
         ) : (
@@ -196,20 +208,39 @@ function WorkPreview({ item, num }) {
           ))}
         </ul>
 
-        <Link className="ow-preview-btn" to={item.href} aria-label={`${item.ctaLabel}: ${item.title}`}>
-          {item.ctaLabel}
-          <ArrowRight />
-        </Link>
+        {item.note && (
+          <p className="ow-note">
+            <span className="ow-note-tag">Starter tier</span>
+            {item.note}
+          </p>
+        )}
+
+        {item.external ? (
+          <a className="ow-preview-btn" href={item.href} target="_blank" rel="noreferrer" aria-label={`${item.ctaLabel}: ${item.title}`}>
+            {item.ctaLabel}
+            <ArrowRight />
+          </a>
+        ) : (
+          <Link className="ow-preview-btn" to={item.href} aria-label={`${item.ctaLabel}: ${item.title}`}>
+            {item.ctaLabel}
+            <ArrowRight />
+          </Link>
+        )}
       </div>
     </motion.article>
   )
 }
 
 export default function OurWorkSection() {
-  const [activeId, setActiveId] = useState(WORK_ITEMS[0]?.id ?? null)
+  // Lead with the first item that has a real screenshot (a live client site),
+  // not the placeholder mock, so the default preview is a real piece of proof.
+  const firstReal = WORK_ITEMS.find((w) => w.mediaType === 'image') ?? WORK_ITEMS[0]
+  const [activeId, setActiveId] = useState(firstReal?.id ?? null)
+  const [gallery, setGallery] = useState(null) // { images, title } | null
   const activeIndex = Math.max(0, WORK_ITEMS.findIndex((w) => w.id === activeId))
   const active = WORK_ITEMS[activeIndex]
   const displayNum = (item, i) => item.number ?? String(i + 1).padStart(2, '0')
+  const openGallery = (it) => setGallery({ images: it.gallery ?? [it.mediaSrc], title: it.title })
 
   if (!active) return null
 
@@ -276,15 +307,29 @@ export default function OurWorkSection() {
                         })}
                       </div>
                     </div>
-                    <Link
-                      className="ow-row-arrow"
-                      to={item.href}
-                      aria-label={`Open ${item.title}`}
-                      onClick={(e) => e.stopPropagation()}
-                      onFocus={() => setActiveId(item.id)}
-                    >
-                      <ArrowUpRight />
-                    </Link>
+                    {item.external ? (
+                      <a
+                        className="ow-row-arrow"
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open ${item.title} (live site)`}
+                        onClick={(e) => e.stopPropagation()}
+                        onFocus={() => setActiveId(item.id)}
+                      >
+                        <ArrowUpRight />
+                      </a>
+                    ) : (
+                      <Link
+                        className="ow-row-arrow"
+                        to={item.href}
+                        aria-label={`Open ${item.title}`}
+                        onClick={(e) => e.stopPropagation()}
+                        onFocus={() => setActiveId(item.id)}
+                      >
+                        <ArrowUpRight />
+                      </Link>
+                    )}
                   </div>
 
                   {/* Mobile/tablet accordion: preview renders under the active row
@@ -292,7 +337,7 @@ export default function OurWorkSection() {
                   <div className="ow-inline-preview">
                     <AnimatePresence mode="wait">
                       {isActive && (
-                        <WorkPreview key={item.id} item={item} num={displayNum(item, i)} />
+                        <WorkPreview key={item.id} item={item} num={displayNum(item, i)} onOpenGallery={openGallery} />
                       )}
                     </AnimatePresence>
                   </div>
@@ -310,11 +355,14 @@ export default function OurWorkSection() {
             transition={{ duration: 0.6, delay: 0.15, ease: EASE }}
           >
             <AnimatePresence mode="wait">
-              <WorkPreview key={active.id} item={active} num={displayNum(active, activeIndex)} />
+              <WorkPreview key={active.id} item={active} num={displayNum(active, activeIndex)} onOpenGallery={openGallery} />
             </AnimatePresence>
           </motion.div>
         </div>
       </div>
+      {gallery && (
+        <Lightbox images={gallery.images} title={gallery.title} onClose={() => setGallery(null)} />
+      )}
     </section>
   )
 }

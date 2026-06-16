@@ -177,7 +177,12 @@ export default function AboutPage() {
                 and systems that grow with you.
               </blockquote>
               <div className="abt-quote-attr tilt-pop-sm">
-                <span className="abt-quote-avatar" aria-hidden="true">XB</span>
+                <img
+                  className="abt-quote-avatar abt-quote-photo"
+                  src="/founder.png"
+                  alt="Xander Blumenthal, Founder and CEO of Rapid Rise AI"
+                  loading="lazy"
+                />
                 <span>
                   <span className="abt-quote-name">Xander Blumenthal</span>
                   <span className="abt-quote-role">Founder and CEO</span>

@@ -36,7 +36,7 @@ export default function LoadingScreen({ onDone }) {
           <div className="ls-ring ls-ring--1" />
           <div className="ls-ring ls-ring--2" />
           <div className="ls-ring ls-ring--3" />
-          <div className="ls-dot" />
+          <img className="ls-mark" src="/brand/logo.png" alt="Rapid Rise AI" />
         </div>
         <div ref={logoRef} className="ls-logo">Rapid Rise AI</div>
         <div ref={tagRef}  className="ls-tag">AI &amp; Software Infrastructure</div>

@@ -1,0 +1,95 @@
+/* ── Cinematic page-transition layers ────────────────────────────────────────
+   #route-stage      wraps the routed page; gets the suck/bloom transform.
+   .transition-scrim black-hole vignette that masks the route swap (below orbs).
+   .transition-canvas persistent overlay canvas with the morphing orbs (top).
+   Idle state is fully inert: no transform on the stage (so the home page's
+   position:fixed canvas behaves normally), no scrim, no orb compositing.        */
+
+#route-stage {
+  transform-origin: 50% 50%;
+}
+
+/* will-change is applied ONLY during a transition. Setting `will-change:
+   transform` permanently would make the home page's position:fixed #canvas-
+   container resolve against #route-stage even at rest, breaking the layout. */
+body.rr-transitioning #route-stage {
+  will-change: transform, opacity, filter;
+}
+
+.transition-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(2, 4, 12, 0.96) 0%,
+    rgba(1, 3, 10, 0.94) 32%,
+    rgba(0, 2, 8, 0.82) 64%,
+    rgba(0, 1, 6, 0.62) 100%
+  );
+  /* opacity is driven inline by the controller (a pure function of phase) — no
+     CSS transition, so it tracks the animation frame-for-frame. */
+}
+
+.transition-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  pointer-events: none;
+  opacity: 0;
+}
+.transition-canvas.is-active {
+  opacity: 1;
+}
+/* react-three-fiber sets the <canvas> to pointer-events:auto, which re-enables
+   it even though the wrapper above is `none`. Since this overlay is always
+   mounted and full-screen, that auto canvas would sit on top of the whole site
+   (even at opacity 0) and swallow every click — freezing navigation. Re-assert
+   `none` on all descendants so the orbs stay purely decorative and clicks fall
+   through to the page. (Same fix #canvas-container uses in index.css.) */
+.transition-canvas,
+.transition-canvas * {
+  pointer-events: none !important;
+}
+.transition-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Handoff: while a transition runs, a service page's real 3-D object stays
+   hidden; when the transition ends the class is removed and it fades in just as
+   the overlay orbs fade out — a clean cross-fade onto the live object. On a
+   direct page load (no transition) the object is visible immediately. */
+.svc-hero-object {
+  transition: opacity 0.5s ease;
+}
+body.rr-transitioning .svc-hero-object {
+  opacity: 0;
+}
+
+/* Global overlays (cookie banner, floating reviews widget) live OUTSIDE
+   #route-stage, so they'd otherwise float over the black hole. Fade them out for
+   the duration of a transition so the frame stays cinematic. */
+.cc-banner,
+.grw {
+  transition: opacity 0.4s ease;
+}
+body.rr-transitioning .cc-banner,
+body.rr-transitioning .grw {
+  /* !important: these use framer-motion, which sets opacity as an inline style. */
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .transition-scrim,
+  .transition-canvas {
+    display: none;
+  }
+  .svc-hero-object {
+    transition: none;
+  }
+}
