@@ -43,6 +43,13 @@ const shots = (slug, n) =>
   ['cover', ...Array.from({ length: n }, (_, i) => String(i + 1).padStart(2, '0'))]
     .map((f) => `/work/${slug}/${f}.png`)
 
+// Real client sites with both desktop + mobile captures: desktop screens
+// (pc-NN.png) first, then mobile screens (mobile-NN.jpg). Cover = pc-01.
+const mix = (slug, pc, mob) => [
+  ...Array.from({ length: pc }, (_, i) => `/work/${slug}/pc-${String(i + 1).padStart(2, '0')}.png`),
+  ...Array.from({ length: mob }, (_, i) => `/work/${slug}/mobile-${String(i + 1).padStart(2, '0')}.jpg`),
+]
+
 export const WORK_ITEMS = [
   {
     id: 'rapid-rise-website',
@@ -62,9 +69,11 @@ export const WORK_ITEMS = [
     ],
     ctaLabel: 'View Project',
     href: '/services/website-development',
-    mediaType: 'mock',
+    mediaType: 'image',
+    mediaSrc: '/work/rapid-rise-website/cover.png',
+    gallery: shots('rapid-rise-website', 4),
     mockKind: 'website',
-    mediaAlt: 'Rapid Rise AI website with interactive 3D homepage',
+    mediaAlt: 'Rapid Rise AI website — interactive 3D homepage, services, pricing, and work',
   },
   {
     id: 'onyx-details',
@@ -87,9 +96,9 @@ export const WORK_ITEMS = [
     href: 'https://onyxdetails.co.za/',
     external: true,
     mediaType: 'image',
-    mediaSrc: '/work/onyx-details/cover.png',
-    gallery: shots('onyx-details', 3),
-    mediaAlt: 'Onyx Details live mobile car detailing website with booking and packages',
+    mediaSrc: '/work/onyx-details/pc-01.png',
+    gallery: mix('onyx-details', 7, 9),
+    mediaAlt: 'Onyx Details live mobile car detailing website: desktop and mobile screens',
   },
   {
     id: 'commando-gym',
@@ -112,9 +121,9 @@ export const WORK_ITEMS = [
     href: 'https://www.commandoonline.co.za/',
     external: true,
     mediaType: 'image',
-    mediaSrc: '/work/commando/cover.png',
-    gallery: shots('commando', 4),
-    mediaAlt: 'Commando 24/7 gym and wellness live website with memberships and bookings',
+    mediaSrc: '/work/commando/pc-01.png',
+    gallery: mix('commando', 8, 8),
+    mediaAlt: 'Commando 24/7 gym and wellness live website: desktop and mobile screens',
   },
   {
     id: 'client-portal-system',

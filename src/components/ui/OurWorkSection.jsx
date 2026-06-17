@@ -255,17 +255,9 @@ export default function OurWorkSection() {
           transition={{ duration: 0.6, ease: EASE }}
         >
           <div className="ow-head-left">
-            <p className="ow-eyebrow">{WORK_SECTION_COPY.eyebrow}</p>
             <h2 className="ow-title">
               {WORK_SECTION_COPY.title}<span className="ow-dot">.</span>
             </h2>
-          </div>
-          <div className="ow-head-right">
-            <p className="ow-sub">{WORK_SECTION_COPY.sub}</p>
-            <Link className="ow-all-link" to="/proof">
-              View all work
-              <ArrowRight />
-            </Link>
           </div>
         </motion.header>
 
