@@ -1,51 +1,67 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
-/* Cursor-following edge glow. One delegated pointer listener tracks the cursor
-   inside whichever card is under it and writes its relative position to CSS vars
-   (--mx, --my) plus a --spot flag. The card's masked border gradient (in
-   index.css) then lights a bright spot at that point, so the edge glows where the
-   cursor is and fades as it leaves. Independent of the 3D tilt — both read the
-   pointer, neither touches the other. Pointer-fine only (no touch). */
+/* Cursor-following ambient glow. A single soft radial light that rides directly
+   behind the pointer and EASES toward it every frame, so it glides continuously
+   across the whole page instead of jumping between sections. One full-viewport
+   element in one coordinate space (not a per-card spot), screen-blended so it
+   reads as light over anything and never hurts legibility.
 
-const SEL = '.glass-card, .sd2-pkg, .ct2-form-panel, .nav-dd-item'
-
+   Gated to fine pointers (desktop mice). Under prefers-reduced-motion it still
+   appears but tracks the cursor instantly (no easing/animation loop). The element
+   is pointer-events:none, so it never intercepts clicks. */
 export default function EdgeSpotlight() {
+  const ref = useRef(null)
+
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
+    const el = ref.current
+    if (!el) return
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-    let current = null
+    // target = real cursor; (x, y) = eased glow centre that chases it.
+    let tx = window.innerWidth / 2
+    let ty = window.innerHeight / 2
+    let x = tx
+    let y = ty
     let raf = 0
-    let evt = null
+    let shown = false
 
-    const clear = () => {
-      if (current) {
-        current.style.setProperty('--spot', '0')
-        current = null
-      }
-    }
+    const place = () => { el.style.transform = `translate3d(${x}px, ${y}px, 0)` }
 
-    const apply = () => {
-      raf = 0
-      const e = evt
-      if (!e) return
-      const card = e.target?.closest?.(SEL) || null
-      if (current && current !== card) clear()
-      if (card) {
-        const r = card.getBoundingClientRect()
-        const x = ((e.clientX - r.left) / r.width) * 100
-        const y = ((e.clientY - r.top) / r.height) * 100
-        card.style.setProperty('--mx', `${x.toFixed(1)}%`)
-        card.style.setProperty('--my', `${y.toFixed(1)}%`)
-        card.style.setProperty('--spot', '1')
-        current = card
+    const loop = () => {
+      // Critically-damped-feeling chase: ~0.16 per frame trails on fast moves,
+      // snaps shut when the pointer rests. Stop the loop once it has caught up.
+      x += (tx - x) * 0.16
+      y += (ty - y) * 0.16
+      place()
+      if (Math.abs(tx - x) > 0.4 || Math.abs(ty - y) > 0.4) {
+        raf = requestAnimationFrame(loop)
+      } else {
+        x = tx; y = ty; place()
+        raf = 0
       }
     }
 
     const onMove = (e) => {
-      evt = e
-      if (!raf) raf = requestAnimationFrame(apply)
+      tx = e.clientX
+      ty = e.clientY
+      if (!shown) {
+        shown = true
+        // First sighting: drop the glow straight under the cursor, then fade in.
+        x = tx; y = ty; place()
+        el.style.opacity = '1'
+      }
+      if (reduce) { x = tx; y = ty; place(); return }
+      if (!raf) raf = requestAnimationFrame(loop)
     }
-    const onOut = (e) => { if (!e.relatedTarget) clear() }
+
+    // Hide when the pointer leaves the window entirely (relatedTarget null).
+    const onOut = (e) => {
+      if (!e.relatedTarget && !e.toElement) {
+        shown = false
+        el.style.opacity = '0'
+      }
+    }
 
     window.addEventListener('pointermove', onMove, { passive: true })
     window.addEventListener('pointerout', onOut, { passive: true })
@@ -53,9 +69,8 @@ export default function EdgeSpotlight() {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerout', onOut)
       cancelAnimationFrame(raf)
-      clear()
     }
   }, [])
 
-  return null
+  return <div ref={ref} className="cursor-spotlight" aria-hidden="true" />
 }

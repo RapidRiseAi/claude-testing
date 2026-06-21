@@ -7,6 +7,7 @@ import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
 import Parallax from '../components/ui/Parallax'
 import usePageMeta from '../hooks/usePageMeta'
+import ObjectSlot from '../components/scene/ObjectSlot'
 import { WORK_ITEMS } from '../data/workItems'
 import './ProofPage.css'
 
@@ -75,6 +76,7 @@ export default function ProofPage() {
         <header className="pg-hero">
           <Parallax className="depth-orb prf-orb prf-orb-1" speed={-50} aria-hidden="true" />
           <Parallax className="depth-orb prf-orb prf-orb-2" speed={70} aria-hidden="true" />
+          <ObjectSlot className="pg-hero-object" />
           <p className="pg-eyebrow">Proof &amp; Builds</p>
           <h1 className="pg-h1">Proof of what we can build.</h1>
           <p className="pg-sub">

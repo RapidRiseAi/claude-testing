@@ -11,18 +11,25 @@ import './transition.css'
 
 /* ── Feel / timing ────────────────────────────────────────────────────────────
    Everything that shapes the character of the transition lives here. Durations
-   are in seconds; the whole morph is ~2.0s on desktop (slightly shorter + fewer
-   orbs on mobile). These are the knobs to dial.                                 */
+   are in seconds; the full morph is ~7s on desktop (slightly shorter + fewer
+   orbs on mobile) — a deliberately slow, cinematic story with six beats:
+   fly-up (service source only) → gather → suck (current page pulled in) →
+   HOLD (singularity, route swaps here) → explode (the burst BUILDS the new page)
+   → reassemble (orbs settle INTO the destination object). The real objects
+   cross-fade with the orbs on the SAME aligned shape at both ends, so it always
+   reads as ONE object morphing — never a second object loading in.              */
 const FEEL = {
-  flyup: 0.70,        // service→x: scroll-to-top "fly up" before the morph
-  gather: 0.80,       // object shape → centre sphere
-  suck: 1.20,         // black hole: page disintegrates into particles + is pulled in
-  explode: 0.90,      // cinematic burst outward, hero blooms from centre
-  reassemble: 1.25,   // particles slowly pulled back into the destination object
-  handoff: 0.45,      // overlay orbs fade out as the real object fades in
-  navAt: 0.62,        // fraction through SUCK at which the route actually swaps
-  scrimPeak: 0.95,    // darkest the black-hole vignette gets
-  fade: 0.34,         // out-of-scope cross-fade (no orbs)
+  flyup: 0.90,        // service→x: scroll the current page to the top, first
+  gather: 1.40,       // the current object's particles coalesce into the centre sphere
+  suck: 1.70,         // black hole: the CURRENT page disintegrates + is pulled in
+  hold: 0.45,         // singularity beat: compressed sphere hangs, scrim at peak, route swaps
+  explode: 1.35,      // cinematic burst outward — the explosion builds the new page
+  reassemble: 1.95,   // particles are slowly pulled back into the destination object
+  handoff: 0.35,      // SHORT final cross-fade — reveal the real object only once the
+                      // orbs are ~97% reassembled + aligned, so they settle INTO it
+  navAt: 0.45,        // fraction through the HOLD at which the route actually swaps
+  scrimPeak: 0.97,    // darkest the black-hole vignette gets
+  fade: 0.40,         // out-of-scope cross-fade (no orbs)
 }
 
 const clamp01 = (t) => (t < 0 ? 0 : t > 1 ? 1 : t)
@@ -124,10 +131,17 @@ export default function TransitionProvider({ children }) {
     transitionState.active = false
     transitionState.srcAnchor = null
     transitionState.dstAnchor = null
+    transitionState.fromKind = null
+    transitionState.toKind = null
     resetTransitionProgress()
     setScrim(0)
     clearStage()
     document.body.classList.remove('rr-transitioning')
+    // Restore the persistent object's canvas: drop it back to its normal z-index
+    // (HeroOrb's scroll handler re-asserts it on home; service uses the CSS default)
+    // and clear any stray inline styles.
+    const cc = document.getElementById('canvas-container')
+    if (cc) { cc.style.opacity = ''; cc.style.transition = ''; cc.style.zIndex = '' }
     setActive(false)
   }, [clearStage, setScrim])
 
@@ -135,13 +149,24 @@ export default function TransitionProvider({ children }) {
   const startMorph = useCallback((path, toPathname, from, to) => {
     runningRef.current = true
     document.body.classList.add('rr-transitioning')
+    // Lift the persistent object's canvas above the black-hole scrim so the ONE
+    // object is visible morphing through the transition (it sits just under the
+    // page-dissolve swarm on the overlay). Restored in cleanup.
+    const cc0 = document.getElementById('canvas-container')
+    if (cc0) cc0.style.zIndex = '92'
 
     transitionState.fromIndex = from.index
-    transitionState.toIndex = to.index
-    transitionState.srcAnchor = objectScreenAnchor(from)   // measured now (source live)
-    transitionState.dstAnchor = null                        // measured at reassemble
-    transitionState.pageCells = scanPageCells()             // capture the source page NOW
-    transitionState.swarmSeedId++                           // tell the canvas to respawn the swarm
+    // Landing on home always scroll-tops to the hero globe; use it (index 0) as
+    // the destination shape so the orbs reassemble into what is actually shown.
+    transitionState.toIndex = to.kind === 'home' ? 0 : to.index
+    transitionState.fromKind = from.kind
+    transitionState.toKind = to.kind
+    // srcAnchor + pageCells are captured at gStart (AFTER the fly-up settles), so
+    // the orbs gather from — and the swarm sucks in — the current page at its
+    // final scrolled-to-top position, not its pre-fly-up position.
+    transitionState.srcAnchor = null
+    transitionState.dstAnchor = null
+    transitionState.pageCells = null
     resetTransitionProgress()
     transitionState.active = true
     setActive(true)
@@ -152,17 +177,20 @@ export default function TransitionProvider({ children }) {
     const Tf = (doFly ? FEEL.flyup : 0) * speed
     const Dg = FEEL.gather * speed
     const Ds = FEEL.suck * speed
+    const Dh = FEEL.hold * speed
     const De = FEEL.explode * speed
     const Dr = FEEL.reassemble * speed
     const gStart = Tf
     const sStart = gStart + Dg
-    const eStart = sStart + Ds
+    const hStart = sStart + Ds          // singularity hold begins (suck complete)
+    const eStart = hStart + Dh          // burst begins after the hold beat
     const rStart = eStart + De
     const rEnd = rStart + Dr
-    const navTime = sStart + Ds * FEEL.navAt
+    const navTime = hStart + Dh * FEEL.navAt   // route swaps INSIDE the hold (page fully sucked)
     // viewport-centre origin in page coords, captured for the implosion.
     const suckOriginY = startScrollY + window.innerHeight / 2
 
+    let sourceCaptured = false
     let navigated = false
     let measuredDst = false
     const t0 = performance.now()
@@ -193,7 +221,8 @@ export default function TransitionProvider({ children }) {
       transitionState.explode = explode
       transitionState.reassemble = reassemble
       if (t >= gStart && t < sStart) transitionState.phase = 'gather'
-      else if (t >= sStart && t < eStart) transitionState.phase = 'suck'
+      else if (t >= sStart && t < hStart) transitionState.phase = 'suck'
+      else if (t >= hStart && t < eStart) transitionState.phase = 'hold'
       else if (t >= eStart && t < rStart) transitionState.phase = 'explode'
       else if (t >= rStart) transitionState.phase = 'reassemble'
 
@@ -201,6 +230,17 @@ export default function TransitionProvider({ children }) {
       const fadeIn = clamp01((t - gStart) / (Dg * 0.6))
       const fadeOut = clamp01((rEnd - t) / FEEL.handoff)
       transitionState.opacity = Math.min(fadeIn, fadeOut)
+
+      // Capture the source object anchor + page cells once the fly-up has settled
+      // (gStart), then tell the canvas to (re)spawn from them — so the orbs gather
+      // from, and the swarm sucks in, the CURRENT page at its final position.
+      if (!sourceCaptured && t >= gStart) {
+        sourceCaptured = true
+        transitionState.srcAnchor = objectScreenAnchor(from)
+        transitionState.pageCells = scanPageCells()
+        transitionState.swarmSeedId++
+      }
+
 
       // Black-hole scrim: rises with the suck (page → black hole), then CLEARS
       // across the burst so the explosion reveals the new page on its way in.

@@ -4,6 +4,7 @@ import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
 import Parallax from '../components/ui/Parallax'
 import usePageMeta from '../hooks/usePageMeta'
+import ObjectSlot from '../components/scene/ObjectSlot'
 import './ProcessPage.css'
 
 /* ── Icons (24×24, round caps) ─────────────────────────────────────────────── */
@@ -79,6 +80,7 @@ export default function ProcessPage() {
         <header className="pg-hero">
           <Parallax className="depth-orb proc-orb proc-orb-1" speed={-50} aria-hidden="true" />
           <Parallax className="depth-orb proc-orb proc-orb-2" speed={70} aria-hidden="true" />
+          <ObjectSlot className="pg-hero-object" />
           <p className="pg-eyebrow">Our Process</p>
           <h1 className="pg-h1">A clear path from first conversation to long term growth.</h1>
           <p className="pg-sub">

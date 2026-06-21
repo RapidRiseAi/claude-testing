@@ -47,3 +47,12 @@ shots/*_after.png
 shots/polish/
 scripts/*.png
 .mcp.json
+
+# Dev-only orb compare/verification captures + reference inputs (large, regenerable,
+# not part of the deployed site)
+scripts/obj-shots/
+scripts/transition-shots/
+scripts/ref-tiles/
+references/
+website objects reference images/
+OBJECT_UPGRADE_GOAL.md

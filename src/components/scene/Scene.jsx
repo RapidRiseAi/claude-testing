@@ -37,9 +37,12 @@ function FaintBackdropDots() {
   )
 }
 
-export default function Scene() {
+export default function Scene({ active = true, mode = 'home' }) {
   return (
     <Canvas
+      /* Persistent canvas: freeze the render loop when the object isn't on-screen
+         (off the home page) so it costs no GPU, then resume when home is active. */
+      frameloop={active ? 'always' : 'never'}
       camera={{ position: [0, 0.15, 7.4], fov: 42 }}
       gl={{
         antialias: true,
@@ -52,7 +55,7 @@ export default function Scene() {
       {/* No background fill — canvas is transparent; body #000 shows through */}
       <FaintBackdropDots />
       <Suspense fallback={null}>
-        <HeroOrb />
+        <HeroOrb mode={mode} />
       </Suspense>
     </Canvas>
   )

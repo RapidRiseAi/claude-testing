@@ -33,17 +33,29 @@ export const transitionState = {
   // Whole-overlay opacity (fade the orbs in at the start, out at handoff).
   opacity: 0,
 
-  // On-screen anchor of the source / destination object, in CSS pixels (centre
-  // of the object). null → screen centre. The canvas converts px→world itself
-  // (it owns the camera + canvas size). srcAnchor is captured at click time;
-  // dstAnchor is measured lazily once the destination page has mounted.
+  // On-screen anchor of the source / destination object. Each is a full handoff
+  // descriptor { x, y, r, rotY, rotX } in CSS pixels (centre + on-screen radius)
+  // plus the object's live rotation, so the overlay can reproduce the real
+  // object's exact size + orientation and hand off without a snap. null →
+  // screen centre / default size. srcAnchor is captured at click time; the
+  // destination is tracked LIVE from the published screen data below while it
+  // reassembles (dstAnchor is the frozen fallback measured once it mounts).
   srcAnchor: null,
   dstAnchor: null,
 
-  // Written every frame by HeroOrb while the home page is mounted: the live
-  // screen position (CSS px) of the home orb group, so a nav leaving/entering
-  // home can anchor the morph to the real object instead of guessing.
+  // Which kind of object the source / destination owns ('home' | 'service'), so
+  // the persistent object knows whether to collapse the home hero decoration
+  // away (leaving home) or expand it back in (arriving home) during the morph.
+  fromKind: null,
+  toKind: null,
+
+  // Live screen descriptors { x, y, r, rotY, rotX } (CSS px) published every
+  // frame by the real objects while they are mounted: HeroOrb writes
+  // homeOrbScreen, ServiceHeroObject writes svcObjScreen. The overlay reads the
+  // source one at gather and the destination one while reassembling, so the
+  // orbs settle onto the real object at its exact live position/size/rotation.
   homeOrbScreen: null,
+  svcObjScreen: null,
 
   // Snapshot of the source page's visible elements (rects + colours, in CSS px)
   // captured at the start of a morph. The swarm spawns its particles FROM these

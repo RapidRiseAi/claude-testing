@@ -1,0 +1,11 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch()
+const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1.5 })
+const p = await ctx.newPage()
+const errs = []; p.on('pageerror', e => errs.push(e.message))
+await p.goto('http://localhost:5174/', { waitUntil: 'networkidle', timeout: 60000 })
+await p.addStyleTag({ content: '.cc-banner,.grw,.cursor-trail,.cursor-spotlight{display:none!important}' })
+await p.mouse.move(2,2); await p.waitForTimeout(2500)
+await p.screenshot({ path: 'scripts/obj-shots/home-hero.png' })
+console.log('home captured, errs', errs.length)
+await ctx.close(); await b.close()

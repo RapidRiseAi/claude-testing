@@ -20,6 +20,9 @@ body {
    pointer-events:none lets all clicks fall through to scroll-content. */
 
 #canvas-container { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+/* The persistent canvas stays mounted off the home page but is hidden (its render
+   loop is also frozen). Phase 1: only the home page shows the object. */
+#canvas-container.world-hidden { opacity: 0; pointer-events: none; }
 /* react-three-fiber sets the <canvas> (and its wrapper) to pointer-events:auto,
    which defeats the `none` above and swallows clicks meant for the content
    beneath the full-screen canvas (hero CTA, carousel arrows, pricing CTAs).
@@ -426,89 +429,6 @@ body {
   letter-spacing: 0.008em;
   line-height: 1.38;
 }
-
-/* ── Loading screen ─────────────────────────────────────────────────────── */
-.ls-root {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: #000000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.ls-inner { display: flex; flex-direction: column; align-items: center; }
-
-.ls-rings {
-  position: relative;
-  width: 90px; height: 90px;
-  margin-bottom: 2.2rem;
-}
-.ls-ring { position: absolute; top: 50%; left: 50%; border-radius: 50%; }
-.ls-ring--1 {
-  width: 90px; height: 90px; margin: -45px 0 0 -45px;
-  border: 1px solid rgba(0, 120, 255, 0.22);
-  border-top-color: rgba(0, 170, 255, 0.78);
-  animation: ls-spin 2.8s linear infinite;
-}
-.ls-ring--2 {
-  width: 62px; height: 62px; margin: -31px 0 0 -31px;
-  border: 1px solid rgba(0, 160, 255, 0.16);
-  border-bottom-color: rgba(0, 210, 255, 0.65);
-  animation: ls-spin 1.9s linear infinite reverse;
-}
-.ls-ring--3 {
-  width: 36px; height: 36px; margin: -18px 0 0 -18px;
-  border: 1px solid rgba(0, 200, 255, 0.10);
-  animation: ls-pulse 2.5s ease-in-out infinite;
-}
-.ls-mark {
-  position: absolute; top: 50%; left: 50%;
-  width: 46px; height: 46px; margin: -23px 0 0 -23px;
-  border-radius: 12px;
-  object-fit: cover;
-}
-.ls-dot {
-  position: absolute; top: 50%; left: 50%;
-  width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px;
-  border-radius: 50%;
-  background: #00aaff;
-  box-shadow: 0 0 10px #00aaff, 0 0 22px rgba(0, 140, 255, 0.5);
-  animation: ls-pulse 2s ease-in-out infinite;
-}
-
-.ls-logo {
-  font-size: 1.22rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #ffffff;
-  margin-bottom: 0.5rem;
-}
-.ls-tag {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(130, 175, 220, 0.5);
-  margin-bottom: 2.2rem;
-}
-.ls-bar {
-  width: 190px; height: 2px;
-  background: rgba(0, 80, 200, 0.16);
-  border-radius: 1px;
-  overflow: hidden;
-}
-.ls-fill {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg, #0858cc, #0fb4f0, #6eecff);
-  border-radius: 1px;
-  box-shadow: 0 0 8px rgba(0, 180, 255, 0.55);
-}
-
-/* ── Keyframes ──────────────────────────────────────────────────────────── */
-@keyframes ls-spin  { to { transform: rotate(360deg); } }
-@keyframes ls-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 /* ── Scroll sections ────────────────────────────────────────────────────── */
 .section {
@@ -3710,6 +3630,15 @@ img.ftr-logo {
   gap: 14px;
   margin-top: 34px;
 }
+/* Centered hero showcase slot — the shared persistent 3-D object docks here on
+   brand/trust pages. Sits above the headline; square + responsive so it never
+   overflows narrow viewports (object scales to ~84% of the slot). */
+.pg-hero-object {
+  width: min(400px, 70vw);
+  height: min(400px, 70vw);
+  margin: 0 auto clamp(4px, 1.4vh, 16px);
+  pointer-events: none;
+}
 
 .pg-section {
   position: relative;
@@ -5461,6 +5390,35 @@ a.pricing-quote-btn { text-decoration: none; }
   pointer-events: none;
 }
 
+/* Cursor-following ambient glow (EdgeSpotlight). A soft radial light that eases
+   toward the pointer and rides directly behind it — same stacking level as the
+   comet (which is rendered after it, so the sharp comet sits on top). Centred on
+   its translate point via the negative margin; screen-blended so it reads as
+   light over any background and never harms text legibility. */
+.cursor-spotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 620px;
+  height: 620px;
+  margin: -310px 0 0 -310px;       /* centre the glow on the translate3d point */
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  background: radial-gradient(closest-side circle,
+    rgba(96, 178, 255, 0.20) 0%,
+    rgba(64, 146, 255, 0.11) 30%,
+    rgba(42, 112, 232, 0.04) 55%,
+    rgba(42, 112, 232, 0) 76%);
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-spotlight { transition: none; }
+}
+
 /* Contact hero trust badges sit centered under the centered sub */
 .ct-trust { justify-content: center; }
 /* Contact form + trust list center as blocks under centered headings */
@@ -5583,7 +5541,13 @@ a.pricing-quote-btn { text-decoration: none; }
   filter: blur(26px);
   pointer-events: none;
   z-index: 0;
+  opacity: 1;
+  transition: opacity 0.6s ease;
 }
+/* During a page transition the object hasn't reassembled yet — keep its aura
+   hidden so there's no glow with nothing emitting it. It fades in when the
+   transition ends (the object is fully built by then). */
+body.rr-transitioning .sd-hero-visual::before { opacity: 0; transition: none; }
 /* The old centered top glow doesn't fit a two-column hero; the aura replaces it */
 .service-detail-hero.sd-hero::before { display: none; }
 

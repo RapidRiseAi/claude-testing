@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import PageLayout from '../components/ui/PageLayout'
 import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
-import ServiceHeroObject from '../components/ui/ServiceHeroObject'
+import ObjectSlot from '../components/scene/ObjectSlot'
 import usePageMeta from '../hooks/usePageMeta'
 import { ALL_SERVICES } from '../data/services'
 import {
@@ -192,9 +192,9 @@ export default function ServiceDetailPage() {
             </div>
           </div>
 
-          <div className="sd-hero-visual" aria-hidden="true">
-            <ServiceHeroObject slug={slug} />
-          </div>
+          {/* The hero visual is an object SLOT: the ONE persistent shared object
+              docks here and morphs into this service's shape. No per-page object. */}
+          <ObjectSlot className="sd-hero-visual" />
         </div>
 
         {/* Problem -> solution: a before/after comparison story */}

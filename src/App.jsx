@@ -2,9 +2,11 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import CursorTrail from './components/ui/CursorTrail'
 import EdgeSpotlight from './components/ui/EdgeSpotlight'
 import ScrollToTop from './components/ScrollToTop'
+import PersistentScene from './components/scene/PersistentScene'
 import TransitionProvider from './components/transition/TransitionProvider'
 import CookieConsent from './components/ui/CookieConsent'
 import GoogleReviewsWidget from './components/ui/GoogleReviewsWidget'
+import ObjectDev from './pages/ObjectDev'
 import HomePage from './pages/HomePage'
 import ServicesPage from './pages/ServicesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
@@ -21,11 +23,18 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
-      <CursorTrail />
+      {/* The ONE persistent 3-D object — mounted once here so it survives every
+          route change (the basis for "all pages share the same object"). */}
+      <PersistentScene />
+      {/* EdgeSpotlight (ambient glow) before CursorTrail so the sharp comet
+          paints on top and the soft glow rides behind the cursor. */}
       <EdgeSpotlight />
+      <CursorTrail />
       <TransitionProvider>
       <Routes>
       <Route path="/" element={<HomePage />} />
+      {/* DEV-only: isolated object preview for reference matching (remove before ship) */}
+      <Route path="/objdev" element={<ObjectDev />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/services/:slug" element={<ServiceDetailPage />} />
       <Route path="/pricing" element={<Navigate to="/services" replace />} />

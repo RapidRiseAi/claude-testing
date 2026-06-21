@@ -4,6 +4,7 @@ import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
 import Parallax from '../components/ui/Parallax'
 import usePageMeta from '../hooks/usePageMeta'
+import ObjectSlot from '../components/scene/ObjectSlot'
 import './AboutPage.css'
 
 /* ── Icons (24×24, round caps) ─────────────────────────────────────────────── */
@@ -95,6 +96,7 @@ export default function AboutPage() {
         <header className="pg-hero">
           <Parallax className="depth-orb abt-orb abt-orb-1" speed={-50} aria-hidden="true" />
           <Parallax className="depth-orb abt-orb abt-orb-2" speed={70} aria-hidden="true" />
+          <ObjectSlot className="pg-hero-object" />
           <p className="pg-eyebrow">About Rapid Rise AI</p>
           <h1 className="pg-h1">We build digital ecosystems, not disconnected tools.</h1>
           <p className="pg-sub">

@@ -59,16 +59,21 @@ body.rr-transitioning #route-stage {
   height: 100% !important;
 }
 
-/* Handoff: while a transition runs, a service page's real 3-D object stays
-   hidden; when the transition ends the class is removed and it fades in just as
-   the overlay orbs fade out — a clean cross-fade onto the live object. On a
-   direct page load (no transition) the object is visible immediately. */
+/* Handoff: while a transition runs, the real 3-D objects start HIDDEN; the
+   controller cross-fades them inline against the overlay orbs (source fades out
+   as the orbs fade in; destination fades in as the orbs fade out) so the morph
+   reads as ONE continuous object. These rules just set the hidden default so a
+   freshly-mounted destination never pops in before its reveal. On a direct page
+   load (no transition) the objects are visible immediately. */
 .svc-hero-object {
   transition: opacity 0.5s ease;
 }
 body.rr-transitioning .svc-hero-object {
   opacity: 0;
 }
+/* The persistent object's canvas (#canvas-container) is NOT hidden during a
+   transition — it IS the object doing the morph (lifted above the scrim by the
+   controller). */
 
 /* Global overlays (cookie banner, floating reviews widget) live OUTSIDE
    #route-stage, so they'd otherwise float over the black hole. Fade them out for
