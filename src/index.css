@@ -81,6 +81,9 @@ body {
   transition: padding 0.35s, top 0.42s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .navbar--scrolled { padding-top: 0.6rem; padding-bottom: 0.6rem; }
+/* When the mobile menu is open it's a full takeover — lift the whole bar above
+   the cookie-consent banner (z 9000) so the panel + its CTA are never covered. */
+.navbar--menu-open { z-index: 9100; }
 /* Auto-hide on scroll-down (slides up via top; gsap entrance uses transform) */
 .navbar--hidden { top: -130px; }
 
@@ -200,6 +203,125 @@ body {
 .navbar-cta-arrow { flex-shrink: 0; transition: transform 0.22s ease; }
 .navbar-cta-btn:hover .navbar-cta-arrow { transform: translateX(3px); }
 
+/* ── Mobile hamburger + slide-down menu ───────────────────────────────────────
+   Hidden on desktop; the @media (max-width:1100px) block below hides the desktop
+   row (links + CTA) and reveals the burger + panel instead. */
+.navbar-burger {
+  display: none;            /* shown ≤1100px */
+  position: relative; z-index: 1;
+  justify-self: end;
+  width: 44px; height: 44px;
+  align-items: center; justify-content: center;
+  background: rgba(14, 26, 48, 0.42);
+  border: 1px solid rgba(120, 170, 255, 0.18);
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.navbar-burger-box { position: relative; width: 20px; height: 14px; }
+.navbar-burger-line {
+  position: absolute; left: 0; width: 100%; height: 2px; border-radius: 2px;
+  background: #cfe2ff;
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+}
+.navbar-burger-line:nth-child(1) { top: 0; }
+.navbar-burger-line:nth-child(2) { top: 6px; }
+.navbar-burger-line:nth-child(3) { top: 12px; }
+.navbar--menu-open .navbar-burger-line:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.navbar--menu-open .navbar-burger-line:nth-child(2) { opacity: 0; }
+.navbar--menu-open .navbar-burger-line:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Slide-down panel — a full-bleed glass sheet under the bar. */
+.nav-mobile {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 0;                       /* under .navbar-inner (z1), over the page */
+  padding: 78px 18px 24px;
+  max-height: 100dvh;
+  background: linear-gradient(180deg, rgba(8, 14, 30, 0.97) 0%, rgba(6, 11, 24, 0.985) 100%);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  border-bottom: 1px solid rgba(120, 170, 255, 0.14);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: transform 0.40s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, visibility 0s linear 0.4s;
+}
+.nav-mobile--open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+.nav-mobile-scroll { max-height: calc(100dvh - 102px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.nav-mobile-primary { display: flex; flex-direction: column; }
+.nav-mobile-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 8px;
+  font-size: 1.18rem; font-weight: 650; letter-spacing: -0.01em;
+  color: #eaf2ff; text-decoration: none;
+  border-bottom: 1px solid rgba(120, 160, 230, 0.10);
+}
+.nav-mobile-link:active { color: #57b0ff; }
+
+.nav-mobile-section { margin-top: 18px; }
+.nav-mobile-heading {
+  display: block;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+  color: rgba(103, 156, 220, 0.66);
+  margin: 0 8px 10px;
+}
+.nav-mobile-services { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.nav-mobile-svc {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px;
+  background: rgba(18, 32, 58, 0.5);
+  border: 1px solid rgba(110, 160, 235, 0.14);
+  border-radius: 13px;
+  text-decoration: none;
+}
+.nav-mobile-svc:active { background: rgba(28, 52, 94, 0.6); }
+.nav-mobile-svc-ic {
+  flex-shrink: 0; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  color: #58b6ff;
+  background: rgba(40, 110, 220, 0.14);
+  border-radius: 9px;
+}
+.nav-mobile-svc-ic svg { width: 17px; height: 17px; }
+.nav-mobile-svc-name {
+  font-size: 0.84rem; font-weight: 560; line-height: 1.2;
+  color: rgba(224, 236, 252, 0.92);
+}
+
+.nav-mobile-cta {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  margin-top: 22px;
+  padding: 15px 22px;
+  font-size: 0.96rem; font-weight: 680;
+  color: #fff; text-decoration: none;
+  background: linear-gradient(135deg, #1158c8 0%, #1e90ee 100%);
+  border: 1px solid rgba(110, 195, 255, 0.26);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 0 26px rgba(0, 130, 240, 0.32);
+}
+
+@media (max-width: 1100px) {
+  /* The desktop centre links + right CTA make no sense at this width — the
+     hamburger + slide-down panel replace them. */
+  .navbar-inner { display: flex; justify-content: space-between; align-items: center; }
+  .navbar-links,
+  .navbar-cta-btn { display: none; }
+  .navbar-burger { display: flex; }
+  /* Deepen the bar glass immediately on mobile so the burger always reads,
+     even at the very top of the page over the bright hero. */
+  .navbar--menu-open .navbar-glass { opacity: 1; }
+}
+
 /* ── Hero section — two-column layout ──────────────────────────────────────── */
 .hero-section {
   position: relative;
@@ -258,8 +380,12 @@ body {
   display: flex;
   flex-direction: column;
   font-size: clamp(2.6rem, 4.0vw, 5.2rem);
-  line-height: 0.96;
-  gap: 0.06em;
+  /* >= ~1.05 so the gradient-clipped lines never slice glyph descenders (the
+     "g" in Intelligent, the "y" in Systems); gap trimmed to keep the stacked
+     headline tight despite the slightly looser leading. */
+  line-height: 1.06;
+  gap: 0.02em;
+  padding-bottom: 0.04em;
 }
 
 .h1-row { display: block; }
@@ -470,6 +596,24 @@ h2 {
     align-items: flex-start;
   }
   .hero-h1 { font-size: clamp(2.2rem, 5.0vw, 4.6rem); }
+
+  /* Ambient hero backdrop: the 3-D object now renders BEHIND the page (HeroOrb
+     drops #canvas-container to z-index 1 on narrow layouts) and centred. This
+     scrim sits above the canvas (z1) and below the text (z2), giving the
+     headline + sub guaranteed contrast while the particles still glow through.
+     A faint vignette at the edges seats the object into the frame. */
+  .hero-section::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(135% 62% at 50% 36%, rgba(4, 8, 18, 0.66) 0%, rgba(4, 8, 18, 0.34) 40%, transparent 70%),
+      linear-gradient(180deg, rgba(3, 6, 16, 0.62) 0%, transparent 24%, transparent 60%, rgba(3, 6, 16, 0.5) 100%);
+  }
+  /* Keep both columns above the scrim. */
+  .hero-left-content, .hero-right { z-index: 2; }
 }
 
 @media (max-width: 768px) {
@@ -846,7 +990,8 @@ h2 {
   font-size: clamp(2.8rem, 5.4vw, 5.0rem);
   font-weight: 800;
   letter-spacing: -0.052em;
-  line-height: 1.0;
+  line-height: 1.08;
+  padding-bottom: 0.08em;   /* descender headroom for gradient-clipped text */
   background: linear-gradient(176deg, #FFFFFF 0%, #E6EEFA 46%, #BCD0EE 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -977,7 +1122,8 @@ h2 {
   font-size: clamp(2.5rem, 4.4vw, 4.6rem);
   font-weight: 800;
   letter-spacing: -0.05em;
-  line-height: 1.0;
+  line-height: 1.1;
+  padding-bottom: 0.08em;   /* descender headroom for gradient-clipped text */
   background: linear-gradient(176deg, #FFFFFF 0%, #E6EEFA 46%, #BCD0EE 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1023,7 +1169,8 @@ h2 {
   font-size: clamp(2.8rem, 5vw, 5.4rem);
   font-weight: 800;
   letter-spacing: -0.055em;
-  line-height: 0.96;
+  line-height: 1.06;
+  padding-bottom: 0.06em;   /* descender headroom for gradient-clipped text */
   background: linear-gradient(175deg, #F5F8FC 0%, #E8EEF8 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -1784,6 +1931,147 @@ h2 {
     border-radius: 20px;
   }
   .expertise-card:not(.expertise-card--active) { display: none; }
+}
+
+/* ── Mobile expertise: native horizontal scroll-snap row (≤1100px) ────────────
+   Replaces the desktop pinned framer carousel. Every service is a full card the
+   browser snaps between; a peek of the next card invites the swipe. */
+@media (max-width: 1100px) {
+  .expertise-section--mobile {
+    height: auto !important;
+    min-height: 0;
+    padding: clamp(64px, 12vh, 104px) 0 40px;
+    display: block;
+  }
+  .expertise-section--mobile .expertise-heading-block {
+    padding: 0 6vw;
+    margin-bottom: 22px;
+    width: auto; max-width: 640px;
+  }
+  .expertise-section--mobile .expertise-eyebrow { margin-bottom: 12px; }
+  .expertise-section--mobile .expertise-h2 {
+    font-size: clamp(1.55rem, 6.4vw, 2.2rem);
+    white-space: normal;
+    margin-bottom: 10px;
+  }
+  .expertise-section--mobile .expertise-sub { font-size: 0.95rem; max-width: 56ch; }
+
+  .ec-scroller {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 6vw;
+    padding: 4px 6vw 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .ec-scroller::-webkit-scrollbar { display: none; }
+
+  .ec-mcard {
+    position: relative;
+    scroll-snap-align: start;
+    flex: 0 0 86%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    padding: 26px 22px 24px;
+    border-radius: 22px;
+    background:
+      radial-gradient(120% 80% at 100% 100%, rgba(28, 86, 180, 0.18) 0%, transparent 60%),
+      linear-gradient(165deg, rgba(20, 34, 60, 0.92) 0%, rgba(11, 19, 38, 0.96) 100%);
+    border: 1px solid rgba(108, 158, 235, 0.20);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 18px 40px rgba(0, 0, 0, 0.4);
+  }
+  .ec-mcard-arrow {
+    position: absolute; top: 18px; right: 18px;
+    width: 38px; height: 38px;
+  }
+  .ec-mcard-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em;
+    color: rgba(120, 170, 240, 0.7);
+  }
+  .ec-mcard-category {
+    margin-top: 10px;
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+    color: rgba(96, 152, 220, 0.78);
+  }
+  .ec-mcard-title {
+    margin: 7px 0 0;
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-size: 1.5rem; font-weight: 750; letter-spacing: -0.03em; line-height: 1.12;
+    color: #f3f8fe;
+    max-width: 90%;
+  }
+  .ec-mcard-intro {
+    margin: 12px 0 0;
+    font-size: 0.92rem; line-height: 1.6;
+    color: rgba(206, 224, 248, 0.74);
+  }
+  .ec-mcard-divider {
+    height: 1px; margin: 18px 0 16px;
+    background: linear-gradient(90deg, rgba(96, 160, 245, 0.42), transparent 78%);
+  }
+  .expertise-section--mobile .ec-section-label {
+    font-size: 0.64rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: rgba(110, 162, 228, 0.82);
+    margin: 0 0 9px;
+  }
+  .ec-mcard-bullets {
+    list-style: none; margin: 0 0 18px; padding: 0;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .ec-mcard-bullets li {
+    position: relative;
+    padding-left: 18px;
+    font-size: 0.87rem; line-height: 1.42; font-weight: 480;
+    color: rgba(212, 228, 248, 0.82);
+  }
+  .ec-mcard-bullets li::before {
+    content: ''; position: absolute; left: 0; top: 0.55em;
+    width: 6px; height: 6px; border-radius: 2px;
+    background: #3f9bff;
+    box-shadow: 0 0 8px rgba(63, 155, 255, 0.7);
+  }
+  .ec-mcard-value {
+    margin-top: auto;
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 14px;
+    border-radius: 15px;
+    background: rgba(14, 28, 54, 0.6);
+    border: 1px solid rgba(96, 150, 230, 0.16);
+  }
+  .ec-mcard-value .ec-value-icon {
+    flex-shrink: 0; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: #58b6ff;
+    background: rgba(40, 110, 220, 0.16);
+    border-radius: 10px;
+  }
+  .ec-mcard-value .ec-value-icon svg { width: 20px; height: 20px; }
+  .ec-mcard-value .ec-value-text {
+    margin: 0;
+    font-size: 0.84rem; line-height: 1.5;
+    color: rgba(200, 220, 246, 0.82);
+  }
+
+  .ec-dots {
+    display: flex; justify-content: center; gap: 9px;
+    margin: 20px 6vw 0;
+  }
+  .ec-dot {
+    width: 7px; height: 7px; padding: 0;
+    border-radius: 999px; border: none; cursor: pointer;
+    background: rgba(120, 160, 225, 0.28);
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+  .ec-dot--active {
+    width: 22px;
+    background: linear-gradient(90deg, #2f94ff, #58b6ff);
+  }
 }
 
 
@@ -2839,6 +3127,13 @@ h2 {
 .cp-lanes {
   position: relative;
   z-index: 2;
+  /* The horizontal edge-fade mask also sets a mask painting area (mask-clip
+     defaults to border-box) that hard-clips overflow. Top-lane chips sit at
+     top:0, so a hover lift (translateY(-4px)) + glow would be sliced off.
+     Grow the border-box upward with padding, then cancel the visual shift with
+     an equal negative margin so the chips stay put but gain clip headroom. */
+  padding-top: 30px;
+  margin-top: -30px;
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
           mask-image: linear-gradient(to right, transparent 0%, #000 5%, #000 95%, transparent 100%);
 }
@@ -3607,7 +3902,8 @@ img.ftr-logo {
   font-size: clamp(2.35rem, 4.5vw, 3.85rem);
   font-weight: 800;
   letter-spacing: -0.048em;
-  line-height: 1.04;
+  line-height: 1.1;
+  padding-bottom: 0.06em;   /* descender headroom for gradient-clipped text */
   background: linear-gradient(176deg, #FFFFFF 0%, #E6EEFA 46%, #BCD0EE 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -5199,6 +5495,8 @@ a.pricing-quote-btn { text-decoration: none; }
 .legal-title {
   font-size: clamp(2rem, 3.8vw, 3rem);
   letter-spacing: -0.045em;
+  line-height: 1.12;
+  padding-bottom: 0.06em;   /* descender headroom for gradient-clipped text (e.g. "Privacy") */
   margin: 0 0 12px;
   background: linear-gradient(176deg, #FFFFFF 0%, #E6EEFA 50%, #BCD0EE 100%);
   -webkit-background-clip: text;

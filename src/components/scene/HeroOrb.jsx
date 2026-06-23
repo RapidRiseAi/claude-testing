@@ -2510,6 +2510,10 @@ export default function HeroOrb({ mode = 'home' }) {
   const behindRef = useRef(false)
   const atmosRef = useRef(-1)       // last atmosphere opacity written (-1 = force first write)
   const glowBaseRef = useRef(0)     // lerped progress part of the glow halo opacity
+  // Narrow (≤1100px) layout: the home hero object becomes an AMBIENT BACKDROP —
+  // centred behind the headline (the DOM is single-column there) and rendered
+  // behind #scroll-content (z-index 1) so the text always sits cleanly on top.
+  const narrowRef = useRef(typeof window !== 'undefined' && window.matchMedia('(max-width: 1100px)').matches)
 
   // Arriving on the home page (e.g. a service→home transition): mount the hero
   // decoration so it can EXPAND back in (the transition drives the collapse/expand
@@ -2539,8 +2543,14 @@ export default function HeroOrb({ mode = 'home' }) {
       // "turns blue on scroll-up" bug. Mid-snap is also peak scroll velocity,
       // where the discrete flip is least visible.
       const s3 = scrollState.sec3
+      narrowRef.current = window.matchMedia('(max-width: 1100px)').matches
       let behind = behindRef.current
-      if (!behind && s3 > 0.52) behind = true
+      if (narrowRef.current) {
+        // Narrow layout: keep the object behind the page the whole way down so
+        // the hero reads as an ambient backdrop and the wave still sits behind
+        // the cards — there's no off-to-the-side desktop zone to render in front.
+        behind = true
+      } else if (!behind && s3 > 0.52) behind = true
       else if (behind && s3 < 0.48) behind = false
       if (behind !== behindRef.current) {
         behindRef.current = behind
@@ -2567,6 +2577,7 @@ export default function HeroOrb({ mode = 'home' }) {
       }
     }
     window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
     onScroll()
 
     // Screenshot harness hook — only with ?shot. Drives scroll progress directly
@@ -2586,7 +2597,7 @@ export default function HeroOrb({ mode = 'home' }) {
         shotRotY = null
       }
     }
-    return () => { window.removeEventListener('scroll', onScroll); cleanupShot && cleanupShot() }
+    return () => { window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); cleanupShot && cleanupShot() }
   }, [])
 
   useEffect(() => {
@@ -2685,14 +2696,34 @@ export default function HeroOrb({ mode = 'home' }) {
       }
       g.position.set(px, py, 0)
       g.scale.setScalar(ps)
-      // Spin hard through the black hole + burst, then settle as it reassembles.
-      g.rotation.y += delta * (0.3 + 2.4 * tsx.suck + 1.5 * tsx.explode) * (1 - re)
+      // Spin: ONE smooth, controlled forward turn through the gather → suck →
+      // burst, then DECELERATE and settle onto a clean front-facing angle (the
+      // nearest whole turn) as it reassembles — so the freshly-built object never
+      // whips backward to unwind the accumulated spin (which read as the object
+      // suddenly rotating "the other way" once it had formed).
+      const TWO_PI = Math.PI * 2
+      if (re > 0.0001) {
+        const settle = 1 - Math.pow(1 - re, 3)                    // easeOutCubic
+        g.rotation.y += delta * 1.1 * (1 - settle)                // forward carry, fading out
+        const nearestTurn = Math.round(g.rotation.y / TWO_PI) * TWO_PI
+        g.rotation.y += (nearestTurn - g.rotation.y) * settle * Math.min(1, delta * 5)
+      } else {
+        // Gentle, controlled forward spin through the implosion + ignition — about
+        // half the previous rate, so it no longer whips around dramatically.
+        g.rotation.y += delta * (0.25 + 1.1 * tsx.suck + 0.7 * tsx.explode)
+      }
       g.rotation.x += (0 - g.rotation.x) * Math.min(1, delta * 2)
       g.updateMatrixWorld()
       return
     }
     if (tPosActive.current) {
       tPosActive.current = false
+      // Fold the accumulated transition spin into [-π, π] (a no-op visually — a
+      // whole turn looks identical) so the service / home idle sway settles the
+      // SHORT way, instead of slowly unwinding whole turns the opposite direction.
+      const gg = groupRef.current
+      const TWO_PI = Math.PI * 2
+      gg.rotation.y = ((gg.rotation.y % TWO_PI) + TWO_PI + Math.PI) % TWO_PI - Math.PI
       // Morph done: hand scrollState.progress back to the real scroll position.
       scrollState.progress = Math.min(1, Math.max(0, window.scrollY / window.innerHeight))
     }
@@ -2744,11 +2775,17 @@ export default function HeroOrb({ mode = 'home' }) {
     const p = scrollState.progress
     const sec3 = scrollState.sec3
     const e3 = smoothstep(sec3)
+    // Narrow layout: the hero object is an ambient backdrop, so it starts CENTRED
+    // (x→0) and a touch smaller instead of parked off to the right (the desktop
+    // two-column zone). The card/wave end-states are shared with desktop.
+    const heroX = narrowRef.current ? 0 : ORB_X
+    const heroY = narrowRef.current ? ORB_Y : ORB_Y
+    const heroScale = narrowRef.current ? 0.86 : 1.0
     // Section 3: recentre (x→0), drop to the bottom band (y→WAVE_CY) and scale up
     // so the funnel's orbs spread into a wide wave.
-    let targetX = ORB_X + (END_X - ORB_X) * p
-    let targetY = ORB_Y + (END_Y - ORB_Y) * p
-    let targetScale = 1.0 + (END_SCALE - 1.0) * p
+    let targetX = heroX + (END_X - heroX) * p
+    let targetY = heroY + (END_Y - heroY) * p
+    let targetScale = heroScale + (END_SCALE - heroScale) * p
     targetX += (WAVE_CX - targetX) * e3
     targetY += (WAVE_CY - targetY) * e3
     targetScale += (WAVE_SCALE - targetScale) * e3

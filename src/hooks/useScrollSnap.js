@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import { getStopsPx, CARD_VH, N_CARDS } from '../utils/scrollLayout'
+import { useEffect, useRef, useState } from 'react'
+import { getStopsPx, CARD_VH, N_CARDS, isDesktopLayout } from '../utils/scrollLayout'
 
 const easeInOutCubic = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
@@ -44,7 +44,20 @@ export default function useScrollSnap() {
   const targetIdx  = useRef(null)   // stop index the current animation is heading to
   const g          = useRef({ lastT: -1e9, dir: 0, startT: 0, nextLongAt: Infinity, peak: 0, prevAd: 0, decaying: false })
 
+  // The whole snap controller only makes sense on the desktop pinned-carousel
+  // layout. On narrow layouts the page is normal flow and must scroll NATIVELY —
+  // the stop list collapses to a few viewport multiples there, so idle-snapping
+  // would yank the user out of the long pricing/work region. Track the breakpoint
+  // and only arm the controller on desktop.
+  const [desktop, setDesktop] = useState(() => isDesktopLayout())
   useEffect(() => {
+    const onR = () => setDesktop(isDesktopLayout())
+    window.addEventListener('resize', onR)
+    return () => window.removeEventListener('resize', onR)
+  }, [])
+
+  useEffect(() => {
+    if (!desktop) return   // mobile/tablet: native scrolling, no snap
     let stops = getStopsPx()
     const onResize = () => { stops = getStopsPx() }
     const cycleEnd = 1 + (N_CARDS - 1) * CARD_VH        // viewport units where the card plateau ends
@@ -219,5 +232,5 @@ export default function useScrollSnap() {
       cancelAnim()
       if (idleTimer.current) clearTimeout(idleTimer.current)
     }
-  }, [])
+  }, [desktop])
 }

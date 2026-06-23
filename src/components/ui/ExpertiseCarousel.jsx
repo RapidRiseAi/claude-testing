@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { useTransition } from '../transition/TransitionProvider'
 import { carouselState } from '../../utils/carouselState'
 import { carouselSectionVH, deriveScroll, getStopsPx, isDesktopLayout } from '../../utils/scrollLayout'
 
@@ -281,14 +282,75 @@ function PreviewContent({ card }) {
   )
 }
 
+/* ── Mobile card — a full, always-expanded card for the scroll-snap row.
+   No framer slider, no hidden state: every service is laid out plainly and the
+   browser's native scroll-snap handles swiping between them. ───────────────── */
+function MobileCard({ card, onExplore }) {
+  const Icon = card.icon
+  return (
+    <article className="ec-mcard">
+      <button className="ec-arrow-btn ec-mcard-arrow" onClick={onExplore} aria-label={`Explore ${card.title}`}>
+        <ArrowIcon />
+      </button>
+      <span className="ec-mcard-num">{card.number}</span>
+      <p className="ec-mcard-category">{card.category}</p>
+      <h3 className="ec-mcard-title">{card.title}</h3>
+      <p className="ec-mcard-intro">{card.intro}</p>
+      <div className="ec-mcard-divider" aria-hidden="true" />
+      <p className="ec-section-label">What We Build</p>
+      <ul className="ec-mcard-bullets">
+        {card.whatWeBuild.map((item, i) => <li key={i}>{item}</li>)}
+      </ul>
+      <div className="ec-mcard-value">
+        <div className="ec-value-icon" aria-hidden="true"><Icon /></div>
+        <div className="ec-value-body">
+          <p className="ec-section-label">Business Value</p>
+          <p className="ec-value-text">{card.businessValue}</p>
+        </div>
+      </div>
+    </article>
+  )
+}
+
 /* ── Main component ─────────────────────────────────────────────────────────── */
 export default function ExpertiseCarousel() {
   const [activeCard, setActiveCard] = useState(0)
   const [direction, setDirection]   = useState(1)
   const [cardOffset, setCardOffset] = useState(() => computeOffset())
   const [sectionH, setSectionH]     = useState(() => carouselSectionVH() * 100)
+  const [isMobile, setIsMobile]     = useState(() => !isDesktopLayout())
+  const [snapIdx, setSnapIdx]       = useState(0)
+  const scrollerRef = useRef(null)
   const activeCardRef = useRef(0)
   const navigate = useNavigate()
+  const transition = useTransition()
+
+  /* Track the desktop↔mobile breakpoint so we swap render paths on rotate/resize. */
+  useEffect(() => {
+    const onR = () => setIsMobile(!isDesktopLayout())
+    window.addEventListener('resize', onR)
+    return () => window.removeEventListener('resize', onR)
+  }, [])
+
+  const explore = (card) => {
+    if (transition) transition.transitionTo(card.route)
+    else navigate(card.route)
+  }
+
+  /* Mobile scroll-snap row: update the active dot from the scroll position and
+     let dots scroll the row back. */
+  const onScrollerScroll = () => {
+    const el = scrollerRef.current
+    if (!el) return
+    const i = Math.round((el.scrollLeft / (el.scrollWidth - el.clientWidth)) * (CARDS.length - 1))
+    setSnapIdx(Math.max(0, Math.min(CARDS.length - 1, i)))
+  }
+  const scrollToCard = (i) => {
+    const el = scrollerRef.current
+    if (!el) return
+    const card = el.children[i]
+    if (card) el.scrollTo({ left: card.offsetLeft - el.offsetLeft, behavior: 'smooth' })
+  }
 
   /* keep ref + shared 3-D carousel state in sync */
   useEffect(() => {
@@ -349,6 +411,44 @@ export default function ExpertiseCarousel() {
     }
   }
 
+  /* ── Mobile: native horizontal scroll-snap row of all 7 cards ─────────────── */
+  if (isMobile) {
+    return (
+      <section className="expertise-section expertise-section--mobile" aria-label="Our expertise">
+        <div className="expertise-heading-block">
+          <p className="expertise-eyebrow">OUR EXPERTISE</p>
+          <h2 className="expertise-h2">The systems behind modern growth.</h2>
+          <p className="expertise-sub">We design the digital layers that connect your website, workflows, data, AI, and operations into one smarter business stack.</p>
+        </div>
+
+        <div
+          className="ec-scroller"
+          ref={scrollerRef}
+          onScroll={onScrollerScroll}
+          role="region"
+          aria-label="Expertise cards — swipe to explore"
+        >
+          {CARDS.map((card) => (
+            <MobileCard key={card.number} card={card} onExplore={() => explore(card)} />
+          ))}
+        </div>
+
+        <div className="ec-dots" role="tablist" aria-label="Expertise card navigation">
+          {CARDS.map((card, i) => (
+            <button
+              key={card.number}
+              className={`ec-dot${i === snapIdx ? ' ec-dot--active' : ''}`}
+              aria-label={`Go to ${card.title}`}
+              aria-selected={i === snapIdx}
+              role="tab"
+              onClick={() => scrollToCard(i)}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section
       className="expertise-section"
@@ -396,10 +496,17 @@ export default function ExpertiseCarousel() {
                   }
                 }}
               >
-                {/* Arrow — never animated, always at top-right */}
+                {/* Arrow — never animated, always at top-right. Routes through the
+                    same black-hole morph the nav links use (the global interceptor
+                    only catches <a> clicks, so this <button> must call it directly)
+                    so a card jump animates identically to navigating via the menu. */}
                 <button
                   className="ec-arrow-btn ec-arrow-permanent"
-                  onClick={(e) => { e.stopPropagation(); navigate(card.route) }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (transition) transition.transitionTo(card.route)
+                    else navigate(card.route)
+                  }}
                   aria-label={`Explore ${card.title}`}
                 >
                   <ArrowIcon />

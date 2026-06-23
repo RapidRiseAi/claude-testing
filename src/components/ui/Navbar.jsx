@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { gsap } from 'gsap'
 import { FIXED_PRICE, CUSTOM_SERVICES } from '../../data/services'
 
@@ -78,9 +78,51 @@ function ServicesDropdown() {
   )
 }
 
+/* ── Mobile slide-down menu — touch-friendly replacement for the hover mega-menu.
+   The desktop row (links + CTA) is hidden by CSS ≤1100px; this panel takes over,
+   toggled by the hamburger. Tapping any link closes it (route change also does). */
+function MobileMenu({ open, onClose }) {
+  const ALL = [...FIXED_PRICE, ...CUSTOM_SERVICES]
+  return (
+    <div className={`nav-mobile${open ? ' nav-mobile--open' : ''}`} role="dialog" aria-modal="true" aria-label="Menu" aria-hidden={!open}>
+      <div className="nav-mobile-scroll">
+        <div className="nav-mobile-primary">
+          <Link to="/services" className="nav-mobile-link" onClick={onClose}>Services &amp; Pricing</Link>
+          <Link to="/proof" className="nav-mobile-link" onClick={onClose}>Proof</Link>
+          <Link to="/about" className="nav-mobile-link" onClick={onClose}>About</Link>
+          <Link to="/process" className="nav-mobile-link" onClick={onClose}>Process</Link>
+          <Link to="/industries" className="nav-mobile-link" onClick={onClose}>Industries</Link>
+          <Link to="/contact" className="nav-mobile-link" onClick={onClose}>Contact</Link>
+        </div>
+
+        <div className="nav-mobile-section">
+          <span className="nav-mobile-heading">Services</span>
+          <div className="nav-mobile-services">
+            {ALL.map((s) => (
+              <Link key={s.slug} to={`/services/${s.slug}`} className="nav-mobile-svc" onClick={onClose}>
+                <span className="nav-mobile-svc-ic"><ServiceIcon slug={s.slug} /></span>
+                <span className="nav-mobile-svc-name">{s.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <Link className="nav-mobile-cta" to="/contact" onClick={onClose}>
+          Start Your Project
+          <svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M1 6h10M7 2l4 4-4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 export default function Navbar({ loaded }) {
   const navRef = useRef()
   const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     if (!loaded) return
@@ -100,10 +142,23 @@ export default function Navbar({ loaded }) {
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
+  // Close the menu whenever the route changes (a link was tapped).
+  useEffect(() => { setMenuOpen(false) }, [location.pathname])
+
+  // Lock body scroll + close on Escape while the menu is open.
+  useEffect(() => {
+    if (!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e) => { if (e.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey) }
+  }, [menuOpen])
+
   return (
     <nav
       ref={navRef}
-      className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}
+      className={`navbar${scrolled ? ' navbar--scrolled' : ''}${menuOpen ? ' navbar--menu-open' : ''}`}
       style={{ opacity: 0 }}
     >
       {/* Full-bleed glass on its own layer (sibling of the inner row, NOT an
@@ -148,7 +203,24 @@ export default function Navbar({ loaded }) {
           </svg>
         </Link>
 
+        {/* Hamburger — only shown ≤1100px (CSS). Toggles the mobile panel. */}
+        <button
+          type="button"
+          className="navbar-burger"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((o) => !o)}
+        >
+          <span className="navbar-burger-box" aria-hidden="true">
+            <span className="navbar-burger-line" />
+            <span className="navbar-burger-line" />
+            <span className="navbar-burger-line" />
+          </span>
+        </button>
+
       </div>
+
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
     </nav>
   )
 }
