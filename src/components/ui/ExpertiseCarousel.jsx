@@ -285,30 +285,40 @@ function PreviewContent({ card }) {
 /* ── Mobile card — a full, always-expanded card for the scroll-snap row.
    No framer slider, no hidden state: every service is laid out plainly and the
    browser's native scroll-snap handles swiping between them. ───────────────── */
-function MobileCard({ card, onExplore }) {
+function AccordionItem({ card, open, onToggle, onExplore }) {
   const Icon = card.icon
   return (
-    <article className="ec-mcard">
-      <button className="ec-arrow-btn ec-mcard-arrow" onClick={onExplore} aria-label={`Explore ${card.title}`}>
-        <ArrowIcon />
+    <div className={`ec-acc${open ? ' ec-acc--open' : ''}`}>
+      <button className="ec-acc-head" onClick={onToggle} aria-expanded={open}>
+        <span className="ec-acc-num">{card.number}</span>
+        <span className="ec-acc-ic" aria-hidden="true"><Icon /></span>
+        <span className="ec-acc-titles">
+          <span className="ec-acc-cat">{card.category}</span>
+          <span className="ec-acc-title">{card.title}</span>
+        </span>
+        <svg className="ec-acc-chev" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3 5.5 7 9.5l4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
-      <span className="ec-mcard-num">{card.number}</span>
-      <p className="ec-mcard-category">{card.category}</p>
-      <h3 className="ec-mcard-title">{card.title}</h3>
-      <p className="ec-mcard-intro">{card.intro}</p>
-      <div className="ec-mcard-divider" aria-hidden="true" />
-      <p className="ec-section-label">What We Build</p>
-      <ul className="ec-mcard-bullets">
-        {card.whatWeBuild.map((item, i) => <li key={i}>{item}</li>)}
-      </ul>
-      <div className="ec-mcard-value">
-        <div className="ec-value-icon" aria-hidden="true"><Icon /></div>
-        <div className="ec-value-body">
-          <p className="ec-section-label">Business Value</p>
-          <p className="ec-value-text">{card.businessValue}</p>
+      {/* grid-rows 0fr→1fr animates the height with no JS measurement */}
+      <div className="ec-acc-panel">
+        <div className="ec-acc-inner">
+          <p className="ec-acc-intro">{card.intro}</p>
+          <p className="ec-section-label">What We Build</p>
+          <ul className="ec-acc-bullets">
+            {card.whatWeBuild.map((item, i) => <li key={i}>{item}</li>)}
+          </ul>
+          <div className="ec-acc-value">
+            <p className="ec-section-label">Business Value</p>
+            <p className="ec-value-text">{card.businessValue}</p>
+          </div>
+          <button className="ec-acc-explore" onClick={onExplore}>
+            Explore {card.title}
+            <ArrowIcon />
+          </button>
         </div>
       </div>
-    </article>
+    </div>
   )
 }
 
@@ -319,8 +329,7 @@ export default function ExpertiseCarousel() {
   const [cardOffset, setCardOffset] = useState(() => computeOffset())
   const [sectionH, setSectionH]     = useState(() => carouselSectionVH() * 100)
   const [isMobile, setIsMobile]     = useState(() => !isDesktopLayout())
-  const [snapIdx, setSnapIdx]       = useState(0)
-  const scrollerRef = useRef(null)
+  const [openIdx, setOpenIdx]       = useState(-1)  // mobile accordion: all collapsed → object shows behind
   const activeCardRef = useRef(0)
   const navigate = useNavigate()
   const transition = useTransition()
@@ -335,21 +344,6 @@ export default function ExpertiseCarousel() {
   const explore = (card) => {
     if (transition) transition.transitionTo(card.route)
     else navigate(card.route)
-  }
-
-  /* Mobile scroll-snap row: update the active dot from the scroll position and
-     let dots scroll the row back. */
-  const onScrollerScroll = () => {
-    const el = scrollerRef.current
-    if (!el) return
-    const i = Math.round((el.scrollLeft / (el.scrollWidth - el.clientWidth)) * (CARDS.length - 1))
-    setSnapIdx(Math.max(0, Math.min(CARDS.length - 1, i)))
-  }
-  const scrollToCard = (i) => {
-    const el = scrollerRef.current
-    if (!el) return
-    const card = el.children[i]
-    if (card) el.scrollTo({ left: card.offsetLeft - el.offsetLeft, behavior: 'smooth' })
   }
 
   /* keep ref + shared 3-D carousel state in sync */
@@ -411,37 +405,25 @@ export default function ExpertiseCarousel() {
     }
   }
 
-  /* ── Mobile: native horizontal scroll-snap row of all 7 cards ─────────────── */
+  /* ── Mobile: compact expandable accordion — every service is a thin tap-to-
+     expand row, leaving the 3-D object visible as the section backdrop. ─────── */
   if (isMobile) {
     return (
       <section className="expertise-section expertise-section--mobile" aria-label="Our expertise">
         <div className="expertise-heading-block">
           <p className="expertise-eyebrow">OUR EXPERTISE</p>
           <h2 className="expertise-h2">The systems behind modern growth.</h2>
-          <p className="expertise-sub">We design the digital layers that connect your website, workflows, data, AI, and operations into one smarter business stack.</p>
+          <p className="expertise-sub">The digital layers that connect your website, workflows, data, AI, and operations into one smarter business stack.</p>
         </div>
 
-        <div
-          className="ec-scroller"
-          ref={scrollerRef}
-          onScroll={onScrollerScroll}
-          role="region"
-          aria-label="Expertise cards — swipe to explore"
-        >
-          {CARDS.map((card) => (
-            <MobileCard key={card.number} card={card} onExplore={() => explore(card)} />
-          ))}
-        </div>
-
-        <div className="ec-dots" role="tablist" aria-label="Expertise card navigation">
+        <div className="ec-accordion">
           {CARDS.map((card, i) => (
-            <button
+            <AccordionItem
               key={card.number}
-              className={`ec-dot${i === snapIdx ? ' ec-dot--active' : ''}`}
-              aria-label={`Go to ${card.title}`}
-              aria-selected={i === snapIdx}
-              role="tab"
-              onClick={() => scrollToCard(i)}
+              card={card}
+              open={openIdx === i}
+              onToggle={() => setOpenIdx(openIdx === i ? -1 : i)}
+              onExplore={() => explore(card)}
             />
           ))}
         </div>

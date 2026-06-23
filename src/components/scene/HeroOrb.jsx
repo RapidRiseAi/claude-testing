@@ -22,7 +22,7 @@ const HOME_VIS_R = 1.80   // representative bounding radius (local units) of the
                           // used only to publish a handoff anchor for the page
                           // transition (× the live group scale).
 
-const scrollState = { progress: 0, sec3: 0 }
+const scrollState = { progress: 0, sec3: 0, narrow: false, mwave: 0 }
 let shotRotY = null   // ?shot harness: force a card-object rotation for capture
 let waveBufDirty = false  // wave wrote posTarget; one repair pass owed when it exits
 // Bounding radius (local units) of each normalized card shape, computed once from
@@ -1889,9 +1889,10 @@ function InteractiveMiniOrbs({ groupRef }) {
     const scale = 1.0 + (END_SCALE - 1.0) * p
 
     // Phase 1 — collapse, sqrt ease-out (immediately visible at first scroll pixel)
-    // Peaks at p=0.40; max collapseT=0.5 (orbs move to 50% of sphere radius)
+    // Peaks at p=0.40; max collapseT=0.5 (orbs move to 50% of sphere radius).
+    // Mobile keeps the full uncollapsed globe (its own wave morph drives Section 3).
     const rawT      = Math.min(1, Math.sqrt(p / 0.40))
-    const collapseT = rawT * 0.5
+    const collapseT = scrollState.narrow ? 0 : rawT * 0.5
 
     // Phase 2 — card morph, smoothstep over twice the old range (2× slower)
     // Starts at p=0.38 (slight overlap with collapse for seamless hand off)
@@ -1956,8 +1957,10 @@ function InteractiveMiniOrbs({ groupRef }) {
       }
     }
 
-    // Card morph only kicks in once the collapse starts transitioning (p≥0.38)
-    const usedCardMorph = p >= 0.38 ? finalCardMorph : 0.0
+    // Card morph only kicks in once the collapse starts transitioning (p≥0.38).
+    // Disabled on mobile — there's no pinned carousel there, so the object stays
+    // a full globe until its dedicated wave morph (below) takes over.
+    const usedCardMorph = (scrollState.narrow || p < 0.38) ? 0.0 : finalCardMorph
 
     // Edge-orb size boost applies only to cards that tag edge vs surface (globe,
     // gear, code block, clock, sparkle, rings, funnel). For all other cards uSizeScale stays 1.0 → orbs revert.
@@ -1968,12 +1971,36 @@ function InteractiveMiniOrbs({ groupRef }) {
     // drops behind the content in Section 3 (scroll handler) so these real orbs
     // render behind the cards.
     const sec3 = scrollState.sec3
-    // On mobile the carousel never reaches card 6, so there's no real wave — but
-    // sec3 still climbs with scroll. Zero the wave factor there so the globe
-    // renders normally the whole way down instead of getting depth-faded into
-    // nothing by the wave shader.
-    const wave = scrollState.narrow ? 0 : smoothstep(sec3)
-    if (activeRef.current === 6 && sec3 > 0.001) {
+    // MOBILE wave: morph the GLOBE (card 0) straight into the same wave grid as
+    // Section 3 scrolls in (scrollState.mwave 0→1), so the object becomes the
+    // wave background without needing the desktop carousel's card-6 state. The
+    // grid is N_ORB cells so the globe's orbs map 1:1 onto it.
+    const mWave = scrollState.narrow ? smoothstep(scrollState.mwave || 0) : 0
+    const wave  = scrollState.narrow ? mWave : smoothstep(sec3)
+    if (scrollState.narrow) {
+      if (mWave > 0.001) {
+        const t  = clock.getElapsedTime()
+        const fn = cardBufs[0]
+        for (let i = 0; i < N_ORB; i++) {
+          const ix = i * 3
+          const lx = WAVE_GRID[ix], by = WAVE_GRID[ix + 1], lz = WAVE_GRID[ix + 2]
+          const wy = by
+            + 0.16 * Math.sin(lx * 1.7 + t * 0.5)
+            + 0.12 * Math.sin(lx * 2.9 - lz * 0.9 + t * 0.8)
+            + 0.12 * Math.sin(lz * 1.5 + t * 0.45)
+            + 0.07 * Math.sin((lx * 3.4 + lz * 1.7) + t * 1.05)
+          posTarget[ix]     = fn[ix]     + (lx - fn[ix])     * mWave
+          posTarget[ix + 1] = fn[ix + 1] + (wy - fn[ix + 1]) * mWave
+          posTarget[ix + 2] = fn[ix + 2] + (lz - fn[ix + 2]) * mWave
+        }
+        if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
+        waveBufDirty = true
+      } else if (waveBufDirty) {
+        posTarget.set(cardBufs[0])
+        if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
+        waveBufDirty = false
+      }
+    } else if (activeRef.current === 6 && sec3 > 0.001) {
       const t  = clock.getElapsedTime()
       const fn = cardBufs[6]
       for (let i = 0; i < N_ORB; i++) {
@@ -2006,11 +2033,16 @@ function InteractiveMiniOrbs({ groupRef }) {
     material.uniforms.uMorph.value      = collapseT
     material.uniforms.uMorphCard.value  = usedCardMorph
     material.uniforms.uWaveFade.value   = wave
-    material.uniforms.uOpacity.value    = MAX_CARD_OP + (WAVE_OP - MAX_CARD_OP) * wave
+    // Mobile renders the object/wave behind translucent cards, so push brightness
+    // + dot size up to keep it vivid as a backdrop (desktop values unchanged).
+    const waveOp = scrollState.narrow ? WAVE_OP * 1.9 : WAVE_OP
+    const waveSz = scrollState.narrow ? WAVE_SIZE * 1.7 : WAVE_SIZE
+    const baseOp = scrollState.narrow ? MAX_CARD_OP * 1.45 : MAX_CARD_OP
+    material.uniforms.uOpacity.value    = baseOp + (waveOp - baseOp) * wave
     material.uniforms.uTime.value       = clock.getElapsedTime()
     material.uniforms.uScale.value      = size.height / 2
     const baseSize = 1.0 + (usesEdgeBoost ? 1.0 : 0.0) * usedCardMorph
-    material.uniforms.uSizeScale.value  = baseSize + (WAVE_SIZE - baseSize) * wave
+    material.uniforms.uSizeScale.value  = baseSize + (waveSz - baseSize) * wave
     material.uniforms.uRadius.value     = 0.58 * scale
     material.uniforms.uDepthRadius.value = ((cardBoundingRadii && cardBoundingRadii[activeRef.current]) || 2.0) * (groupRef?.current?.scale.x || scale)
 
@@ -2549,10 +2581,30 @@ export default function HeroOrb({ mode = 'home' }) {
       const s3 = scrollState.sec3
       narrowRef.current = window.matchMedia('(max-width: 1100px)').matches
       scrollState.narrow = narrowRef.current   // module-level mirror for the points frame loop
+      // MOBILE wave trigger: the desktop wave is gated on the carousel reaching
+      // card 6, which never happens on the mobile scroll-row. Instead drive a
+      // dedicated mobile wave progress from the REAL pricing-section position —
+      // 0 while pricing sits below the fold, ramping to 1 as its top rises to the
+      // upper viewport — so the globe morphs into the wave exactly as Section 3
+      // scrolls in. Measured live (sections are compact / variable height here).
+      if (narrowRef.current) {
+        const fp = document.querySelector('.fp-section')
+        const vh = window.innerHeight || 1
+        if (fp) {
+          const top = fp.getBoundingClientRect().top
+          const start = vh * 0.66, end = vh * 0.06
+          scrollState.mwave = Math.min(1, Math.max(0, (start - top) / (start - end)))
+        } else {
+          scrollState.mwave = 0
+        }
+      } else {
+        scrollState.mwave = 0
+      }
       let behind = behindRef.current
       if (narrowRef.current) {
-        // Mobile: the object is a centred backdrop the whole way down, so it
-        // always renders behind #scroll-content — never covering text or cards.
+        // Mobile: the object is a living BACKDROP behind the content the whole way
+        // down (compact cards leave it plenty of room to read), so it never
+        // covers text — globe behind the hero + expertise, wave behind pricing.
         behind = true
       } else if (!behind && s3 > 0.52) behind = true
       else if (behind && s3 < 0.48) behind = false
@@ -2573,10 +2625,12 @@ export default function HeroOrb({ mode = 'home' }) {
         if (el) el.style.opacity = String(atmosOp)
       }
       if (narrowRef.current) {
-        // Mobile: keep the rich globe decoration mounted the whole way down so
-        // the object stays a visible backdrop in every section (otherwise it
-        // drops to sparse orbs past the hero and disappears behind the cards).
-        if (!heavyRef.current) { heavyRef.current = true; setShowHeavy(true) }
+        // Mobile: keep the rich globe decoration (grid/icons/glow) mounted through
+        // the hero + expertise so the object reads as a real globe — but drop it
+        // once the wave starts forming (mwave≥0.5) so the wave is clean orbs, not
+        // a distorted grid.
+        const wantHeavy = (scrollState.mwave || 0) < 0.5
+        if (wantHeavy !== heavyRef.current) { heavyRef.current = wantHeavy; setShowHeavy(wantHeavy) }
       } else if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false
         setShowHeavy(false)
@@ -2787,20 +2841,25 @@ export default function HeroOrb({ mode = 'home' }) {
     let targetX, targetY, targetScale
     if (narrowRef.current) {
       // ── MOBILE journey (desktop path is the else branch, untouched) ──────────
-      // The object stays a GLOBE on mobile (the wave morph needs the desktop
-      // carousel's card-6 state, which the mobile scroll-row never sets). So
-      // rather than chase the off-screen wave, keep it CENTRED and visible as a
-      // slowly-rotating motif: prominent up top in the stacked hero, then it
-      // settles into the open upper band where it glows behind each section's
-      // heading the whole way down. It never slides off to the card-mode spot.
-      const MHERO_Y = 1.18, MHERO_S = 0.56   // hero: upper zone, fully on-screen
-      const MSET_Y  = 0.0, MSET_S   = 0.92   // settled: BIG + centred so the
-                                             // globe fills the backdrop and its
-                                             // particles spill past the content
-                                             // into every margin/gap
+      // Three acts driven by scroll:
+      //  1. HERO   — globe prominent, upper-centre, in front.
+      //  2. EXPERTISE — globe rises to a smaller "header object" anchored at the
+      //     top of the viewport, staying visible while the cards scroll beneath.
+      //     (driven by p: 0 at hero top → 1 one viewport down ≈ expertise.)
+      //  3. PRICING+ — as the pricing section scrolls in (mwave 0→1) the globe
+      //     morphs into the wave and drops to the bottom band, behind the cards.
+      const MHERO_Y = 1.05, MHERO_S = 0.56   // hero: globe upper, behind headline
+      const MEXP_Y  = 0.35, MEXP_S  = 0.66   // expertise: big centred backdrop
+      // Wave end-state: the same wave geometry as desktop but RAISED into the
+      // tall portrait viewport (desktop's -2.6 sits off the bottom here) so it
+      // fills the lower half behind the translucent pricing cards.
+      const MWAVE_Y = -1.95, MWAVE_S = 1.08
+      const mw = smoothstep(scrollState.mwave || 0)
+      const gy = MHERO_Y + (MEXP_Y - MHERO_Y) * p
+      const gs = MHERO_S + (MEXP_S - MHERO_S) * p
       targetX = 0
-      targetY = MHERO_Y + (MSET_Y - MHERO_Y) * p
-      targetScale = MHERO_S + (MSET_S - MHERO_S) * p
+      targetY = gy + (MWAVE_Y - gy) * mw
+      targetScale = gs + (MWAVE_S - gs) * mw
     } else {
       // Section 3: recentre (x→0), drop to the bottom band (y→WAVE_CY) and scale
       // up so the funnel's orbs spread into a wide wave.
@@ -2843,7 +2902,27 @@ export default function HeroOrb({ mode = 'home' }) {
 
     if (isDragging.current) return
     if (shotRotY !== null) { groupRef.current.rotation.set(0.2, shotRotY, 0); return }
-    if (sec3 > 0.01) {
+    if (narrowRef.current) {
+      // MOBILE rotation: slow globe spin while it's a globe; once it becomes the
+      // wave, hold it still and tilt it toward the camera so the wave surface
+      // reads on the tall portrait viewport. (sec3 climbs oddly on mobile, so we
+      // drive purely off mwave here instead of the desktop sec3 branches.)
+      const rot = groupRef.current.rotation
+      const k = Math.min(1, delta * 2.5)
+      if ((scrollState.mwave || 0) > 0.45) {
+        enteredOsc.current = false
+        rot.x += (WAVE_TILT - rot.x) * k
+        rot.y += (0 - rot.y) * k
+        rot.z += (0 - rot.z) * k
+      } else {
+        let y = rot.y + delta * 0.04
+        if (y > Math.PI)  y -= Math.PI * 2
+        if (y < -Math.PI) y += Math.PI * 2
+        rot.y = y
+        rot.x += (0 - rot.x) * k
+        rot.z += (0 - rot.z) * k
+      }
+    } else if (sec3 > 0.01) {
       // Tilt the wave slightly toward the camera (head-on + perspective) and hold
       // it still — the orbs animate themselves (undulation).
       enteredOsc.current = false
