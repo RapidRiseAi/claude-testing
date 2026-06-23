@@ -2545,12 +2545,7 @@ export default function HeroOrb({ mode = 'home' }) {
       const s3 = scrollState.sec3
       narrowRef.current = window.matchMedia('(max-width: 1100px)').matches
       let behind = behindRef.current
-      if (narrowRef.current) {
-        // Narrow layout: keep the object behind the page the whole way down so
-        // the hero reads as an ambient backdrop and the wave still sits behind
-        // the cards — there's no off-to-the-side desktop zone to render in front.
-        behind = true
-      } else if (!behind && s3 > 0.52) behind = true
+      if (!behind && s3 > 0.52) behind = true
       else if (behind && s3 < 0.48) behind = false
       if (behind !== behindRef.current) {
         behindRef.current = behind
@@ -2775,12 +2770,12 @@ export default function HeroOrb({ mode = 'home' }) {
     const p = scrollState.progress
     const sec3 = scrollState.sec3
     const e3 = smoothstep(sec3)
-    // Narrow layout: the hero object is an ambient backdrop, so it starts CENTRED
-    // (x→0) and a touch smaller instead of parked off to the right (the desktop
-    // two-column zone). The card/wave end-states are shared with desktop.
+    // Narrow layout: STACKED hero — the object sits CENTRED in the upper zone
+    // (raised Y) with the text below it, rendered in front (z-index 3) so it's
+    // clearly visible. The card/wave end-states are shared with desktop.
     const heroX = narrowRef.current ? 0 : ORB_X
-    const heroY = narrowRef.current ? ORB_Y : ORB_Y
-    const heroScale = narrowRef.current ? 0.86 : 1.0
+    const heroY = narrowRef.current ? 2.2 : ORB_Y
+    const heroScale = narrowRef.current ? 0.68 : 1.0
     // Section 3: recentre (x→0), drop to the bottom band (y→WAVE_CY) and scale up
     // so the funnel's orbs spread into a wide wave.
     let targetX = heroX + (END_X - heroX) * p

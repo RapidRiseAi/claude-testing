@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { WORK_ITEMS, WORK_SECTION_COPY } from '../../data/workItems'
+import { isDesktopLayout } from '../../utils/scrollLayout'
 import ConceptPreview from './ConceptPreview'
 import Lightbox from './Lightbox'
 
@@ -237,12 +238,42 @@ export default function OurWorkSection() {
   const firstReal = WORK_ITEMS.find((w) => w.mediaType === 'image') ?? WORK_ITEMS[0]
   const [activeId, setActiveId] = useState(firstReal?.id ?? null)
   const [gallery, setGallery] = useState(null) // { images, title } | null
+  const [isMobile, setIsMobile] = useState(() => !isDesktopLayout())
   const activeIndex = Math.max(0, WORK_ITEMS.findIndex((w) => w.id === activeId))
   const active = WORK_ITEMS[activeIndex]
   const displayNum = (item, i) => item.number ?? String(i + 1).padStart(2, '0')
   const openGallery = (it) => setGallery({ images: it.gallery ?? [it.mediaSrc], title: it.title })
 
+  useEffect(() => {
+    const onR = () => setIsMobile(!isDesktopLayout())
+    window.addEventListener('resize', onR)
+    return () => window.removeEventListener('resize', onR)
+  }, [])
+
   if (!active) return null
+
+  /* ── Mobile: side-swipe row of compact work cards (each is a full preview) ── */
+  if (isMobile) {
+    return (
+      <section className="ow-section ow-section--mobile" aria-label="Our work: selected builds and demos">
+        <div className="ow-container">
+          <header className="ow-head">
+            <h2 className="ow-title">{WORK_SECTION_COPY.title}<span className="ow-dot">.</span></h2>
+          </header>
+          <div className="ow-scroller" role="region" aria-label="Selected work — swipe to browse">
+            {WORK_ITEMS.map((item, i) => (
+              <div className="ow-mcard" key={item.id}>
+                <WorkPreview item={item} num={displayNum(item, i)} onOpenGallery={openGallery} />
+              </div>
+            ))}
+          </div>
+        </div>
+        {gallery && (
+          <Lightbox images={gallery.images} title={gallery.title} onClose={() => setGallery(null)} />
+        )}
+      </section>
+    )
+  }
 
   return (
     <section className="ow-section" aria-label="Our work: selected builds and demos">
