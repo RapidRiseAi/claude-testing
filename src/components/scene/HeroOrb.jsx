@@ -1968,7 +1968,11 @@ function InteractiveMiniOrbs({ groupRef }) {
     // drops behind the content in Section 3 (scroll handler) so these real orbs
     // render behind the cards.
     const sec3 = scrollState.sec3
-    const wave = smoothstep(sec3)
+    // On mobile the carousel never reaches card 6, so there's no real wave — but
+    // sec3 still climbs with scroll. Zero the wave factor there so the globe
+    // renders normally the whole way down instead of getting depth-faded into
+    // nothing by the wave shader.
+    const wave = scrollState.narrow ? 0 : smoothstep(sec3)
     if (activeRef.current === 6 && sec3 > 0.001) {
       const t  = clock.getElapsedTime()
       const fn = cardBufs[6]
@@ -2544,8 +2548,13 @@ export default function HeroOrb({ mode = 'home' }) {
       // where the discrete flip is least visible.
       const s3 = scrollState.sec3
       narrowRef.current = window.matchMedia('(max-width: 1100px)').matches
+      scrollState.narrow = narrowRef.current   // module-level mirror for the points frame loop
       let behind = behindRef.current
-      if (!behind && s3 > 0.52) behind = true
+      if (narrowRef.current) {
+        // Mobile: the object is a centred backdrop the whole way down, so it
+        // always renders behind #scroll-content — never covering text or cards.
+        behind = true
+      } else if (!behind && s3 > 0.52) behind = true
       else if (behind && s3 < 0.48) behind = false
       if (behind !== behindRef.current) {
         behindRef.current = behind
@@ -2563,7 +2572,12 @@ export default function HeroOrb({ mode = 'home' }) {
         const el = document.getElementById('scene-atmosphere')
         if (el) el.style.opacity = String(atmosOp)
       }
-      if (heavyRef.current && scrollState.progress > 0.80) {
+      if (narrowRef.current) {
+        // Mobile: keep the rich globe decoration mounted the whole way down so
+        // the object stays a visible backdrop in every section (otherwise it
+        // drops to sparse orbs past the hero and disappears behind the cards).
+        if (!heavyRef.current) { heavyRef.current = true; setShowHeavy(true) }
+      } else if (heavyRef.current && scrollState.progress > 0.80) {
         heavyRef.current = false
         setShowHeavy(false)
       } else if (!heavyRef.current && scrollState.progress < 0.63) {
@@ -2770,20 +2784,34 @@ export default function HeroOrb({ mode = 'home' }) {
     const p = scrollState.progress
     const sec3 = scrollState.sec3
     const e3 = smoothstep(sec3)
-    // Narrow layout: STACKED hero — the object sits CENTRED in the upper zone
-    // (raised Y) with the text below it, rendered in front (z-index 3) so it's
-    // clearly visible. The card/wave end-states are shared with desktop.
-    const heroX = narrowRef.current ? 0 : ORB_X
-    const heroY = narrowRef.current ? 2.2 : ORB_Y
-    const heroScale = narrowRef.current ? 0.68 : 1.0
-    // Section 3: recentre (x→0), drop to the bottom band (y→WAVE_CY) and scale up
-    // so the funnel's orbs spread into a wide wave.
-    let targetX = heroX + (END_X - heroX) * p
-    let targetY = heroY + (END_Y - heroY) * p
-    let targetScale = heroScale + (END_SCALE - heroScale) * p
-    targetX += (WAVE_CX - targetX) * e3
-    targetY += (WAVE_CY - targetY) * e3
-    targetScale += (WAVE_SCALE - targetScale) * e3
+    let targetX, targetY, targetScale
+    if (narrowRef.current) {
+      // ── MOBILE journey (desktop path is the else branch, untouched) ──────────
+      // The object stays a GLOBE on mobile (the wave morph needs the desktop
+      // carousel's card-6 state, which the mobile scroll-row never sets). So
+      // rather than chase the off-screen wave, keep it CENTRED and visible as a
+      // slowly-rotating motif: prominent up top in the stacked hero, then it
+      // settles into the open upper band where it glows behind each section's
+      // heading the whole way down. It never slides off to the card-mode spot.
+      const MHERO_Y = 1.18, MHERO_S = 0.56   // hero: upper zone, fully on-screen
+      const MSET_Y  = 0.0, MSET_S   = 0.92   // settled: BIG + centred so the
+                                             // globe fills the backdrop and its
+                                             // particles spill past the content
+                                             // into every margin/gap
+      targetX = 0
+      targetY = MHERO_Y + (MSET_Y - MHERO_Y) * p
+      targetScale = MHERO_S + (MSET_S - MHERO_S) * p
+    } else {
+      // Section 3: recentre (x→0), drop to the bottom band (y→WAVE_CY) and scale
+      // up so the funnel's orbs spread into a wide wave.
+      const heroX = ORB_X, heroY = ORB_Y, heroScale = 1.0
+      targetX = heroX + (END_X - heroX) * p
+      targetY = heroY + (END_Y - heroY) * p
+      targetScale = heroScale + (END_SCALE - heroScale) * p
+      targetX += (WAVE_CX - targetX) * e3
+      targetY += (WAVE_CY - targetY) * e3
+      targetScale += (WAVE_SCALE - targetScale) * e3
+    }
     const lerpAmt = Math.min(1, delta * 8)
     groupRef.current.position.x += (targetX - groupRef.current.position.x) * lerpAmt
     groupRef.current.position.y += (targetY - groupRef.current.position.y) * lerpAmt

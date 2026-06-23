@@ -1971,12 +1971,12 @@ h2 {
   .ec-mcard {
     position: relative;
     scroll-snap-align: start;
-    flex: 0 0 80%;
-    max-width: 380px;
+    flex: 0 0 73%;
+    max-width: 330px;
     display: flex;
     flex-direction: column;
-    padding: 20px 18px 18px;
-    border-radius: 20px;
+    padding: 16px 15px 15px;
+    border-radius: 18px;
     background:
       radial-gradient(120% 80% at 100% 100%, rgba(28, 86, 180, 0.18) 0%, transparent 60%),
       linear-gradient(165deg, rgba(20, 34, 60, 0.92) 0%, rgba(11, 19, 38, 0.96) 100%);
@@ -1998,19 +1998,19 @@ h2 {
     color: rgba(96, 152, 220, 0.78);
   }
   .ec-mcard-title {
-    margin: 5px 0 0;
+    margin: 4px 0 0;
     font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-    font-size: 1.28rem; font-weight: 750; letter-spacing: -0.03em; line-height: 1.12;
+    font-size: 1.12rem; font-weight: 750; letter-spacing: -0.03em; line-height: 1.12;
     color: #f3f8fe;
     max-width: 88%;
   }
   .ec-mcard-intro {
-    margin: 9px 0 0;
-    font-size: 0.85rem; line-height: 1.5;
+    margin: 7px 0 0;
+    font-size: 0.8rem; line-height: 1.45;
     color: rgba(206, 224, 248, 0.74);
   }
   .ec-mcard-divider {
-    height: 1px; margin: 13px 0 12px;
+    height: 1px; margin: 11px 0 10px;
     background: linear-gradient(90deg, rgba(96, 160, 245, 0.42), transparent 78%);
   }
   .expertise-section--mobile .ec-section-label {
@@ -2019,13 +2019,13 @@ h2 {
     margin: 0 0 7px;
   }
   .ec-mcard-bullets {
-    list-style: none; margin: 0 0 14px; padding: 0;
-    display: flex; flex-direction: column; gap: 6px;
+    list-style: none; margin: 0 0 12px; padding: 0;
+    display: flex; flex-direction: column; gap: 5px;
   }
   .ec-mcard-bullets li {
     position: relative;
-    padding-left: 16px;
-    font-size: 0.82rem; line-height: 1.38; font-weight: 480;
+    padding-left: 15px;
+    font-size: 0.78rem; line-height: 1.34; font-weight: 480;
     color: rgba(212, 228, 248, 0.82);
   }
   .ec-mcard-bullets li::before {
@@ -2514,16 +2514,16 @@ h2 {
   .fp-grid::-webkit-scrollbar { display: none; }
   .fp-card {
     scroll-snap-align: start;
-    flex: 0 0 60%;
-    max-width: 230px;
-    padding: 18px 16px;
-    border-radius: 18px;
+    flex: 0 0 53%;
+    max-width: 205px;
+    padding: 15px 14px;
+    border-radius: 16px;
   }
-  .fp-card-icon { width: 44px; height: 44px; }
-  .fp-card-icon svg { width: 24px; height: 24px; }
-  .fp-card-title { font-size: 0.98rem; }
-  .fp-card-price { font-size: clamp(1.5rem, 6vw, 1.9rem); }
-  .fp-card-btn { padding: 10px 14px; font-size: 0.82rem; }
+  .fp-card-icon { width: 40px; height: 40px; }
+  .fp-card-icon svg { width: 22px; height: 22px; }
+  .fp-card-title { font-size: 0.92rem; }
+  .fp-card-price { font-size: clamp(1.4rem, 5.5vw, 1.75rem); }
+  .fp-card-btn { padding: 9px 12px; font-size: 0.8rem; }
 
   .fp-custom {
     flex-direction: column;
@@ -3030,13 +3030,16 @@ h2 {
     overscroll-behavior-x: contain;
   }
   .ow-scroller::-webkit-scrollbar { display: none; }
-  .ow-mcard { scroll-snap-align: start; flex: 0 0 82%; max-width: 330px; display: flex; }
+  .ow-mcard { scroll-snap-align: start; flex: 0 0 76%; max-width: 300px; display: flex; }
   .ow-mcard .ow-preview { height: 100%; width: 100%; margin: 0; }
-  .ow-mcard .ow-preview-body { padding: 16px; }
-  .ow-mcard .ow-preview-title { font-size: 1.05rem; }
-  .ow-mcard .ow-preview-desc { font-size: 0.82rem; margin-bottom: 12px; }
-  .ow-mcard .ow-highlights { grid-template-columns: 1fr; gap: 6px; margin-bottom: 14px; }
-  .ow-mcard .ow-preview-btn { width: 100%; }
+  .ow-mcard .ow-preview-body { padding: 14px; }
+  .ow-mcard .ow-preview-title { font-size: 0.98rem; margin-bottom: 6px; }
+  .ow-mcard .ow-preview-desc { font-size: 0.79rem; line-height: 1.5; margin-bottom: 10px; }
+  .ow-mcard .ow-preview-tags { margin-bottom: 10px; }
+  .ow-mcard .ow-tag { font-size: 0.64rem; padding: 3px 7px; }
+  .ow-mcard .ow-highlights { grid-template-columns: 1fr; gap: 5px; margin-bottom: 12px; }
+  .ow-mcard .ow-highlights li { font-size: 0.74rem; }
+  .ow-mcard .ow-preview-btn { width: 100%; padding: 10px 16px; font-size: 0.82rem; }
 }
 
 /* (legacy accordion rules kept for any non-mobile narrow fallback) */
