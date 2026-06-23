@@ -5,129 +5,246 @@
 .svc-orb-1 { top: 30px; right: -5%; width: 380px; height: 380px; }
 .svc-orb-2 { top: 520px; left: -7%; width: 420px; height: 420px; }
 
-.svc-section { position: relative; max-width: 1180px; margin: 0 auto; padding: clamp(40px, 6vh, 76px) 6vw; }
-.svc-head { text-align: center; margin-bottom: clamp(26px, 4vh, 44px); }
+.svc-section { position: relative; max-width: 1200px; margin: 0 auto; padding: clamp(44px, 7vh, 84px) 6vw; }
+
+/* ── Section heads (visible eyebrow + gradient heading, home-page rhythm) ───── */
+.svc-head {
+  text-align: center;
+  margin-bottom: clamp(30px, 4.5vh, 50px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.svc-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #22a6f4;
+  margin-bottom: 0.85rem;
+}
 .svc-h2 {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-size: clamp(1.55rem, 2.7vw, 2.3rem);
-  font-weight: 790;
-  letter-spacing: -0.036em;
-  line-height: 1.1;
+  font-size: clamp(1.7rem, 3vw, 2.55rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.14;
+  padding-bottom: 0.08em;            /* room for gradient-clipped descenders */
+  background: linear-gradient(175deg, #FAFCFE 0%, #E9EFF8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: #eef5fd;
   margin: 0 auto;
-  max-width: 22ch;
+  max-width: 24ch;
 }
-.svc-lead { font-size: 1rem; line-height: 1.68; color: rgba(198, 216, 242, 0.64); max-width: 600px; margin: 13px auto 0; }
-.svc-note { font-size: 0.84rem; line-height: 1.7; color: rgba(150, 175, 215, 0.58); max-width: 860px; margin: 24px auto 0; text-align: center; }
+.svc-lead { font-size: clamp(0.98rem, 1.15vw, 1.12rem); line-height: 1.65; color: rgba(198, 216, 242, 0.66); max-width: 620px; margin: 14px auto 0; }
+.svc-note { font-size: 0.84rem; line-height: 1.7; color: rgba(150, 175, 215, 0.58); max-width: 860px; margin: 26px auto 0; text-align: center; }
+
+/* ── Premium icon tile — shared by pricing / service / guidance cards, matched
+      to the home Fixed-Price card icon (glowing, hover-reactive). ──────────── */
+.svc-price-ic,
+.svc-service-ic,
+.svc-guide-ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  color: #7cc0ff;
+  background: linear-gradient(150deg, rgba(58, 134, 252, 0.32) 0%, rgba(26, 70, 168, 0.15) 100%);
+  border: 1px solid rgba(96, 166, 252, 0.48);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 0 18px rgba(46, 124, 244, 0.20);
+  transition: background 0.28s, border-color 0.28s, color 0.28s, box-shadow 0.28s;
+}
+.svc-price-ic svg,
+.svc-service-ic svg,
+.svc-guide-ic svg { width: 23px; height: 23px; }
+.svc-price-card:hover .svc-price-ic,
+.svc-service-card:hover .svc-service-ic,
+.svc-guide-card:hover .svc-guide-ic {
+  background: linear-gradient(150deg, rgba(66, 146, 255, 0.46) 0%, rgba(30, 80, 184, 0.22) 100%);
+  border-color: rgba(120, 186, 255, 0.7);
+  color: #a6d4ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 0 26px rgba(58, 138, 252, 0.4);
+}
+
+/* Shared card hover: glow + brighten the glass edge ring. No transform here —
+   the TiltCard owns transform for the live 3-D tilt, so a CSS lift would be
+   overridden. The glow is the same premium hover cue the home cards use. */
+.svc-price-card,
+.svc-service-card,
+.svc-guide-card { transition: box-shadow 0.28s; }
+.svc-price-card:hover,
+.svc-service-card:hover,
+.svc-guide-card:hover {
+  box-shadow:
+    0 0 0 1px rgba(110, 174, 255, 0.30),
+    0 0 32px rgba(58, 132, 246, 0.22),
+    0 26px 70px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.svc-price-card:hover::before,
+.svc-service-card:hover::before,
+.svc-guide-card:hover::before { opacity: 0.62; }
 
 /* ── Pricing cards ────────────────────────────────────────────────────────── */
 .svc-price-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: clamp(15px, 1.4vw, 22px);
+  align-items: stretch;
 }
 @media (max-width: 1000px) { .svc-price-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .svc-price-grid { grid-template-columns: 1fr; } }
-.svc-price-card { display: flex; flex-direction: column; gap: 10px; padding: 26px 22px 24px; height: 100%; }
-.svc-price-ic {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  color: #8fcaff;
-  background: linear-gradient(150deg, rgba(58, 134, 252, 0.22), rgba(26, 70, 168, 0.1));
-  border: 1px solid rgba(96, 166, 252, 0.3);
-  margin-bottom: 2px;
-}
-.svc-price-ic svg { width: 20px; height: 20px; }
-.svc-price-name { font-size: 1rem; font-weight: 720; letter-spacing: -0.018em; color: #eef5fd; }
-.svc-price-value { display: flex; align-items: baseline; gap: 6px; }
+.svc-price-link { display: block; height: 100%; text-decoration: none; }
+.svc-price-card { display: flex; flex-direction: column; padding: 28px 24px 24px; height: 100%; }
+.svc-price-ic { margin-bottom: 18px; }
+.svc-price-name { font-size: 1.06rem; font-weight: 740; letter-spacing: -0.02em; color: #eef5fd; margin-bottom: 16px; min-height: 2.4em; }
 .svc-price-amount {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  font-size: 1.55rem;
+  font-size: 1.7rem;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.032em;
+  line-height: 1.1;
   color: #ffffff;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(120, 170, 230, 0.12);
 }
-.svc-price-monthly { font-size: 0.82rem; font-weight: 620; color: #5fb0f8; }
-.svc-price-features { list-style: none; margin: 6px 0 0; padding: 12px 0 0; border-top: 1px solid rgba(120, 180, 255, 0.1); display: flex; flex-direction: column; gap: 7px; flex-grow: 1; }
-.svc-price-features li { font-size: 0.84rem; line-height: 1.45; color: rgba(186, 206, 234, 0.7); padding-left: 15px; position: relative; }
-.svc-price-features li::before { content: '–'; position: absolute; left: 0; color: rgba(88, 182, 255, 0.5); }
-.svc-price-cta, .svc-price-link { font-size: 0.82rem; font-weight: 600; color: rgba(88, 182, 255, 0.7); margin-top: 6px; text-decoration: none; }
-.svc-price-card:hover .svc-price-cta, .svc-price-card:hover .svc-price-link { color: #7cc6ff; }
-
-/* ── Service cards ────────────────────────────────────────────────────────── */
-.svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-@media (max-width: 1000px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } }
-.svc-service-card { display: block; padding: 24px 22px 22px; height: 100%; text-decoration: none; }
-.svc-service-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.svc-service-ic {
-  display: inline-flex;
+.svc-price-value { color: #FAFCFF; }
+.svc-price-monthly { font-size: 0.84rem; font-weight: 680; color: #3296ff; letter-spacing: -0.005em; }
+.svc-price-features {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(120, 170, 230, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  flex-grow: 1;
+}
+.svc-price-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: rgba(196, 214, 240, 0.76);
+}
+.svc-price-features li svg { color: #2e9ff0; flex-shrink: 0; margin-top: 2px; }
+.svc-price-cta {
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  color: #8fcaff;
-  background: linear-gradient(150deg, rgba(58, 134, 252, 0.2), rgba(26, 70, 168, 0.08));
-  border: 1px solid rgba(96, 166, 252, 0.26);
-  flex-shrink: 0;
+  gap: 8px;
+  margin-top: 22px;
+  padding: 13px 18px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #2e8cff 0%, #1a77f2 100%);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 680;
+  letter-spacing: 0.004em;
+  border: 1px solid rgba(122, 184, 255, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 14px rgba(8, 46, 140, 0.4);
+  transition: background 0.25s, box-shadow 0.25s;
 }
-.svc-service-ic svg { width: 19px; height: 19px; }
+.svc-price-card:hover .svc-price-cta {
+  background: linear-gradient(180deg, #3d97ff 0%, #2483ff 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 6px 18px rgba(10, 54, 158, 0.5);
+}
+.svc-price-cta svg { transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.svc-price-card:hover .svc-price-cta svg { transform: translateX(4px); }
+
+/* ── Service cards ────────────────────────────────────────────────────────── */
+.svc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(14px, 1.3vw, 20px); align-items: stretch; }
+@media (max-width: 1000px) { .svc-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .svc-grid { grid-template-columns: 1fr; } }
+.svc-service-link { display: block; height: 100%; text-decoration: none; }
+.svc-service-card { display: flex; flex-direction: column; padding: 26px 24px 24px; height: 100%; }
+.svc-service-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .svc-service-badge {
   font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(88, 182, 255, 0.78);
+  color: rgba(124, 198, 255, 0.9);
   background: rgba(47, 148, 255, 0.1);
-  border: 1px solid rgba(47, 148, 255, 0.2);
-  border-radius: 20px;
-  padding: 3px 10px;
+  border: 1px solid rgba(47, 148, 255, 0.24);
+  border-radius: 999px;
+  padding: 4px 11px;
 }
-.svc-service-name { font-size: 1.02rem; font-weight: 720; letter-spacing: -0.018em; color: #eef5fd; margin: 0 0 7px; }
-.svc-service-tagline { font-size: 0.86rem; line-height: 1.55; color: rgba(180, 202, 232, 0.62); margin: 0 0 12px; }
-.svc-service-cta, .svc-service-link { font-size: 0.82rem; font-weight: 600; color: rgba(88, 182, 255, 0.7); text-decoration: none; }
-.svc-service-card:hover .svc-service-cta, .svc-service-card:hover .svc-service-link { color: #7cc6ff; }
-
-/* ── Guidance cards ───────────────────────────────────────────────────────── */
-.svc-guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-.svc-guide-card { padding: 24px 22px 22px; height: 100%; }
-.svc-guide-ic {
+.svc-service-name { font-size: 1.06rem; font-weight: 740; letter-spacing: -0.02em; color: #eef5fd; margin: 0 0 9px; }
+.svc-service-tagline { font-size: 0.88rem; line-height: 1.58; color: rgba(184, 206, 236, 0.66); margin: 0 0 18px; flex-grow: 1; }
+.svc-service-cta {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  color: #8fcaff;
-  background: linear-gradient(150deg, rgba(58, 134, 252, 0.2), rgba(26, 70, 168, 0.08));
-  border: 1px solid rgba(96, 166, 252, 0.26);
-  margin-bottom: 14px;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 660;
+  color: #4ab0ff;
+  transition: color 0.25s;
 }
-.svc-guide-ic svg { width: 19px; height: 19px; }
-.svc-guide-title { font-size: 1.02rem; font-weight: 720; color: #f1f6fd; margin: 0 0 8px; }
-.svc-guide-text { font-size: 0.9rem; line-height: 1.62; color: rgba(186, 206, 234, 0.66); margin: 0 0 12px; }
-.svc-guide-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.86rem; font-weight: 640; color: #4ab0ff; text-decoration: none; }
-.svc-guide-link:hover { color: #7cc6ff; }
+.svc-service-cta svg { transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.svc-service-card:hover .svc-service-cta { color: #7cc6ff; }
+.svc-service-card:hover .svc-service-cta svg { transform: translateX(4px); }
+
+/* ── Guidance cards ───────────────────────────────────────────────────────── */
+.svc-guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: clamp(15px, 1.4vw, 20px); }
+.svc-guide-card { display: flex; flex-direction: column; padding: 28px 26px 24px; height: 100%; }
+.svc-guide-ic { margin-bottom: 18px; }
+.svc-guide-title { font-size: 1.08rem; font-weight: 740; letter-spacing: -0.018em; color: #f1f6fd; margin: 0 0 9px; }
+.svc-guide-text { font-size: 0.91rem; line-height: 1.62; color: rgba(186, 206, 234, 0.66); margin: 0 0 18px; flex-grow: 1; }
+.svc-guide-link { display: inline-flex; align-items: center; gap: 7px; font-size: 0.88rem; font-weight: 660; color: #4ab0ff; text-decoration: none; }
+.svc-guide-link svg { transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.svc-guide-card:hover .svc-guide-link { color: #7cc6ff; }
+.svc-guide-card:hover .svc-guide-link svg { transform: translateX(4px); }
 
 /* ── CTA ──────────────────────────────────────────────────────────────────── */
 .svc-cta {
-  max-width: 900px;
+  max-width: 940px;
   margin: 0 auto;
-  padding: clamp(28px, 4vh, 44px) clamp(26px, 4vw, 52px);
+  padding: clamp(30px, 4vh, 46px) clamp(28px, 4vw, 54px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 30px;
   flex-wrap: wrap;
 }
-.svc-cta span { font-size: 1rem; color: rgba(206, 222, 246, 0.82); max-width: 540px; }
+.svc-cta-text { flex: 1; min-width: 260px; }
+.svc-cta-text .svc-eyebrow { text-align: left; margin-bottom: 0.6rem; }
+.svc-cta h2 {
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: clamp(1.4rem, 2.2vw, 1.95rem);
+  font-weight: 790;
+  letter-spacing: -0.032em;
+  line-height: 1.16;
+  padding-bottom: 0.04em;
+  color: #f3f8fd;
+  margin: 0 0 0.5rem;
+}
+.svc-cta p { font-size: 0.98rem; line-height: 1.6; color: rgba(200, 218, 244, 0.7); max-width: 540px; margin: 0; }
 .svc-cta-actions { display: flex; gap: 12px; flex-shrink: 0; }
 
-@media (max-width: 600px) {
+@media (max-width: 680px) {
   .svc-cta { flex-direction: column; text-align: center; }
+  .svc-cta-text { min-width: 0; }
+  .svc-cta-text .svc-eyebrow { text-align: center; }
+  .svc-cta p { margin-left: auto; margin-right: auto; }
+  .svc-cta-actions { width: 100%; }
+  .svc-cta-actions .pg-btn-primary { width: 100%; justify-content: center; }
 }

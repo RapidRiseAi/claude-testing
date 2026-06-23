@@ -204,7 +204,7 @@ export default function ServicesPage() {
         {/* Fixed price pricing */}
         <section className="svc-section" id="pricing">
           <Reveal className="svc-head" variant="up">
-            <span className="kicker">Fixed Price Products</span>
+            <p className="svc-eyebrow">Fixed Price Products</p>
             <h2 className="svc-h2">Published prices, ready to deploy</h2>
             <p className="svc-lead">
               Four core products with starting prices in ZAR and a clear monthly,
@@ -228,7 +228,7 @@ export default function ServicesPage() {
         {/* Custom services */}
         <section className="svc-section">
           <Reveal className="svc-head" variant="up">
-            <span className="kicker">Bespoke Builds</span>
+            <p className="svc-eyebrow">Bespoke Builds</p>
             <h2 className="svc-h2">Custom Services</h2>
             <p className="svc-lead">
               When the problem is bigger than a template. Scoped after a discovery
@@ -255,7 +255,7 @@ export default function ServicesPage() {
         {/* Guidance */}
         <section className="svc-section">
           <Reveal className="svc-head" variant="up">
-            <span className="kicker">Start Here</span>
+            <p className="svc-eyebrow">Start Here</p>
             <h2 className="svc-h2">Which service do you need first?</h2>
             <p className="svc-lead">
               Match the bottleneck you feel today to the right first step, then
@@ -280,12 +280,14 @@ export default function ServicesPage() {
         <section className="svc-section">
           <Reveal variant="scale">
             <div className="svc-cta glass-card glass-card--bright">
-              <span className="kicker">Not Sure Yet?</span>
-              <h2>Tell us about your business</h2>
-              <p>
-                Not sure where to start? Tell us about your business and we will
-                recommend the right first step.
-              </p>
+              <div className="svc-cta-text">
+                <p className="svc-eyebrow">Not Sure Yet?</p>
+                <h2>Tell us about your business</h2>
+                <p>
+                  Not sure where to start? Tell us about your business and we
+                  will recommend the right first step.
+                </p>
+              </div>
               <div className="svc-cta-actions">
                 <Link className="pg-btn-primary" to="/contact">Start Your Project <ArrowIcon /></Link>
               </div>

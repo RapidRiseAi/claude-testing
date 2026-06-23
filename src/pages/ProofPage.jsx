@@ -80,7 +80,7 @@ export default function ProofPage() {
           <p className="pg-eyebrow">Proof &amp; Builds</p>
           <h1 className="pg-h1">Proof of what we can build.</h1>
           <p className="pg-sub">
-            Live client websites and fully functional showcase systems —
+            Live client websites and fully functional showcase systems:
             websites, portals, dashboards, AI assistants, automations, and
             connected ecosystems that show how Rapid Rise AI works in practice.
           </p>
@@ -101,7 +101,7 @@ export default function ProofPage() {
             <span className="kicker">The Gallery</span>
             <h2 className="prf-h2">Featured work</h2>
             <p className="prf-lead">
-              Live client sites and working showcases of the systems we build —
+              Live client sites and working showcases of the systems we build,
               from a first booking-ready website to a fully connected operations
               stack. Click any card to browse its screens.
             </p>

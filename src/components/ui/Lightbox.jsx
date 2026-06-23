@@ -42,7 +42,7 @@ export default function Lightbox({ images = [], start = 0, title, onClose }) {
             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 5l-7 7 7 7" /></svg>
           </button>
         )}
-        <img className="lb-img" src={images[i]} alt={`${title || 'Screen'} — ${i + 1} of ${n}`} />
+        <img className="lb-img" src={images[i]} alt={`${title || 'Screen'}, ${i + 1} of ${n}`} />
         {n > 1 && (
           <button className="lb-nav lb-next" type="button" aria-label="Next image" onClick={() => go(1)}>
             <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>

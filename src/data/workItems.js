@@ -34,7 +34,7 @@
 export const WORK_SECTION_COPY = {
   eyebrow: 'Proof & Builds',
   title: 'Our Work',
-  sub: 'Live client websites and working showcases — from booking-ready starter sites to connected dashboards, automations, and AI tools. Click any preview to browse its screens.',
+  sub: 'Live client websites and working showcases, from booking-ready starter sites to connected dashboards, automations, and AI tools. Click any preview to browse its screens.',
 }
 
 // Build a gallery path list for a build: the cover slide first, then each UI
@@ -73,7 +73,7 @@ export const WORK_ITEMS = [
     mediaSrc: '/work/rapid-rise-website/cover.png',
     gallery: shots('rapid-rise-website', 4),
     mockKind: 'website',
-    mediaAlt: 'Rapid Rise AI website — interactive 3D homepage, services, pricing, and work',
+    mediaAlt: 'Rapid Rise AI website: interactive 3D homepage, services, pricing, and work',
   },
   {
     id: 'onyx-details',
@@ -84,7 +84,7 @@ export const WORK_ITEMS = [
     shortDescription:
       'A live starter website for a mobile car-detailing business, with online booking and lead capture built in.',
     previewDescription:
-      'A clean, fast starter site for Onyx Details: service and package listings, an online booking flow, and lead capture — everything a new service business needs to start taking jobs online.',
+      'A clean, fast starter site for Onyx Details: service and package listings, an online booking flow, and lead capture. Everything a new service business needs to start taking jobs online.',
     highlights: [
       'Service and package listing',
       'Online booking flow',
@@ -109,7 +109,7 @@ export const WORK_ITEMS = [
     shortDescription:
       'A live starter website for a 24/7 gym and wellness studio in Sabie, with memberships and lead capture.',
     previewDescription:
-      'A starter site for Commando: membership tiers, wellness-studio booking prompts, FAQs, location, and lead capture — a complete online presence for an independent gym at an entry-level price.',
+      'A starter site for Commando: membership tiers, wellness-studio booking prompts, FAQs, location, and lead capture. A complete online presence for an independent gym at an entry-level price.',
     highlights: [
       'Membership tiers',
       'Wellness studio bookings',
