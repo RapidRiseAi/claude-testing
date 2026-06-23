@@ -1955,20 +1955,18 @@ h2 {
   .expertise-section--mobile .expertise-sub { font-size: 0.95rem; max-width: 56ch; }
 
   /* Compact expandable accordion — thin rows that tap to expand. Cards are
-     translucent so the 3-D globe backdrop reads through the gaps between them. */
+     SOLID cards — the globe reads in the gaps between/around them, never through. */
   .ec-accordion { display: flex; flex-direction: column; gap: 9px; padding: 0 6vw; }
   .ec-acc {
     border-radius: 15px;
-    border: 1px solid rgba(108, 158, 235, 0.16);
-    background: linear-gradient(165deg, rgba(13, 24, 47, 0.52) 0%, rgba(7, 14, 30, 0.64) 100%);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(108, 158, 235, 0.18);
+    background: linear-gradient(165deg, #121f37 0%, #0a1322 100%);
     overflow: hidden;
     transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
   }
   .ec-acc--open {
     border-color: rgba(92, 162, 255, 0.42);
-    background: linear-gradient(165deg, rgba(18, 34, 66, 0.66) 0%, rgba(9, 17, 36, 0.74) 100%);
+    background: linear-gradient(165deg, #16294c 0%, #0b1428 100%);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   .ec-acc-head {
@@ -2502,31 +2500,34 @@ h2 {
   .fp-grid::-webkit-scrollbar { display: none; }
   .fp-card {
     scroll-snap-align: start;
-    flex: 0 0 53%;
-    max-width: 205px;
-    padding: 15px 14px;
-    border-radius: 16px;
-    /* translucent so the wave reads through/behind the row */
-    background: linear-gradient(165deg, rgba(16, 28, 52, 0.58) 0%, rgba(9, 16, 33, 0.7) 100%);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    flex: 0 0 50%;
+    max-width: 188px;
+    padding: 14px 13px;
+    border-radius: 15px;
+    /* SOLID — the wave shows in the open zone around the row, not through cards */
+    background: linear-gradient(165deg, #131f39 0%, #0a1426 100%);
   }
-  .fp-card::after { opacity: 0.25; }
-  .fp-card-icon { width: 40px; height: 40px; }
-  .fp-card-icon svg { width: 22px; height: 22px; }
-  .fp-card-title { font-size: 0.92rem; }
-  .fp-card-price { font-size: clamp(1.4rem, 5.5vw, 1.75rem); }
-  .fp-card-btn { padding: 9px 12px; font-size: 0.8rem; }
+  .fp-card::after { opacity: 0.4; }
+  /* tighten the card vertically: smaller gaps, fewer dividers shown */
+  .fp-card-icon { width: 38px; height: 38px; margin-bottom: 10px; }
+  .fp-card-icon svg { width: 21px; height: 21px; }
+  .fp-card-title { font-size: 0.9rem; margin-bottom: 8px; }
+  .fp-card-divider { margin: 9px 0; }
+  .fp-card-startlabel { font-size: 0.6rem; margin-bottom: 1px; }
+  .fp-card-price { font-size: clamp(1.35rem, 5.5vw, 1.7rem); }
+  .fp-card-monthly-row { margin-top: 8px; }
+  /* the section already says "Payment plans available on all services" — drop the
+     redundant per-card badge to shorten each card */
+  .fp-card-badge { display: none; }
+  .fp-card-btn { padding: 9px 12px; font-size: 0.8rem; margin-top: 12px; }
 
   .fp-custom {
     flex-direction: column;
     text-align: center;
-    gap: 14px;
-    padding: 18px;
+    gap: 13px;
+    padding: 17px;
     margin: auto 6vw 0;   /* pushed to the bottom — the gap above is the wave zone */
-    background: linear-gradient(165deg, rgba(16, 28, 52, 0.5) 0%, rgba(9, 16, 33, 0.6) 100%);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    background: linear-gradient(165deg, #131f39 0%, #0a1426 100%);
   }
   .fp-custom-text { text-align: center; }
   .fp-custom-btn { width: 100%; justify-content: center; }
@@ -3033,8 +3034,10 @@ h2 {
   .ow-mcard .ow-preview-desc { font-size: 0.79rem; line-height: 1.5; margin-bottom: 10px; }
   .ow-mcard .ow-preview-tags { margin-bottom: 10px; }
   .ow-mcard .ow-tag { font-size: 0.64rem; padding: 3px 7px; }
-  .ow-mcard .ow-highlights { grid-template-columns: 1fr; gap: 5px; margin-bottom: 12px; }
-  .ow-mcard .ow-highlights li { font-size: 0.74rem; }
+  .ow-mcard .ow-highlights { grid-template-columns: 1fr 1fr; gap: 5px 10px; margin-bottom: 12px; }
+  .ow-mcard .ow-highlights li { font-size: 0.72rem; }
+  /* drop the bulky "Starter tier" disclaimer on mobile so the cards stay short */
+  .ow-mcard .ow-note { display: none; }
   .ow-mcard .ow-preview-btn { width: 100%; padding: 10px 16px; font-size: 0.82rem; }
 }
 

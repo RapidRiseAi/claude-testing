@@ -153,9 +153,26 @@
 .sd2-final-sub { font-size: 1rem; line-height: 1.65; color: rgba(196, 216, 242, 0.72); max-width: 520px; margin: 0 0 24px; }
 
 @media (max-width: 760px) {
-  .sd2-chip-grid { grid-template-columns: 1fr; }
+  .sd2-chip-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .sd2-addons { grid-template-columns: 1fr; }
   .sd2-deliverables { grid-template-columns: 1fr; }
+
+  /* Phones: package tiers become a compact side-swipe row (same strategy as the
+     home/services pages) rather than a long stack of tall cards. */
+  .sd2-pkg-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .sd2-pkg-grid::-webkit-scrollbar { display: none; }
+  .sd2-pkg-grid > * { flex: 0 0 80%; max-width: 300px; scroll-snap-align: start; }
+  .sd2-pkg { padding: 20px 17px 18px; }
 }
 
 /* ── 3D object — fills the hero's right column, vertically centered ────────── */

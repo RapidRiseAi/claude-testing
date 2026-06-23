@@ -248,3 +248,43 @@
   .svc-cta-actions { width: 100%; }
   .svc-cta-actions .pg-btn-primary { width: 100%; justify-content: center; }
 }
+
+/* ── Mobile (phones): card sets become compact side-swipe rows — same strategy
+   as the home page, so they read as browsable cards instead of a tall stack. ── */
+@media (max-width: 760px) {
+  .svc-section { padding: clamp(40px, 6vh, 64px) 6vw; }
+  .svc-price-grid, .svc-grid, .svc-guide-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 6vw;
+    margin: 0 -6vw;
+    padding: 4px 6vw 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .svc-price-grid::-webkit-scrollbar,
+  .svc-grid::-webkit-scrollbar,
+  .svc-guide-grid::-webkit-scrollbar { display: none; }
+  .svc-price-grid > *, .svc-guide-grid > * { flex: 0 0 74%; max-width: 290px; scroll-snap-align: start; }
+  .svc-grid > * { flex: 0 0 56%; max-width: 215px; scroll-snap-align: start; }
+
+  .svc-price-card { padding: 18px 16px; }
+  .svc-price-ic { margin-bottom: 12px; }
+  .svc-price-name { min-height: 0; margin-bottom: 12px; font-size: 1rem; }
+  .svc-price-amount { font-size: 1.45rem; padding-top: 12px; }
+  .svc-price-features { margin-top: 12px; padding-top: 12px; gap: 7px; }
+  .svc-price-features li { font-size: 0.8rem; }
+  .svc-price-cta { margin-top: 16px; padding: 11px 16px; font-size: 0.85rem; }
+
+  .svc-service-card { padding: 18px 16px; }
+  .svc-service-top { margin-bottom: 12px; }
+
+  .svc-guide-card { padding: 18px 16px; }
+  .svc-guide-ic { margin-bottom: 12px; }
+  .svc-guide-title { font-size: 1rem; }
+  .svc-guide-text { font-size: 0.84rem; margin-bottom: 14px; }
+}

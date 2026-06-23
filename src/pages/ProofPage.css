@@ -262,7 +262,25 @@
 
 /* ── Responsive ───────────────────────────────────────────────────────────── */
 @media (max-width: 760px) {
-  .prf-grid { grid-template-columns: 1fr; }
-  .prf-cat-grid { grid-template-columns: 1fr; }
   .prf-checklist { grid-template-columns: 1fr; }
+
+  /* Phones: featured work + categories become compact side-swipe rows (same
+     strategy as the home page) instead of a tall full-width stack. */
+  .prf-grid, .prf-cat-grid {
+    display: flex;
+    grid-template-columns: none;
+    gap: 12px;
+    max-width: none;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 10px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .prf-grid::-webkit-scrollbar, .prf-cat-grid::-webkit-scrollbar { display: none; }
+  .prf-grid > * { flex: 0 0 80%; max-width: 300px; scroll-snap-align: start; }
+  .prf-cat-grid > * { flex: 0 0 68%; max-width: 250px; scroll-snap-align: start; }
+  /* drop the bulky "Starter tier" disclaimer so the work cards stay short */
+  .prf-note { display: none; }
 }
