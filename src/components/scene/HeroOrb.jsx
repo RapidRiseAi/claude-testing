@@ -1419,6 +1419,10 @@ const WAVE_ZN    = 2.0      // near row z (toward camera, clipped just below the
 const WAVE_ZF    = -2.5     // far row z — close so the BACK projects very low on screen
 const WAVE_LIFT  = 0.9      // far L/R edges rise into the empty side gutters
 const WAVE_TILT  = 0.0      // flat (no tilt) so the back edge stays low, like the mockup
+// MOBILE: the wave is a full-section backdrop, not a bottom band — tilt the plane
+// UP toward the camera so its far rows rise behind the pricing cards and the wave
+// reads through the whole section (visible in the gaps around the cards).
+const MWAVE_TILT = -0.8
 const WAVE_CX    = 0.0      // group recentres horizontally
 const WAVE_CY    = -2.6     // group drops low so the wave sits in the bottom band, below cards
 const WAVE_SCALE = 1.0      // group scales up from the carousel-end 0.55
@@ -2937,10 +2941,10 @@ export default function HeroOrb({ mode = 'home' }) {
       //  3. PRICING+ — as the pricing section scrolls in (mwave 0→1) the globe
       //     morphs into the wave and drops to the bottom band, behind the cards.
       const MEXP_Y  = 0.35, MEXP_S  = 0.66   // expertise: big centred backdrop
-      // Wave end-state: the same wave geometry as desktop but RAISED into the
-      // tall portrait viewport (desktop's -2.6 sits off the bottom here) so it
-      // fills the lower half behind the translucent pricing cards.
-      const MWAVE_Y = -1.95, MWAVE_S = 1.08
+      // Wave end-state: tilted up (MWAVE_TILT) and centred so the wave surface
+      // fills the WHOLE pricing section behind the cards — visible in the gaps all
+      // around them, not just a band at the bottom.
+      const MWAVE_Y = -0.5, MWAVE_S = 1.2
       const mw = smoothstep(scrollState.mwave || 0)
       const gy = MHERO_Y + (MEXP_Y - MHERO_Y) * p
       const gs = MHERO_S + (MEXP_S - MHERO_S) * p
@@ -2998,7 +3002,7 @@ export default function HeroOrb({ mode = 'home' }) {
       const k = Math.min(1, delta * 2.5)
       if ((scrollState.mwave || 0) > 0.45) {
         enteredOsc.current = false
-        rot.x += (WAVE_TILT - rot.x) * k
+        rot.x += (MWAVE_TILT - rot.x) * k
         rot.y += (0 - rot.y) * k
         rot.z += (0 - rot.z) * k
       } else {
