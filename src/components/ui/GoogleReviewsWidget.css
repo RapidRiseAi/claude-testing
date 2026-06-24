@@ -30,6 +30,15 @@
 .grw-dot { -webkit-tap-highlight-color: transparent; }
 .grw-mini:focus { outline: none; }   /* keyboard ring still shows via :focus-visible above */
 
+/* Grow from the anchored corner (origin set in CSS so it can flip per breakpoint) */
+.grw-mini, .grw-card { transform-origin: bottom left; }
+
+/* Mobile: centre the pill/card so it sits on the lip of the hero trust card */
+@media (max-width: 1100px) {
+  .grw { left: 50%; right: auto; transform: translateX(-50%); justify-content: center; bottom: clamp(16px, 2.4vw, 22px); }
+  .grw-mini, .grw-card { transform-origin: bottom center; }
+}
+
 /* ── Collapsed pill (the minimized state) ──────────────────────────────────── */
 .grw-mini {
   pointer-events: auto;

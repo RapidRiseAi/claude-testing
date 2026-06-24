@@ -108,7 +108,6 @@ export default function GoogleReviewsWidget() {
             className="grw-mini"
             onClick={expand}
             aria-label={`Open ${businessName} Google reviews`}
-            style={{ transformOrigin: 'bottom left' }}
             initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.7 }}
@@ -127,7 +126,6 @@ export default function GoogleReviewsWidget() {
             key="full"
             className="grw-card glass-card glass-card--bright"
             aria-label={`${businessName} Google reviews`}
-            style={{ transformOrigin: 'bottom left' }}
             initial={{ opacity: 0, scale: 0.72 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.72 }}
