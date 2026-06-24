@@ -99,7 +99,7 @@ export default function GoogleReviewsWidget() {
 
   return (
     <div className="grw">
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout" initial={false}>
         {minimized ? (
           // ── Collapsed pill — one click brings the full card back ──────────
           <motion.button
@@ -108,11 +108,11 @@ export default function GoogleReviewsWidget() {
             className="grw-mini"
             onClick={expand}
             aria-label={`Open ${businessName} Google reviews`}
-            style={{ transformOrigin: 'bottom right' }}
-            initial={{ opacity: 0, scale: 0.82 }}
+            style={{ transformOrigin: 'bottom left' }}
+            initial={{ opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.82 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, scale: 0.7 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
           >
             <GoogleG size={18} />
             <span className="grw-mini-score">{Number(rating).toFixed(1)}</span>
@@ -127,11 +127,11 @@ export default function GoogleReviewsWidget() {
             key="full"
             className="grw-card glass-card glass-card--bright"
             aria-label={`${businessName} Google reviews`}
-            style={{ overflow: 'hidden', transformOrigin: 'bottom right' }}
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ height: { duration: 0.42, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.28, ease: 'easeOut' } }}
+            style={{ transformOrigin: 'bottom left' }}
+            initial={{ opacity: 0, scale: 0.72 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.72 }}
+            transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
           >
             <button type="button" className="grw-close" onClick={minimize} aria-label="Minimize reviews widget">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

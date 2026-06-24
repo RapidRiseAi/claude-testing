@@ -20,6 +20,16 @@
   padding: 16px 18px 14px;
 }
 
+/* Kill the grey/blue mobile tap-flash on every interactive part of the widget —
+   that full-button highlight box on tap was the "container gets highlighted". */
+.grw-mini,
+.grw-card,
+.grw-close,
+.grw-head,
+.grw-more,
+.grw-dot { -webkit-tap-highlight-color: transparent; }
+.grw-mini:focus { outline: none; }   /* keyboard ring still shows via :focus-visible above */
+
 /* ── Collapsed pill (the minimized state) ──────────────────────────────────── */
 .grw-mini {
   pointer-events: auto;
