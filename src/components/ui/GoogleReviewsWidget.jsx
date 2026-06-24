@@ -127,11 +127,11 @@ export default function GoogleReviewsWidget() {
             key="full"
             className="grw-card glass-card glass-card--bright"
             aria-label={`${businessName} Google reviews`}
-            style={{ transformOrigin: 'bottom right' }}
-            initial={{ opacity: 0, scale: 0.92, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 10 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            style={{ overflow: 'hidden', transformOrigin: 'bottom right' }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ height: { duration: 0.42, ease: [0.22, 1, 0.36, 1] }, opacity: { duration: 0.28, ease: 'easeOut' } }}
           >
             <button type="button" className="grw-close" onClick={minimize} aria-label="Minimize reviews widget">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

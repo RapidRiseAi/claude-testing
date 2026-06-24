@@ -5949,6 +5949,8 @@ body.rr-transitioning .sd-hero-visual::before { opacity: 0; transition: none; }
   }
   .service-detail-hero.sd-hero .service-detail-h1 { font-size: clamp(2.5rem, 9vw, 3.6rem); max-width: 18ch; }
   .sd-hero-copy { max-width: 100%; }
+  /* object ON TOP, then the headline + copy below it (matches the brand pages) */
+  .sd-hero-visual { order: -1; min-height: 0; height: min(300px, 66vw); margin-bottom: 6px; }
 }
 
 /* ── Editorial section heads — heading, then subheading stacked below it ── */

@@ -17,8 +17,9 @@ const END_X = -3.3
 const END_Y = -0.42       // card-mode group centre — projects to ~60% viewport height,
                           // the measured vertical centre of the carousel card column
 const END_SCALE = 0.715   // carousel/card-mode group scale (+30% — Section-2 object size)
-// Mobile hero resting spot — small globe in the top band, clear of the headline.
-const MHERO_Y = 2.05
+// Mobile hero resting spot — small globe in the top band, BELOW the navbar and
+// clear of the headline.
+const MHERO_Y = 1.62
 const MHERO_S = 0.35
 const HOME_VIS_R = 1.80   // representative bounding radius (local units) of the home
                           // object — tuned to the hero globe (≈R) the page lands on,
@@ -1643,17 +1644,29 @@ function InteractiveMiniOrbs({ groupRef }) {
 
   useEffect(() => {
     const canvas = gl.domElement
-    const onMove = (e) => {
+    const setFromXY = (clientX, clientY) => {
       const rect = canvas.getBoundingClientRect()
-      ndc.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1
-      ndc.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1
+      ndc.x =  ((clientX - rect.left) / rect.width)  * 2 - 1
+      ndc.y = -((clientY - rect.top)  / rect.height) * 2 + 1
     }
+    const onMove = (e) => setFromXY(e.clientX, e.clientY)
     const onLeave = () => ndc.set(2, 2)
+    // Touch: pointermove is cancelled the moment a swipe becomes a scroll, so the
+    // hover glow would only flash on a tap. touchmove keeps firing through the
+    // drag, so the glow follows the finger as it sweeps across the object.
+    const onTouchMove = (e) => { const t = e.touches && e.touches[0]; if (t) setFromXY(t.clientX, t.clientY) }
+    const onTouchEnd = () => ndc.set(2, 2)
     window.addEventListener('pointermove', onMove)
     window.addEventListener('pointerleave', onLeave)
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true })
     return () => {
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerleave', onLeave)
+      window.removeEventListener('touchmove', onTouchMove)
+      window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('touchcancel', onTouchEnd)
     }
   }, [gl, ndc])
 
@@ -2627,7 +2640,10 @@ export default function HeroOrb({ mode = 'home' }) {
       // frame and nothing can linger into Section 2. The scroll snap is eased,
       // which keeps the ramp smooth on wheel/key steps; it completes exactly as
       // a down-snap lands and starts shrinking immediately on the way up.
-      const atmosOp = Math.min(1, Math.max(0, (s3 - 0.15) / 0.85))
+      // The atmosphere is a FIXED full-viewport glow whose gradient ends ~mid-
+      // screen — on mobile that static edge reads as a faint horizontal "line"
+      // behind the pricing area, so drop it there (the wave is bright enough).
+      const atmosOp = narrowRef.current ? 0 : Math.min(1, Math.max(0, (s3 - 0.15) / 0.85))
       if (atmosOp !== atmosRef.current) {
         atmosRef.current = atmosOp
         const el = document.getElementById('scene-atmosphere')
@@ -2810,7 +2826,11 @@ export default function HeroOrb({ mode = 'home' }) {
         const worldR = (0.84 * Math.min(slot.w, slot.h) / 2) * halfH / (ch / 2)
         dScale = worldR / cardR
       } else if (tsx.toKind === 'home') {
-        dx = ORB_X; dy = ORB_Y; dScale = 1.0
+        // Reassemble straight to the layout's resting hero spot so the object
+        // doesn't land at the desktop (right) position and then slide to the
+        // mobile (top-centre) one — that slide was the visible drift.
+        if (narrowRef.current) { dx = 0; dy = MHERO_Y; dScale = MHERO_S }
+        else { dx = ORB_X; dy = ORB_Y; dScale = 1.0 }
       }
       const re = tsx.reassemble
       let px, py, ps
