@@ -8,6 +8,7 @@ import Reveal from '../components/ui/Reveal'
 import Parallax from '../components/ui/Parallax'
 import usePageMeta from '../hooks/usePageMeta'
 import ObjectSlot from '../components/scene/ObjectSlot'
+import SwipeHint from '../components/ui/SwipeHint'
 import { WORK_ITEMS } from '../data/workItems'
 import './ProofPage.css'
 
@@ -160,6 +161,7 @@ export default function ProofPage() {
               </Reveal>
             ))}
           </div>
+          <SwipeHint />
         </section>
 
         {/* Categories */}
@@ -184,6 +186,7 @@ export default function ProofPage() {
               </Reveal>
             ))}
           </div>
+          <SwipeHint />
         </section>
 
         {/* Quality standards */}

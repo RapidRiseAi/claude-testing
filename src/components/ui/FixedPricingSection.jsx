@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import SwipeHint from './SwipeHint'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const MonitorCodeIcon = () => (
@@ -174,6 +175,7 @@ export default function FixedPricingSection() {
             <ProductCard key={product.title} product={product} index={i} />
           ))}
         </div>
+        <SwipeHint />
 
         {/* Custom-build CTA */}
         <motion.div

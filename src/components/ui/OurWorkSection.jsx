@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { WORK_ITEMS, WORK_SECTION_COPY } from '../../data/workItems'
 import { isDesktopLayout } from '../../utils/scrollLayout'
+import SwipeHint from './SwipeHint'
 import ConceptPreview from './ConceptPreview'
 import Lightbox from './Lightbox'
 
@@ -267,6 +268,7 @@ export default function OurWorkSection() {
               </div>
             ))}
           </div>
+          <SwipeHint />
         </div>
         {gallery && (
           <Lightbox images={gallery.images} title={gallery.title} onClose={() => setGallery(null)} />

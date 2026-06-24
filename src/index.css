@@ -5598,6 +5598,20 @@ a.pricing-quote-btn { text-decoration: none; }
 
 /* Frosted glass surface — translucent so the cursor trail + atmosphere refract
    softly through it. Use for feature cards, panels, callouts. */
+/* Swipe affordance under a horizontal card row — mobile only. */
+.swipe-hint { display: none; }
+@media (max-width: 760px) {
+  .swipe-hint {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin: 6px 6vw 0;
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+    color: rgba(140, 184, 240, 0.55);
+  }
+  .swipe-hint-ic { color: rgba(120, 175, 255, 0.7); animation: swipe-nudge 1.5s ease-in-out infinite; }
+}
+@keyframes swipe-nudge { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+@media (prefers-reduced-motion: reduce) { .swipe-hint-ic { animation: none; } }
+
 .glass-card {
   position: relative;
   /* Deep-dark navy panel — same colour as the home Fixed Price cards, used for

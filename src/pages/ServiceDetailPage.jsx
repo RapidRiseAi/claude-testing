@@ -1,9 +1,10 @@
-import { useRef, useLayoutEffect } from 'react'
+import { useRef, useLayoutEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import PageLayout from '../components/ui/PageLayout'
 import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
 import ObjectSlot from '../components/scene/ObjectSlot'
+import SwipeHint from '../components/ui/SwipeHint'
 import usePageMeta from '../hooks/usePageMeta'
 import { ALL_SERVICES } from '../data/services'
 import {
@@ -45,6 +46,9 @@ function SecIcon({ name }) {
 
 function PackageCard({ pkg, i = 0 }) {
   const featured = !!pkg.badge
+  // Mobile: the feature + limits list collapses so the card stays short; the
+  // toggle is hidden on desktop (CSS) where the details are always shown.
+  const [open, setOpen] = useState(false)
   return (
     <Reveal className="sd2-pkg-rev" variant="up" delay={i * 0.07} amount={0.25}>
       <TiltCard
@@ -56,19 +60,37 @@ function PackageCard({ pkg, i = 0 }) {
         <p className="sd2-pkg-price">{pkg.price}</p>
         <p className="sd2-pkg-monthly">{pkg.monthly}</p>
         {pkg.summary && <p className="sd2-pkg-summary">{pkg.summary}</p>}
-        <ul className="sd2-pkg-features">
-          {pkg.features.map((f) => (
-            <li key={f}><CheckIcon />{f}</li>
-          ))}
-        </ul>
-        {pkg.limits && (
-          <div className="sd2-pkg-limits">
-            <p className="sd2-pkg-limits-title">Plan limits</p>
-            <ul>
-              {pkg.limits.map((l) => <li key={l}>{l}</li>)}
+
+        <button
+          type="button"
+          className="sd2-pkg-toggle"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+        >
+          {open ? 'Hide details' : "See what's included"}
+          <svg className="sd2-pkg-chev" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M3 5.5 7 9.5l4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+
+        <div className={`sd2-pkg-details${open ? ' sd2-pkg-details--open' : ''}`}>
+          <div className="sd2-pkg-details-inner">
+            <ul className="sd2-pkg-features">
+              {pkg.features.map((f) => (
+                <li key={f}><CheckIcon />{f}</li>
+              ))}
             </ul>
+            {pkg.limits && (
+              <div className="sd2-pkg-limits">
+                <p className="sd2-pkg-limits-title">Plan limits</p>
+                <ul>
+                  {pkg.limits.map((l) => <li key={l}>{l}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
         <Link className="sd2-pkg-btn" to={`/contact?service=${encodeURIComponent(pkg.name)}`}>
           Start Your Project
           <ArrowIcon />
@@ -88,6 +110,46 @@ function SectionHead({ kicker, icon, title, lead }) {
       </h2>
       {lead && <p className="sd2-lead">{lead}</p>}
     </Reveal>
+  )
+}
+
+/* Add-ons. Desktop keeps the full heading + list (unchanged). On mobile it
+   becomes a compact, collapsed-by-default expandable PANEL (not a big heading). */
+function AddonsPanel({ title, addons }) {
+  const [open, setOpen] = useState(false)
+  const list = (
+    <ul className="sd2-addons glass-card">
+      {addons.map((a) => (
+        <li key={a.label}>
+          <span className="sd2-addon-label">{a.label}</span>
+          <span className="sd2-addon-dots" aria-hidden="true" />
+          <span className="sd2-addon-price">{a.price}</span>
+        </li>
+      ))}
+    </ul>
+  )
+  return (
+    <section className="sd2-section sd2-addons-section" aria-label="Add ons">
+      <div className="sd2-addons-deskhead">
+        <SectionHead kicker="Extras" icon="addons" title={title} />
+        {list}
+      </div>
+      <button
+        type="button"
+        className={`sd2-addons-toggle${open ? ' sd2-addons-toggle--open' : ''}`}
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="sd2-addons-toggle-ic" aria-hidden="true"><SecIcon name="addons" /></span>
+        <span className="sd2-addons-toggle-label">{title}</span>
+        <svg className="sd2-addons-chev" width="15" height="15" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3 5.5 7 9.5l4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      <div className={`sd2-addons-wrap${open ? ' sd2-addons-wrap--open' : ''}`}>
+        <div className="sd2-addons-wrap-inner">{list}</div>
+      </div>
+    </section>
   )
 }
 
@@ -215,6 +277,7 @@ export default function ServiceDetailPage() {
             <div className="sd2-pkg-grid">
               {content.packages.map((pkg, i) => <PackageCard key={pkg.name} pkg={pkg} i={i} />)}
             </div>
+            {content.packages.length > 1 && <SwipeHint />}
           </section>
         )}
 
@@ -225,6 +288,7 @@ export default function ServiceDetailPage() {
             <div className="sd2-pkg-grid">
               {group.packages.map((pkg, i) => <PackageCard key={pkg.name} pkg={pkg} i={i} />)}
             </div>
+            {group.packages.length > 1 && <SwipeHint />}
           </section>
         ))}
 
@@ -257,22 +321,9 @@ export default function ServiceDetailPage() {
           </Reveal>
         </section>
 
-        {/* Add ons */}
+        {/* Add ons — collapsible panel on mobile, full section on desktop */}
         {content.addons && (
-          <section className="sd2-section" aria-label="Add ons">
-            <SectionHead kicker="Extras" icon="addons" title={content.addonsTitle ?? 'Add ons'} />
-            <Reveal variant="up" amount={0.25}>
-              <ul className="sd2-addons glass-card">
-                {content.addons.map((a) => (
-                  <li key={a.label}>
-                    <span className="sd2-addon-label">{a.label}</span>
-                    <span className="sd2-addon-dots" aria-hidden="true" />
-                    <span className="sd2-addon-price">{a.price}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </section>
+          <AddonsPanel title={content.addonsTitle ?? 'Add ons'} addons={content.addons} />
         )}
 
         {/* Process */}

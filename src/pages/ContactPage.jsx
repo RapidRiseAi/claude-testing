@@ -269,6 +269,17 @@ export default function ContactPage() {
               <WhatsAppIcon />
               Message Us on WhatsApp
             </a>
+            {/* Mobile-only: jump straight to the request form (CSS hides it on desktop) */}
+            <a
+              className="pg-btn-ghost pg-btn--to-form"
+              href="#project-form"
+              onClick={(e) => {
+                e.preventDefault()
+                document.getElementById('project-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              }}
+            >
+              Fill in the Form
+            </a>
             <a className="pg-btn-ghost" href={`mailto:${CONTACT_EMAIL}`}>Email {CONTACT_EMAIL}</a>
           </div>
         </header>

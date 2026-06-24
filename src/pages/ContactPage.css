@@ -173,3 +173,9 @@
   .ct2-next-rail { display: none; }
   .ct2-next-node { display: none; }
 }
+
+/* Mobile-only hero shortcut to the request form (hidden on desktop). */
+.pg-btn--to-form { display: none; }
+@media (max-width: 760px) {
+  .pg-btn--to-form { display: inline-flex; align-items: center; justify-content: center; }
+}

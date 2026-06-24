@@ -4,6 +4,7 @@ import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
 import Parallax from '../components/ui/Parallax'
 import usePageMeta from '../hooks/usePageMeta'
+import SwipeHint from '../components/ui/SwipeHint'
 import { CUSTOM_SERVICES } from '../data/services'
 import { PRICING_DISCLAIMER } from '../data/serviceContent'
 import './ServicesPage.css'
@@ -219,6 +220,7 @@ export default function ServicesPage() {
               </Reveal>
             ))}
           </div>
+          <SwipeHint />
 
           <Reveal variant="up" amount={0.6}>
             <p className="svc-note">{PRICING_DISCLAIMER}</p>
@@ -242,6 +244,7 @@ export default function ServicesPage() {
               </Reveal>
             ))}
           </div>
+          <SwipeHint />
           <Reveal variant="up" amount={0.6}>
             <p className="svc-note">
               Custom development and consulting are quoted at R500/hour, or as a
@@ -274,6 +277,7 @@ export default function ServicesPage() {
               </Reveal>
             ))}
           </div>
+          <SwipeHint />
         </section>
 
         {/* CTA */}

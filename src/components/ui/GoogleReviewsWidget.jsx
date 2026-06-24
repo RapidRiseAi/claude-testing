@@ -108,10 +108,11 @@ export default function GoogleReviewsWidget() {
             className="grw-mini"
             onClick={expand}
             aria-label={`Open ${businessName} Google reviews`}
-            initial={{ opacity: 0, y: 16, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.9 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+            style={{ transformOrigin: 'bottom right' }}
+            initial={{ opacity: 0, scale: 0.82 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.82 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           >
             <GoogleG size={18} />
             <span className="grw-mini-score">{Number(rating).toFixed(1)}</span>
@@ -126,10 +127,11 @@ export default function GoogleReviewsWidget() {
             key="full"
             className="grw-card glass-card glass-card--bright"
             aria-label={`${businessName} Google reviews`}
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 26 }}
+            style={{ transformOrigin: 'bottom right' }}
+            initial={{ opacity: 0, scale: 0.92, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 10 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             <button type="button" className="grw-close" onClick={minimize} aria-label="Minimize reviews widget">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
