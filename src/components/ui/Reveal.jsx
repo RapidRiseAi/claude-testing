@@ -25,6 +25,10 @@ export default function Reveal({
   amount = 0.3,
   as = 'div',
   style,
+  // Animate on MOUNT instead of on-scroll for phone-width horizontal scrollers —
+  // off-screen-right cards never enter the viewport there, so whileInView would
+  // leave them hidden until swiped. Desktop keeps the normal scroll reveal.
+  instantOnMobile = false,
   ...rest
 }) {
   const reduce = useReducedMotion()
@@ -33,12 +37,16 @@ export default function Reveal({
     return <Tag className={className} style={style} {...rest}>{children}</Tag>
   }
   const MotionTag = motion[as] ?? motion.div
+  const instant = instantOnMobile && typeof window !== 'undefined'
+    && window.matchMedia && window.matchMedia('(max-width: 760px)').matches
+  const trigger = instant
+    ? { animate: 'show' }
+    : { whileInView: 'show', viewport: { once: true, amount, margin: '-60px' } }
   return (
     <MotionTag
       className={className}
       initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, amount, margin: '-60px' }}
+      {...trigger}
       variants={VARIANTS[variant] ?? VARIANTS.up}
       transition={{ duration, delay, ease: EXPO }}
       style={{ transformPerspective: 1200, ...style }}

@@ -110,7 +110,7 @@ export default function ProofPage() {
 
           <div className="prf-grid">
             {WORK_ITEMS.map((item, i) => (
-              <Reveal key={item.id} variant="up" delay={(i % 3) * 0.08} amount={0.25}>
+              <Reveal key={item.id} variant="up" delay={(i % 3) * 0.08} amount={0.25} instantOnMobile>
                 <TiltCard className="prf-card glass-card" max={7}>
                   <article id={item.id} className="prf-card-inner">
                     <div className="prf-media">
@@ -177,7 +177,7 @@ export default function ProofPage() {
 
           <div className="prf-cat-grid">
             {CATEGORIES.map((c, i) => (
-              <Reveal key={c.title} variant="up" delay={(i % 3) * 0.07} amount={0.4}>
+              <Reveal key={c.title} variant="up" delay={(i % 3) * 0.07} amount={0.4} instantOnMobile>
                 <TiltCard className="prf-cat glass-card" max={9}>
                   <span className="prf-cat-ic tilt-pop-sm"><Icon name={c.icon} /></span>
                   <h3 className="prf-cat-title tilt-pop-sm">{c.title}</h3>

@@ -16,11 +16,15 @@ import {
    Respects prefers-reduced-motion (renders a static surface) and is safe on
    touch (no pointer = no tilt). Pass `as`-style props through; `glare={false}`
    to disable the highlight. */
-// Touch devices (coarse pointer): no tilt. The 3D rotate was getting nudged by
-// synthesized pointer events during a vertical swipe, stretching + clipping the
-// card and making the page feel stuck. Static surface there — desktop untouched.
-const IS_TOUCH = typeof window !== 'undefined'
-  && window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+// Touch devices: no tilt. The 3D rotate was getting nudged by synthesized
+// pointer events during a vertical swipe, stretching + clipping the card. Use a
+// belt-and-braces check (some mobile browsers report the primary pointer as
+// "fine"), so the static surface is reliably used on phones. Desktop untouched.
+const IS_TOUCH = typeof window !== 'undefined' && (
+  'ontouchstart' in window
+  || (navigator.maxTouchPoints || 0) > 0
+  || (window.matchMedia && window.matchMedia('(any-pointer: coarse)').matches)
+)
 
 export default function TiltCard({
   children,

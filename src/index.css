@@ -238,10 +238,11 @@ body {
   z-index: 0;                       /* under .navbar-inner (z1), over the page */
   padding: 78px 18px 24px;
   max-height: 100dvh;
-  background: linear-gradient(180deg, rgba(8, 14, 30, 0.97) 0%, rgba(6, 11, 24, 0.985) 100%);
+  /* same deep dark-navy theme as the desktop mega-menu */
+  background: linear-gradient(180deg, rgba(6, 9, 18, 0.985) 0%, rgba(3, 5, 12, 0.99) 100%);
   backdrop-filter: blur(22px) saturate(1.4);
   -webkit-backdrop-filter: blur(22px) saturate(1.4);
-  border-bottom: 1px solid rgba(120, 170, 255, 0.14);
+  border-bottom: 1px solid rgba(120, 170, 255, 0.12);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
   transform: translateY(-100%);
   opacity: 0;
@@ -279,17 +280,20 @@ body {
 .nav-mobile-svc {
   display: flex; align-items: center; gap: 10px;
   padding: 11px 12px;
-  background: rgba(18, 32, 58, 0.5);
-  border: 1px solid rgba(110, 160, 235, 0.14);
+  /* same dark-navy card surface + lit edge as the desktop dropdown items */
+  background: linear-gradient(180deg, #05080f 0%, #03050b 100%);
+  border: 1px solid rgba(140, 185, 255, 0.16);
+  box-shadow: 0 10px 26px -16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   border-radius: 13px;
   text-decoration: none;
 }
-.nav-mobile-svc:active { background: rgba(28, 52, 94, 0.6); }
+.nav-mobile-svc:active { border-color: rgba(150, 196, 255, 0.34); }
 .nav-mobile-svc-ic {
   flex-shrink: 0; width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  color: #58b6ff;
-  background: rgba(40, 110, 220, 0.14);
+  color: #7fb6f5;
+  background: rgba(20, 40, 78, 0.6);
+  border: 1px solid rgba(110, 160, 230, 0.2);
   border-radius: 9px;
 }
 .nav-mobile-svc-ic svg { width: 17px; height: 17px; }
@@ -2492,7 +2496,7 @@ h2 {
   .fp-grid {
     display: flex;
     grid-template-columns: none;
-    align-items: flex-start;   /* cards size to their own content — no tall card stretches the rest */
+    align-items: stretch;   /* all cards match the tallest; CTAs line up at the bottom */
     gap: 12px;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
@@ -2507,7 +2511,6 @@ h2 {
     scroll-snap-align: start;
     flex: 0 0 50%;
     max-width: 188px;
-    height: auto;
     min-height: 0;           /* desktop forces a tall 450px+ card for the pinned wave — not on mobile */
     padding: 14px 13px;
     border-radius: 15px;
@@ -2516,7 +2519,7 @@ h2 {
   /* tighten the card vertically: smaller gaps */
   .fp-card-icon { width: 38px; height: 38px; margin-bottom: 10px; }
   .fp-card-icon svg { width: 21px; height: 21px; }
-  .fp-card-title { font-size: 0.9rem; margin-bottom: 8px; }
+  .fp-card-title { font-size: 0.9rem; margin-bottom: 8px; min-height: 2.4em; }
   .fp-card-divider { margin: 9px 0; }
   .fp-card-startlabel { font-size: 0.6rem; margin-bottom: 1px; }
   .fp-card-price { font-size: clamp(1.35rem, 5.5vw, 1.7rem); }
@@ -2524,7 +2527,8 @@ h2 {
   /* the section already says "Payment plans available on all services" — drop the
      redundant per-card badge to shorten each card */
   .fp-card-badge { display: none; }
-  .fp-card-btn { padding: 9px 12px; font-size: 0.8rem; margin-top: 12px; }
+  /* push the CTA to the bottom so every card's button lines up */
+  .fp-card-btn { padding: 9px 12px; font-size: 0.8rem; margin-top: auto; }
 
   .fp-custom {
     flex-direction: column;

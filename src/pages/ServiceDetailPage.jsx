@@ -50,7 +50,7 @@ function PackageCard({ pkg, i = 0 }) {
   // toggle is hidden on desktop (CSS) where the details are always shown.
   const [open, setOpen] = useState(false)
   return (
-    <Reveal className="sd2-pkg-rev" variant="up" delay={i * 0.07} amount={0.25}>
+    <Reveal className="sd2-pkg-rev" variant="up" delay={i * 0.07} amount={0.25} instantOnMobile>
       <TiltCard
         className={`sd2-pkg glass-card${featured ? ' sd2-pkg--featured glass-card--bright' : ''}`}
         max={7}

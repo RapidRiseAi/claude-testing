@@ -17,6 +17,9 @@ const END_X = -3.3
 const END_Y = -0.42       // card-mode group centre — projects to ~60% viewport height,
                           // the measured vertical centre of the carousel card column
 const END_SCALE = 0.715   // carousel/card-mode group scale (+30% — Section-2 object size)
+// Mobile hero resting spot — small globe in the top band, clear of the headline.
+const MHERO_Y = 2.05
+const MHERO_S = 0.35
 const HOME_VIS_R = 1.80   // representative bounding radius (local units) of the home
                           // object — tuned to the hero globe (≈R) the page lands on,
                           // used only to publish a handoff anchor for the page
@@ -2550,6 +2553,7 @@ export default function HeroOrb({ mode = 'home' }) {
   // centred behind the headline (the DOM is single-column there) and rendered
   // behind #scroll-content (z-index 1) so the text always sits cleanly on top.
   const narrowRef = useRef(typeof window !== 'undefined' && window.matchMedia('(max-width: 1100px)').matches)
+  const txWasActive = useRef(false)   // detects the frame a page transition ends
 
   // Arriving on the home page (e.g. a service→home transition): mount the hero
   // decoration so it can EXPAND back in (the transition drives the collapse/expand
@@ -2761,6 +2765,16 @@ export default function HeroOrb({ mode = 'home' }) {
       const cc = document.getElementById('canvas-container')
       if (cc && cc.style.zIndex !== '1') cc.style.zIndex = '1'
     }
+    // The FRAME a transition ends: arriving on mobile home, SNAP the object to its
+    // hero spot instead of letting it lerp there from the desktop (right-side)
+    // position — that lerp was the visible "object jumps to the right, then slides
+    // to the middle" on every navigation back to home.
+    if (txWasActive.current && !transitionState.active
+        && narrowRef.current && worldState.mode === 'home' && scrollState.progress < 0.15) {
+      groupRef.current.position.set(0, MHERO_Y, 0)
+      groupRef.current.scale.setScalar(MHERO_S)
+    }
+    txWasActive.current = transitionState.active
 
     // ── PAGE-TRANSITION: move the group source → screen-centre → destination ────
     const tsx = transitionState
@@ -2898,7 +2912,6 @@ export default function HeroOrb({ mode = 'home' }) {
       //     (driven by p: 0 at hero top → 1 one viewport down ≈ expertise.)
       //  3. PRICING+ — as the pricing section scrolls in (mwave 0→1) the globe
       //     morphs into the wave and drops to the bottom band, behind the cards.
-      const MHERO_Y = 2.05, MHERO_S = 0.35   // hero: small globe in the TOP band, clear of the headline
       const MEXP_Y  = 0.35, MEXP_S  = 0.66   // expertise: big centred backdrop
       // Wave end-state: the same wave geometry as desktop but RAISED into the
       // tall portrait viewport (desktop's -2.6 sits off the bottom here) so it

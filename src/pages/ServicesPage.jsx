@@ -215,7 +215,7 @@ export default function ServicesPage() {
 
           <div className="svc-price-grid">
             {PRICING.map((p, i) => (
-              <Reveal key={p.slug} variant="up" delay={i * 0.07} amount={0.35}>
+              <Reveal key={p.slug} variant="up" delay={i * 0.07} amount={0.35} instantOnMobile>
                 <PricingCard {...p} />
               </Reveal>
             ))}
@@ -239,7 +239,7 @@ export default function ServicesPage() {
           </Reveal>
           <div className="svc-grid">
             {CUSTOM_SERVICES.map((s, i) => (
-              <Reveal key={s.slug} variant="up" delay={i * 0.06} amount={0.3}>
+              <Reveal key={s.slug} variant="up" delay={i * 0.06} amount={0.3} instantOnMobile>
                 <ServiceCard service={s} />
               </Reveal>
             ))}
@@ -267,7 +267,7 @@ export default function ServicesPage() {
           </Reveal>
           <div className="svc-guide-grid">
             {GUIDANCE.map((g, i) => (
-              <Reveal key={g.title} variant="up" delay={i * 0.06} amount={0.3}>
+              <Reveal key={g.title} variant="up" delay={i * 0.06} amount={0.3} instantOnMobile>
                 <TiltCard className="svc-guide-card glass-card" max={7}>
                   <span className="svc-guide-ic tilt-pop-sm"><Icon name={GUIDANCE_ICONS[i % GUIDANCE_ICONS.length]} /></span>
                   <h3 className="svc-guide-title tilt-pop-sm">{g.title}</h3>

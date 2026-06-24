@@ -81,8 +81,23 @@ function ServicesDropdown() {
 /* ── Mobile slide-down menu — touch-friendly replacement for the hover mega-menu.
    The desktop row (links + CTA) is hidden by CSS ≤1100px; this panel takes over,
    toggled by the hamburger. Tapping any link closes it (route change also does). */
+function MobileServiceGroup({ heading, items, onClose }) {
+  return (
+    <div className="nav-mobile-section">
+      <span className="nav-mobile-heading">{heading}</span>
+      <div className="nav-mobile-services">
+        {items.map((s) => (
+          <Link key={s.slug} to={`/services/${s.slug}`} className="nav-mobile-svc" onClick={onClose}>
+            <span className="nav-mobile-svc-ic"><ServiceIcon slug={s.slug} /></span>
+            <span className="nav-mobile-svc-name">{s.name}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function MobileMenu({ open, onClose }) {
-  const ALL = [...FIXED_PRICE, ...CUSTOM_SERVICES]
   return (
     <div className={`nav-mobile${open ? ' nav-mobile--open' : ''}`} role="dialog" aria-modal="true" aria-label="Menu" aria-hidden={!open}>
       <div className="nav-mobile-scroll">
@@ -95,17 +110,9 @@ function MobileMenu({ open, onClose }) {
           <Link to="/contact" className="nav-mobile-link" onClick={onClose}>Contact</Link>
         </div>
 
-        <div className="nav-mobile-section">
-          <span className="nav-mobile-heading">Services</span>
-          <div className="nav-mobile-services">
-            {ALL.map((s) => (
-              <Link key={s.slug} to={`/services/${s.slug}`} className="nav-mobile-svc" onClick={onClose}>
-                <span className="nav-mobile-svc-ic"><ServiceIcon slug={s.slug} /></span>
-                <span className="nav-mobile-svc-name">{s.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+        {/* Services split into the same two groups as the desktop mega-menu */}
+        <MobileServiceGroup heading="Fixed Price Products" items={FIXED_PRICE} onClose={onClose} />
+        <MobileServiceGroup heading="Custom Services" items={CUSTOM_SERVICES} onClose={onClose} />
 
         <Link className="nav-mobile-cta" to="/contact" onClick={onClose}>
           Start Your Project

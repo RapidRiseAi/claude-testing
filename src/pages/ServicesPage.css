@@ -272,18 +272,20 @@
   .svc-guide-grid::-webkit-scrollbar { display: none; }
   .svc-price-grid > *, .svc-guide-grid > * { flex: 0 0 74%; max-width: 290px; scroll-snap-align: start; }
   .svc-grid > * { flex: 0 0 56%; max-width: 215px; scroll-snap-align: start; }
-  /* natural height: padding under the last line, nothing more */
-  .svc-price-link, .svc-service-link,
-  .svc-price-card, .svc-service-card, .svc-guide-card { height: auto; }
-  .svc-price-features { flex-grow: 0; }
+  /* service + guide cards: natural height (no empty bottom) */
+  .svc-service-link, .svc-service-card, .svc-guide-card { height: auto; }
+  /* PRICING cards: all match the tallest, with the CTA pinned to the bottom so
+     prices + buttons line up across the row */
+  .svc-price-grid { align-items: stretch; }
+  .svc-price-link, .svc-price-card { height: 100%; }
 
   .svc-price-card { padding: 18px 16px; }
   .svc-price-ic { margin-bottom: 12px; }
-  .svc-price-name { min-height: 0; margin-bottom: 12px; font-size: 1rem; }
+  .svc-price-name { min-height: 2.6em; margin-bottom: 12px; font-size: 1rem; }
   .svc-price-amount { font-size: 1.45rem; padding-top: 12px; }
-  .svc-price-features { margin-top: 12px; padding-top: 12px; gap: 7px; }
+  .svc-price-features { flex-grow: 1; margin-top: 12px; padding-top: 12px; gap: 7px; }
   .svc-price-features li { font-size: 0.8rem; }
-  .svc-price-cta { margin-top: 16px; padding: 11px 16px; font-size: 0.85rem; }
+  .svc-price-cta { margin-top: auto; padding: 11px 16px; font-size: 0.85rem; }
 
   .svc-service-card { padding: 18px 16px; }
   .svc-service-top { margin-bottom: 12px; }
