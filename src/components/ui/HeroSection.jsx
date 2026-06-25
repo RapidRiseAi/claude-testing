@@ -152,16 +152,6 @@ export default function HeroSection({ loaded }) {
               View Our Work
             </MagneticButton>
           </div>
-
-          {/* Closing assurance line — anchors the bottom of the hero (desktop) */}
-          <div className="hero-assurance">
-            <span className="hero-assurance-rule" aria-hidden="true" />
-            <ul className="hero-assurance-items">
-              <li>Fixed, transparent pricing</li>
-              <li>Fast delivery</li>
-              <li>Built to scale</li>
-            </ul>
-          </div>
         </motion.div>
 
       </motion.div>

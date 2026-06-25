@@ -334,6 +334,15 @@ body {
   flex-direction: row;
   align-items: stretch;
   overflow: hidden;
+
+  /* The vertical band the hero text is centred within. Its two edges are the
+     two fixed neighbours that frame the text:
+       top  = bottom of the navbar  → its 2× 0.95rem padding + 52px inner row
+       btm  = top of the Google reviews pill → its bottom inset + ~38px height
+     With justify-content:center on .hero-left-content, equal-weighting these
+     two paddings lands the text's centre exactly on the band's midpoint. */
+  --hero-band-top: calc(1.9rem + 52px);                 /* ≈ 82px */
+  --hero-band-bottom: calc(clamp(14px, 2.2vw, 26px) + 38px); /* ≈ 64px */
 }
 
 /* Left column — eyebrow, headline, sub, CTA */
@@ -343,10 +352,11 @@ body {
   z-index: 2;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  /* Centre the text in the band between the navbar bottom and the reviews pill
+     top — the two paddings ARE those edges, so its midpoint is the text centre. */
+  justify-content: center;
   gap: 3.2rem;               /* upgraded line spacing so the block breathes + fills down */
-  /* heading near the top but with a little air above it */
-  padding: clamp(120px, 17vh, 184px) 2vw 48px 5vw;
+  padding: var(--hero-band-top) 2vw var(--hero-band-bottom) 5vw;
 }
 
 /* Right column — stat group anchored to orb zone */
@@ -431,6 +441,23 @@ body {
   color: #58B6FF;
 }
 
+/* The tight negative tracking pulls each gradient line's paint box inside the
+   final glyph's ink; background-clip:text then leaves that overhang transparent
+   (the "g"/"e"/"s" looked sliced on the right). A hair of right padding extends
+   the painted box past the last glyph — text is left-aligned so it's invisible. */
+.h1-line-1,
+.h1-line-2,
+.h1-line-3 {
+  display: inline-block;
+  padding-right: 0.12em;
+  /* background-clip:text only paints inside the box; the tight line-height left the
+     box bottom at the baseline, so the "g" descender fell outside the gradient and
+     read as clipped. Grow the paint box down, then pull the same amount back with a
+     negative margin so the descender is covered without nudging line 2 / the subhead. */
+  padding-bottom: 0.24em;
+  margin-bottom: -0.24em;
+}
+
 /* Supporting subheading under the headline (the former big text, demoted) */
 .hero-subhead {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
@@ -469,50 +496,6 @@ body {
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: rgba(132, 166, 208, 0.62);
-}
-
-/* Closing assurance line under the CTAs — anchors the hero bottom (desktop only;
-   the mobile hero is already finalised so it's hidden ≤1100). */
-.hero-assurance {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  max-width: 640px;
-  margin-top: 0.5rem;
-}
-.hero-assurance-rule {
-  height: 1px;
-  width: 100%;
-  background: linear-gradient(90deg, rgba(96, 156, 242, 0.55) 0%, rgba(96, 156, 242, 0.14) 52%, transparent 100%);
-}
-.hero-assurance-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.9rem 1.9rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
-  letter-spacing: 0.005em;
-  color: rgba(188, 210, 238, 0.78);
-}
-.hero-assurance-items li {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-.hero-assurance-items li::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #46a0ff;
-  box-shadow: 0 0 9px rgba(70, 160, 255, 0.75);
-  flex-shrink: 0;
-}
-@media (max-width: 1100px) {
-  .hero-assurance { display: none; }
 }
 
 /* ── Primary CTA button ─────────────────────────────────────────────────────── */
