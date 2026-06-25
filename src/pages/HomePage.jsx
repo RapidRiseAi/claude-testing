@@ -1,4 +1,5 @@
 import Navbar from '../components/ui/Navbar'
+import HeroBackdropOrbs from '../components/ui/HeroBackdropOrbs'
 import HeroSection from '../components/ui/HeroSection'
 import ExpertiseCarousel from '../components/ui/ExpertiseCarousel'
 import FixedPricingSection from '../components/ui/FixedPricingSection'
@@ -22,6 +23,11 @@ export default function HomePage() {
       {/* The 3-D object (#canvas-container) and atmospheric glow (#scene-atmosphere)
           now live at the app root in <PersistentScene> so the object survives
           navigation — they are no longer mounted per-page here. */}
+
+      {/* Viewport-pinned ambient orb field. Sits ABOVE this comment / BEFORE
+          #scroll-content in the DOM on purpose: at z-index 2 it ties the content
+          layer, so source order is what keeps it behind every section's text. */}
+      <HeroBackdropOrbs />
 
       <div id="scroll-content">
         <HeroSection loaded={loaded} />

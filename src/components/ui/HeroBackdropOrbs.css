@@ -1,0 +1,54 @@
+/* ── Ambient backdrop orbs ───────────────────────────────────────────────────
+   A quiet field of drifting dots that adds depth across the whole home page.
+   Mounted once at the top of HomePage (NOT inside the hero) as a viewport-pinned
+   layer, so it stays put through the entire scroll with no per-section seam.
+   Animation is pure CSS (compositor-only transform/opacity) — never touches
+   React or the main thread. */
+
+.hero-orbs {
+  /* fixed → pinned to the viewport, a continuous backdrop the whole way down. */
+  position: fixed;
+  inset: 0;
+  /* z2 lands the field above the Section-3+ wave (canvas drops to z1) and below
+     the Section-1/2 object (canvas z3). It ties #scroll-content at z2, but it's
+     rendered BEFORE that in the DOM, so source-order keeps it behind all content. */
+  z-index: 2;
+  overflow: hidden;       /* clip any orb that drifts past the viewport edges */
+  pointer-events: none;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  /* Solid core fading to nothing — even a 3px dot reads as a soft glow, not a
+     hard pixel. Alpha comes from the animated opacity, so --core is opaque rgb. */
+  background: radial-gradient(circle, var(--core) 0%, rgba(0, 0, 0, 0) 68%);
+  opacity: var(--o-max);
+  /* Two independent loops: a slow positional drift + a gentle brightness twinkle.
+     Negative delays (set per-orb) start each mid-cycle so the field never pulses
+     in unison. */
+  animation:
+    hero-orb-drift   var(--dur) ease-in-out var(--d-delay) infinite,
+    hero-orb-twinkle var(--tw)  ease-in-out var(--t-delay) infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes hero-orb-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(var(--dx), var(--dy), 0); }
+}
+
+@keyframes hero-orb-twinkle {
+  0%, 100% { opacity: var(--o-min); }
+  50%      { opacity: var(--o-max); }
+}
+
+/* Reduced-motion: keep the depth, drop the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-orb { animation: none; opacity: var(--o-max); }
+}
+
+/* Pull the field back a touch on phones so the centred headline stays crisp. */
+@media (max-width: 768px) {
+  .hero-orbs { opacity: 0.7; }
+}
