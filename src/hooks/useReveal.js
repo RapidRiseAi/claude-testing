@@ -48,10 +48,11 @@ export default function useReveal() {
         }
       },
       // Reveal the moment the element's TOP edge crosses the screen's bottom-15%
-      // line — viewport-relative (%), so it behaves identically on any screen size
-      // or aspect ratio. threshold:0 = fire on the first pixel that enters (the top
-      // edge), rather than waiting for 10% of the block to show.
-      { threshold: 0, rootMargin: '0px 0px -15% 0px' },
+      // line. Computed in PIXELS (15% of the live viewport height) rather than a
+      // `%` rootMargin — same as the Reveal component — so the trigger is exact and
+      // identical on any screen size / aspect ratio. threshold:0 = fire on the
+      // first pixel that enters (the top edge).
+      { threshold: 0, rootMargin: `0px 0px -${Math.round((window.innerHeight || 0) * 0.15)}px 0px` },
     )
 
     document.querySelectorAll(REVEAL_SELECTOR).forEach((el) => observer.observe(el))

@@ -1,5 +1,5 @@
-import { motion, useReducedMotion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { useRef, useState, useEffect } from 'react'
 
 /* Scroll entrance with real 3D depth. Elements rise and rotate in from
    perspective (rotateX/rotateY + scale), so scrolling feels like moving through
@@ -9,15 +9,18 @@ import { useRef } from 'react'
 
 const EXPO = [0.16, 1, 0.3, 1]
 
-/* The reveal rule (whole site):
-   - Trigger line = 15% of the viewport height, measured up from the BOTTOM. An
-     element reveals the moment its TOP edge crosses that line. The line is
-     viewport-relative, so it lands in the same spot on any screen / aspect ratio.
-   - On a fresh page, anything already above the line eases in ~1s after the page
-     opens — WITHOUT needing a scroll — so a page never looks empty (which made
-     people leave). Anything below the line waits until a scroll brings its top
-     across the line, and reveals with no extra delay. */
+/* The reveal rule (below-hero content, whole site):
+   - Trigger line = 15% of the viewport HEIGHT, measured up from the bottom. We
+     compute it in PIXELS from the live viewport and feed a native
+     IntersectionObserver (threshold 0) — framer-motion's whileInView/useInView
+     did NOT honour a `%` margin reliably (it behaved like ~50% on mobile), so we
+     drive the trigger ourselves. An element reveals the moment its TOP edge
+     crosses that line, identically on any screen size / aspect ratio.
+   - On a fresh page, content already above the line eases in ~1s after the page
+     opens (no scroll needed) so pages never look empty; content reached later by
+     scrolling reveals immediately (the 1s window has already elapsed). */
 const INITIAL_REVEAL_DELAY = 1 // seconds
+const TRIGGER_FRACTION = 0.15  // bottom 15% of the viewport height
 
 const VARIANTS = {
   up:    { hidden: { opacity: 0, y: 46, rotateX: 7, scale: 0.965 }, show: { opacity: 1, y: 0, rotateX: 0, scale: 1 } },
@@ -34,8 +37,8 @@ export default function Reveal({
   variant = 'up',
   delay = 0,
   duration = 0.85,
-  // Kept for API compatibility — the trigger is now the bottom-15% line (top
-  // edge), not a % of the element, so a fixed `amount` is intentionally unused.
+  // Kept for API compatibility — the trigger is the bottom-15% line (top edge),
+  // not a % of the element, so this is intentionally unused.
   amount = 0.3,
   as = 'div',
   style,
@@ -52,10 +55,44 @@ export default function Reveal({
   if (mountedAt.current === null) {
     mountedAt.current = typeof performance !== 'undefined' ? performance.now() : 0
   }
-  const startDelay = useRef(null)
-  // Fire the instant the element's TOP edge crosses the bottom-15% line. `amount:
-  // 'some'` (any pixel) keeps even very tall blocks reachable.
-  const inView = useInView(ref, { once: true, amount: 'some', margin: '0px 0px -15% 0px' })
+  // null while hidden; once revealed it holds the transition delay that was used.
+  const [revealDelay, setRevealDelay] = useState(null)
+
+  const instant = instantOnMobile && typeof window !== 'undefined'
+    && window.matchMedia && window.matchMedia('(max-width: 760px)').matches
+
+  useEffect(() => {
+    if (reduce || revealDelay !== null) return
+
+    const fire = () => {
+      const now = typeof performance !== 'undefined' ? performance.now() : 0
+      const since = (now - mountedAt.current) / 1000
+      // ~1s on the first screenful; ~0 once you've scrolled (1s has passed).
+      setRevealDelay(Math.max(0, INITIAL_REVEAL_DELAY - since) + delay)
+    }
+
+    if (instant) { fire(); return }
+
+    const el = ref.current
+    if (!el) return
+
+    let io
+    const observe = () => {
+      io?.disconnect()
+      const bottomPx = Math.round((window.innerHeight || 0) * TRIGGER_FRACTION)
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) { io.disconnect(); fire() }
+        },
+        { threshold: 0, rootMargin: `0px 0px -${bottomPx}px 0px` },
+      )
+      io.observe(el)
+    }
+    observe()
+    // Recompute the px line if the viewport changes (rotation, mobile toolbar).
+    window.addEventListener('resize', observe)
+    return () => { io?.disconnect(); window.removeEventListener('resize', observe) }
+  }, [reduce, instant, delay, revealDelay])
 
   if (reduce) {
     const Tag = as
@@ -63,17 +100,7 @@ export default function Reveal({
   }
 
   const MotionTag = motion[as] ?? motion.div
-  const instant = instantOnMobile && typeof window !== 'undefined'
-    && window.matchMedia && window.matchMedia('(max-width: 760px)').matches
-  const show = instant || inView
-
-  // Resolve the reveal delay ONCE, the first frame this element is shown. Shown on
-  // load → ~1s; shown later via scroll → the 1s window has already elapsed → 0.
-  if (show && startDelay.current === null) {
-    const since = (mountedAt.current ? performance.now() - mountedAt.current : 0) / 1000
-    startDelay.current = Math.max(0, INITIAL_REVEAL_DELAY - since) + delay
-  }
-  const transitionDelay = startDelay.current ?? delay
+  const show = revealDelay !== null
 
   return (
     <MotionTag
@@ -82,7 +109,7 @@ export default function Reveal({
       initial="hidden"
       animate={show ? 'show' : 'hidden'}
       variants={VARIANTS[variant] ?? VARIANTS.up}
-      transition={{ duration, delay: transitionDelay, ease: EXPO }}
+      transition={{ duration, delay: show ? revealDelay : 0, ease: EXPO }}
       style={{ transformPerspective: 1200, ...style }}
       {...rest}
     >
