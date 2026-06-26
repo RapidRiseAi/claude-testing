@@ -1845,12 +1845,20 @@ function InteractiveMiniOrbs({ groupRef }) {
     if (worldState.mode === 'service') {
       const u = material.uniforms
       const idx = worldState.index ?? 0
-      if (activeRef.current !== idx) {
+      // Re-form the clean card shape when the index changes OR the shared buffer is
+      // still wave-dirty. The wave loops mutate posTarget in place and only repair
+      // it while you keep scrolling on home — so navigating away mid-wave (or
+      // arriving from a no-object page) can leave posTarget holding the wave grid.
+      // Without the waveBufDirty check, a service whose index matches the wave's
+      // active card (globe 0 on mobile, funnel 6 on desktop) renders as the wavy
+      // plane. This makes the docked object's shape bulletproof.
+      if (activeRef.current !== idx || waveBufDirty) {
         activeRef.current = idx
         posTarget.set(cardBufs[idx]); tagTarget.set(cardTags[idx])
         if (targetAttrRef.current) targetAttrRef.current.needsUpdate = true
         if (tagAttrRef.current) tagAttrRef.current.needsUpdate = true
         phaseRef.current = 'idle'
+        waveBufDirty = false
       }
       u.uColorCard.value.setStyle(CARD_COLORS[idx])
       u.uMorph.value = 0.5            // card-mode collapse depth
@@ -2779,6 +2787,12 @@ export default function HeroOrb({ mode = 'home' }) {
   useFrame((state, delta) => {
     if (!groupRef.current) return
 
+    // Cap delta so a frame spike during the GPU-heavy page morph (the orb-swarm
+    // overlay + both service objects rendering at once) can't become a huge one-
+    // frame rotation jump — that was the "object spins crazy fast" going service →
+    // service. Bounds every delta-scaled motion below to a ~30fps-equivalent step.
+    if (delta > 0.033) delta = 0.033
+
     // ── SELF-HEAL: a page transition lifts the canvas to z-index 92; if it gets
     // interrupted or overlapped the cleanup can be skipped, leaving the object
     // stuck IN FRONT of the home content (so the cards look transparent until a
@@ -2812,6 +2826,13 @@ export default function HeroOrb({ mode = 'home' }) {
       else if (tsx.toKind === 'home') scrollState.progress = 1 - tsx.reassemble
       if (!tPosActive.current) {
         tPosActive.current = true
+        // Re-sync the mobile/desktop flag to the LIVE viewport before computing the
+        // reassemble target. narrowRef is normally only refreshed by the home scroll
+        // handler, which bails during a transition — so a stale value would make the
+        // object reassemble to the mobile home spot (top-centre) on desktop and then
+        // slide to the right. Reading it fresh here makes it build at the correct end
+        // point straight away, regardless of how we got here.
+        narrowRef.current = window.matchMedia('(max-width: 1100px)').matches
         tFromPos.copy(g.position)
         tFromScale.current = g.scale.x
       }
