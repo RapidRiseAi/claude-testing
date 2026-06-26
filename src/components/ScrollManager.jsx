@@ -31,6 +31,9 @@ export default function ScrollManager() {
   const { pathname } = useLocation()
   const navType = useNavigationType()   // 'POP' (back/forward) | 'PUSH' | 'REPLACE'
   const firstRender = useRef(true)
+  // True while a restore is in progress — pauses saving so a clamped intermediate
+  // scroll (page not tall enough yet) can't overwrite the real saved position.
+  const restoring = useRef(false)
 
   // Take over scroll restoration from the browser — its SPA guess is unreliable
   // and would fight the logic below.
@@ -48,6 +51,7 @@ export default function ScrollManager() {
     let raf = 0
     const persist = () => {
       raf = 0
+      if (restoring.current) return   // don't overwrite the saved value mid-restore
       try { sessionStorage.setItem(KEY + pathname, String(Math.round(window.scrollY))) } catch { /* private mode */ }
     }
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(persist) }
@@ -69,20 +73,30 @@ export default function ScrollManager() {
     }
 
     if (target <= 0) {
+      restoring.current = false
       window.scrollTo(0, 0)
       return
     }
 
-    // Synchronous first attempt (before paint → minimal flash), then re-assert for
-    // a few frames so the offset is reachable once late content (images / fonts)
-    // has expanded the page height.
+    // Patient restore: the page (esp. home, with its 3D + snap layout and images)
+    // is often NOT tall enough yet, so an immediate scrollTo clamps toward 0. Keep
+    // re-asserting every frame until we actually reach the target, within a time
+    // budget — and pause saving meanwhile so the clamped value can't be written.
+    restoring.current = true
     window.scrollTo(0, target)
-    let tries = 0
-    const restore = () => {
+    const startedAt = (typeof performance !== 'undefined' ? performance.now() : 0)
+    const tick = () => {
       window.scrollTo(0, target)
-      if (++tries < 8 && Math.abs(window.scrollY - target) > 2) requestAnimationFrame(restore)
+      const reached = Math.abs(window.scrollY - target) <= 2
+      const now = (typeof performance !== 'undefined' ? performance.now() : 0)
+      if (reached || now - startedAt > 1500) {
+        // Settle one more frame, then resume saving.
+        requestAnimationFrame(() => { restoring.current = false })
+        return
+      }
+      requestAnimationFrame(tick)
     }
-    requestAnimationFrame(restore)
+    requestAnimationFrame(tick)
   }, [pathname, navType])
 
   return null

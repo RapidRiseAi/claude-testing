@@ -10,17 +10,61 @@ import { useRef, useState, useEffect } from 'react'
 const EXPO = [0.16, 1, 0.3, 1]
 
 /* The reveal rule (below-hero content, whole site):
-   - Trigger line = 15% of the viewport HEIGHT, measured up from the bottom. We
-     compute it in PIXELS from the live viewport and feed a native
-     IntersectionObserver (threshold 0) — framer-motion's whileInView/useInView
-     did NOT honour a `%` margin reliably (it behaved like ~50% on mobile), so we
-     drive the trigger ourselves. An element reveals the moment its TOP edge
-     crosses that line, identically on any screen size / aspect ratio.
+   - Trigger line = 15% of the viewport HEIGHT, measured up from the bottom. An
+     element reveals the moment its TOP edge crosses that line. We measure this
+     directly with getBoundingClientRect against (innerHeight * 0.85) — NOT an
+     IntersectionObserver — because the observer's first on-mount callback was
+     not firing reliably for these framer-motion elements (transform/opacity),
+     which left first-screen content stuck hidden (the "empty page" bug). Direct
+     geometry makes the line exact on any screen size / aspect ratio.
    - On a fresh page, content already above the line eases in ~1s after the page
      opens (no scroll needed) so pages never look empty; content reached later by
      scrolling reveals immediately (the 1s window has already elapsed). */
 const INITIAL_REVEAL_DELAY = 1 // seconds
 const TRIGGER_FRACTION = 0.15  // bottom 15% of the viewport height
+
+/* ── Shared watcher ──────────────────────────────────────────────────────────
+   ONE scroll/resize listener for every Reveal on the page, rAF-throttled. Each
+   pending element is checked against the line; when its top crosses, its callback
+   fires and it's dropped. O(pending) reads per frame, decreasing as things reveal
+   — far cheaper and more predictable than one IntersectionObserver per element. */
+const pending = new Set()
+let scheduled = false
+
+function runChecks() {
+  scheduled = false
+  if (!pending.size || typeof window === 'undefined') return
+  const line = (window.innerHeight || 0) * (1 - TRIGGER_FRACTION)
+  for (const entry of pending) {
+    if (entry.el.getBoundingClientRect().top <= line) {
+      pending.delete(entry)
+      entry.cb()
+    }
+  }
+}
+
+function schedule() {
+  if (scheduled) return
+  scheduled = true
+  requestAnimationFrame(runChecks)
+}
+
+function watch(el, cb) {
+  const entry = { el, cb }
+  pending.add(entry)
+  if (pending.size === 1) {
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+  }
+  schedule() // immediate check so first-screen content reveals on load
+  return () => {
+    pending.delete(entry)
+    if (!pending.size) {
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+    }
+  }
+}
 
 const VARIANTS = {
   up:    { hidden: { opacity: 0, y: 46, rotateX: 7, scale: 0.965 }, show: { opacity: 1, y: 0, rotateX: 0, scale: 1 } },
@@ -72,26 +116,9 @@ export default function Reveal({
     }
 
     if (instant) { fire(); return }
-
     const el = ref.current
     if (!el) return
-
-    let io
-    const observe = () => {
-      io?.disconnect()
-      const bottomPx = Math.round((window.innerHeight || 0) * TRIGGER_FRACTION)
-      io = new IntersectionObserver(
-        (entries) => {
-          if (entries.some((e) => e.isIntersecting)) { io.disconnect(); fire() }
-        },
-        { threshold: 0, rootMargin: `0px 0px -${bottomPx}px 0px` },
-      )
-      io.observe(el)
-    }
-    observe()
-    // Recompute the px line if the viewport changes (rotation, mobile toolbar).
-    window.addEventListener('resize', observe)
-    return () => { io?.disconnect(); window.removeEventListener('resize', observe) }
+    return watch(el, fire)
   }, [reduce, instant, delay, revealDelay])
 
   if (reduce) {
