@@ -108,6 +108,16 @@ function MobileMenu({ open, onClose }) {
           <Link to="/process" className="nav-mobile-link" onClick={onClose}>Process</Link>
           <Link to="/industries" className="nav-mobile-link" onClick={onClose}>Industries</Link>
           <Link to="/contact" className="nav-mobile-link" onClick={onClose}>Contact</Link>
+          {/* External affiliate portal — new tab, same style as the links above. */}
+          <a
+            className="nav-mobile-link"
+            href="https://affiliates.rapidriseai.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onClose}
+          >
+            Affiliate Program
+          </a>
         </div>
 
         {/* Services split into the same two groups as the desktop mega-menu */}
@@ -201,6 +211,16 @@ export default function Navbar({ loaded }) {
 
           <Link to="/proof"  className="navbar-link">Proof</Link>
           <Link to="/about"  className="navbar-link">About</Link>
+          {/* External: the affiliate portal lives outside this site. Opens in a
+              new tab; styled identically to the other nav links. */}
+          <a
+            className="navbar-link"
+            href="https://affiliates.rapidriseai.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Affiliate Program
+          </a>
         </div>
 
         <Link className="navbar-cta-btn" to="/contact">

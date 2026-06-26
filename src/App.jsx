@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import CursorTrail from './components/ui/CursorTrail'
 import EdgeSpotlight from './components/ui/EdgeSpotlight'
 import ScrollManager from './components/ScrollManager'
+import AffiliateTracker from './components/AffiliateTracker'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 import PersistentScene from './components/scene/PersistentScene'
 import TransitionProvider from './components/transition/TransitionProvider'
 import CookieConsent from './components/ui/CookieConsent'
@@ -23,6 +25,8 @@ export default function App() {
   return (
     <>
       <ScrollManager />
+      {/* Non-visual: captures ?ref=/?affiliate=/?utm_affiliate= referral codes. */}
+      <AffiliateTracker />
       {/* The ONE persistent 3-D object — mounted once here so it survives every
           route change (the basis for "all pages share the same object"). */}
       <PersistentScene />
@@ -53,6 +57,7 @@ export default function App() {
       </TransitionProvider>
       <GoogleReviewsWidget />
       <CookieConsent />
+      <SpeedInsights />
     </>
   )
 }

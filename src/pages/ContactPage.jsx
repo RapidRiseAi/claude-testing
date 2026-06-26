@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import PageLayout from '../components/ui/PageLayout'
 import TiltCard from '../components/ui/TiltCard'
@@ -115,6 +115,15 @@ function NextIcon({ name }) {
   )
 }
 
+// A unique id per filled-out enquiry, used as an idempotency key so a double
+// click or a retry after a network hiccup collapses into ONE lead server-side.
+function newSubmissionId() {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
+  } catch { /* fall through */ }
+  return `rr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+}
+
 const INITIAL = {
   name: '',
   business: '',
@@ -145,6 +154,8 @@ export default function ContactPage() {
   }))
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | submitting | drafted | sent | error
+  // Stable across re-renders / retries of the same enquiry; reset after success.
+  const submissionIdRef = useRef(newSubmissionId())
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -171,8 +182,13 @@ export default function ContactPage() {
     if (Object.keys(er).length) return
     setStatus('submitting')
     try {
-      const { delivered } = await submitContactRequest(form)
+      const { delivered } = await submitContactRequest(form, {
+        submissionId: submissionIdRef.current,
+      })
       setStatus(delivered ? 'sent' : 'drafted')
+      // A confirmed server capture is "done": rotate the key so a genuinely new
+      // enquiry later is not deduplicated against this one.
+      if (delivered) submissionIdRef.current = newSubmissionId()
     } catch {
       setStatus('error')
     }
