@@ -65,6 +65,7 @@ export default async function handler(req, res) {
     affiliate: {
       code: cleanAffiliateCode(body.affiliateCode),
       session_id: cleanString(body.affiliateSessionId, 64),
+      tracking_token: cleanString(body.affiliateTrackingToken, 64),
       source: cleanString(body.affiliateSource, 40),
       captured_at: cleanString(body.affiliateCapturedAt, 40),
     },

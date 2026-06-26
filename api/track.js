@@ -36,6 +36,7 @@ export default async function handler(req, res) {
   const payload = {
     code,
     session_id: sessionId,
+    tracking_token: cleanString(body.trackingToken, 64),
     landing_page: cleanString(body.landingPath, 300),
     referrer: cleanString(body.referrer, 500),
   }

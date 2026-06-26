@@ -31,6 +31,7 @@ function buildPayload(data, meta) {
     // Attribution (null when the visitor did not arrive via an affiliate link).
     affiliateCode: affiliate?.code ?? null,
     affiliateSessionId: affiliate?.sessionId ?? null,
+    affiliateTrackingToken: affiliate?.trackingToken ?? null,
     affiliateSource: affiliate?.source ?? null,
     affiliateCapturedAt: affiliate?.capturedAt ?? null,
     // Idempotency key — lets the server collapse double-clicks / retries of the

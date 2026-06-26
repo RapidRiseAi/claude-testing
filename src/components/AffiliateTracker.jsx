@@ -1,6 +1,11 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
-import { captureAffiliateFromUrl, getStoredAffiliate, reportAffiliateVisit } from '../utils/affiliate'
+import {
+  captureAffiliateFromUrl,
+  getStoredAffiliate,
+  reportAffiliateIntent,
+  reportAffiliateVisit,
+} from '../utils/affiliate'
 
 // Non-visual: captures an affiliate referral code from the URL on first load and
 // on every in-app navigation (an affiliate deep-link can land on any route), then
@@ -19,6 +24,21 @@ export default function AffiliateTracker() {
     const record = fresh || getStoredAffiliate()
     if (record) reportAffiliateVisit(record)
   }, [location.search, location.pathname])
+
+  useEffect(() => {
+    const onClick = (event) => {
+      const link = event.target?.closest?.('a[href]')
+      if (!link) return
+      const href = link.getAttribute('href') || ''
+      if (href.startsWith('mailto:')) reportAffiliateIntent('email', href)
+      else if (href.startsWith('tel:')) reportAffiliateIntent('phone', href)
+      else if (/https?:\/\/(wa\.me|api\.whatsapp\.com)\//i.test(href)) {
+        reportAffiliateIntent('whatsapp', href)
+      }
+    }
+    document.addEventListener('click', onClick, { capture: true })
+    return () => document.removeEventListener('click', onClick, { capture: true })
+  }, [])
 
   return null
 }

@@ -17,6 +17,7 @@ export const env = {
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
   leadRpc: process.env.WEBSITE_LEAD_RPC || 'submit_website_lead',
   clickRpc: process.env.AFFILIATE_CLICK_RPC || 'record_website_referral_click',
+  intentRpc: process.env.AFFILIATE_INTENT_RPC || 'record_website_referral_intent',
   hmacSecret: process.env.AFFILIATE_ATTRIBUTION_HMAC_SECRET || '',
   resendKey: process.env.RESEND_API_KEY || '',
   // Accept the project-wide Resend naming used by the other apps

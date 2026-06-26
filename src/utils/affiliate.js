@@ -63,6 +63,7 @@ function safeStorage() {
 // CRM's job server-side. Keep this in sync with the format of your CRM
 // `tracking_code` column so legitimate codes are never rejected here.
 const AFFILIATE_CODE_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{1,63}$/
+const TRACKING_TOKEN_RE = /^[A-Za-z0-9_-]{4,64}$/
 
 export function isValidAffiliateCode(raw) {
   if (typeof raw !== 'string') return false
@@ -140,13 +141,16 @@ export function readAffiliateRoute(pathname, search) {
 
   const code = segments[1].trim()
   if (!isValidAffiliateCode(code)) return null
+  const token = segments[2] && TRACKING_TOKEN_RE.test(segments[2]) ? segments[2] : null
+  const destinationSegments = token ? segments.slice(3) : segments.slice(2)
 
   return {
     code,
+    trackingToken: token,
     source: 'route',
     destination:
       readSafeDestination(search) ||
-      readDestinationFromRouteSegments(segments.slice(2)) ||
+      readDestinationFromRouteSegments(destinationSegments) ||
       '/',
   }
 }
@@ -176,6 +180,7 @@ export function captureAffiliateFromUrl(search) {
   const record = {
     code: found.code,
     source: found.source,
+    trackingToken: found.trackingToken || null,
     capturedAt: new Date().toISOString(),
     sessionId: newSessionId(),
   }
@@ -194,8 +199,18 @@ export function captureAffiliateFromRoute(pathname, search) {
   if (!found) return null
 
   const queryRecord = captureAffiliateFromUrl(`?ref=${encodeURIComponent(found.code)}`)
+  const record = queryRecord || getStoredAffiliate()
+  if (record && found.trackingToken && record.trackingToken !== found.trackingToken) {
+    record.trackingToken = found.trackingToken
+    record.source = 'route'
+    try {
+      safeStorage()?.setItem(AFFILIATE_KEY, JSON.stringify(record))
+    } catch {
+      /* best-effort campaign-token upgrade */
+    }
+  }
   return {
-    record: queryRecord || getStoredAffiliate(),
+    record,
     destination: found.destination,
   }
 }
@@ -225,6 +240,9 @@ export function getStoredAffiliate() {
       /* best-effort migration of older local records */
     }
   }
+  if (parsed.trackingToken && !TRACKING_TOKEN_RE.test(parsed.trackingToken)) {
+    parsed.trackingToken = null
+  }
   return parsed
 }
 
@@ -249,12 +267,13 @@ export function clearStoredAffiliate() {
 // Disabled unless VITE_TRACK_API is set (a same-origin path like '/api/track'),
 // so the default build behaves exactly as before: no network call at all.
 const TRACK_API = import.meta.env.VITE_TRACK_API || ''
+const INTENT_API = import.meta.env.VITE_INTENT_API || ''
 
 export function reportAffiliateVisit(record) {
   if (!TRACK_API || !record || !record.code) return
   let already = false
   try {
-    const k = `rr-aff-reported:${record.code}`
+    const k = `rr-aff-reported:${record.code}:${record.trackingToken || 'default'}`
     already = window.sessionStorage.getItem(k) === '1'
     if (!already) window.sessionStorage.setItem(k, '1')
   } catch {
@@ -266,6 +285,7 @@ export function reportAffiliateVisit(record) {
     const body = JSON.stringify({
       code: record.code,
       sessionId: record.sessionId,
+      trackingToken: record.trackingToken || null,
       source: record.source,
       landingPath: window.location.pathname,
       referrer: document.referrer || null,
@@ -279,5 +299,48 @@ export function reportAffiliateVisit(record) {
     }).catch(() => {})
   } catch {
     /* never throw from tracking */
+  }
+}
+
+function serviceHintFromPath(pathname) {
+  const parts = splitPath(pathname)
+  if (parts[0] === 'services' && parts[1]) return parts[1].replace(/-/g, ' ')
+  if (parts[0] === 'contact') return 'contact'
+  return null
+}
+
+export function reportAffiliateIntent(channel, linkUrl) {
+  if (!INTENT_API || !channel) return
+  const record = getStoredAffiliate()
+  if (!record?.code || !record?.sessionId) return
+
+  const normalized = String(channel).toLowerCase()
+  try {
+    const day = new Date().toISOString().slice(0, 10)
+    const k = `rr-aff-intent:${record.code}:${record.trackingToken || 'default'}:${normalized}:${day}`
+    if (window.sessionStorage.getItem(k) === '1') return
+    window.sessionStorage.setItem(k, '1')
+  } catch {
+    /* sessionStorage blocked - still report best-effort */
+  }
+
+  try {
+    fetch(INTENT_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: record.code,
+        sessionId: record.sessionId,
+        trackingToken: record.trackingToken || null,
+        channel: normalized,
+        pagePath: window.location.pathname,
+        pageUrl: window.location.href,
+        linkUrl: linkUrl || null,
+        serviceHint: serviceHintFromPath(window.location.pathname),
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  } catch {
+    /* never throw from intent tracking */
   }
 }
