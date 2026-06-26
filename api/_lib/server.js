@@ -19,8 +19,18 @@ export const env = {
   clickRpc: process.env.AFFILIATE_CLICK_RPC || 'record_website_referral_click',
   hmacSecret: process.env.AFFILIATE_ATTRIBUTION_HMAC_SECRET || '',
   resendKey: process.env.RESEND_API_KEY || '',
-  notifyTo: process.env.INTERNAL_NOTIFICATION_EMAIL || '',
-  notifyFrom: process.env.NOTIFICATION_FROM || 'Rapid Rise AI <team@rapidriseai.com>',
+  // Accept the project-wide Resend naming used by the other apps
+  // (RESEND_FROM_EMAIL / RESEND_TO_EMAIL) as well as this app's own names, so the
+  // env vars already in place work without renaming. The recipient defaults to
+  // the team inbox so a new-lead notification has somewhere to go out of the box.
+  notifyTo:
+    process.env.INTERNAL_NOTIFICATION_EMAIL ||
+    process.env.RESEND_TO_EMAIL ||
+    'team@rapidriseai.com',
+  notifyFrom:
+    process.env.RESEND_FROM_EMAIL ||
+    process.env.NOTIFICATION_FROM ||
+    'Rapid Rise AI <team@rapidriseai.com>',
 }
 
 export function isConfigured() {
