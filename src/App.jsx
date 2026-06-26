@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import CursorTrail from './components/ui/CursorTrail'
 import EdgeSpotlight from './components/ui/EdgeSpotlight'
-import ScrollToTop from './components/ScrollToTop'
+import ScrollManager from './components/ScrollManager'
 import PersistentScene from './components/scene/PersistentScene'
 import TransitionProvider from './components/transition/TransitionProvider'
 import CookieConsent from './components/ui/CookieConsent'
@@ -22,7 +22,7 @@ import { LEGAL_NAV } from './data/legalContent'
 export default function App() {
   return (
     <>
-      <ScrollToTop />
+      <ScrollManager />
       {/* The ONE persistent 3-D object — mounted once here so it survives every
           route change (the basis for "all pages share the same object"). */}
       <PersistentScene />
