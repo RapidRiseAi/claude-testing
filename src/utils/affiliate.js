@@ -19,6 +19,19 @@ export const AFFILIATE_PARAMS = ['ref', 'affiliate', 'utm_affiliate']
 export const AFFILIATE_KEY = 'rr-aff'
 export const AFFILIATE_TTL_DAYS = 30
 const TTL_MS = AFFILIATE_TTL_DAYS * 24 * 60 * 60 * 1000
+const AFFILIATE_ROUTE_PREFIX = 'r'
+const ROUTE_DESTINATION_PARAM_NAMES = ['to', 'dest', 'destination', 'redirect']
+const PUBLIC_ROUTE_ROOTS = new Set([
+  'about',
+  'contact',
+  'industries',
+  'process',
+  'proof',
+  'services',
+  'privacy-policy',
+  'terms-of-service',
+  'paia-manual',
+])
 
 function newSessionId() {
   try {
@@ -75,6 +88,69 @@ function readCodeFromSearch(search) {
   return null
 }
 
+function safeDecodePathSegment(segment) {
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
+function splitPath(pathname) {
+  return String(pathname || '')
+    .split('/')
+    .filter(Boolean)
+    .map(safeDecodePathSegment)
+}
+
+function readSafeDestination(search) {
+  let params
+  try {
+    params = new URLSearchParams(search || '')
+  } catch {
+    return null
+  }
+  for (const name of ROUTE_DESTINATION_PARAM_NAMES) {
+    const raw = params.get(name)
+    if (!raw) continue
+    const dest = raw.trim()
+    if (
+      dest.startsWith('/') &&
+      !dest.startsWith('//') &&
+      !dest.startsWith('/\\') &&
+      !dest.startsWith('/r/') &&
+      !/[\r\n]/.test(dest)
+    ) {
+      return dest
+    }
+  }
+  return null
+}
+
+function readDestinationFromRouteSegments(segments) {
+  if (!segments.length) return null
+  const [root] = segments
+  if (!PUBLIC_ROUTE_ROOTS.has(root)) return null
+  return `/${segments.map(encodeURIComponent).join('/')}`
+}
+
+export function readAffiliateRoute(pathname, search) {
+  const segments = splitPath(pathname)
+  if (segments[0] !== AFFILIATE_ROUTE_PREFIX || !segments[1]) return null
+
+  const code = segments[1].trim()
+  if (!isValidAffiliateCode(code)) return null
+
+  return {
+    code,
+    source: 'route',
+    destination:
+      readSafeDestination(search) ||
+      readDestinationFromRouteSegments(segments.slice(2)) ||
+      '/',
+  }
+}
+
 // Capture an affiliate code from the current URL into storage.
 //
 // Rules (from the brief):
@@ -111,6 +187,17 @@ export function captureAffiliateFromUrl(search) {
     }
   }
   return record
+}
+
+export function captureAffiliateFromRoute(pathname, search) {
+  const found = readAffiliateRoute(pathname, search)
+  if (!found) return null
+
+  const queryRecord = captureAffiliateFromUrl(`?ref=${encodeURIComponent(found.code)}`)
+  return {
+    record: queryRecord || getStoredAffiliate(),
+    destination: found.destination,
+  }
 }
 
 // Read the stored attribution, honouring the 30-day window. Expired or

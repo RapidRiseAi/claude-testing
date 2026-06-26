@@ -19,6 +19,7 @@ import IndustriesPage from './pages/IndustriesPage'
 import ContactPage from './pages/ContactPage'
 import NotFoundPage from './pages/NotFoundPage'
 import LegalPage from './pages/LegalPage'
+import AffiliateRedirectPage from './pages/AffiliateRedirectPage'
 import { LEGAL_NAV } from './data/legalContent'
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
       <Route path="/process" element={<ProcessPage />} />
       <Route path="/industries" element={<IndustriesPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/r/:code/*" element={<AffiliateRedirectPage />} />
       {/* Legal documents at top-level routes (/privacy-policy, /paia-manual, …) */}
       {LEGAL_NAV.map((doc) => (
         <Route key={doc.slug} path={`/${doc.slug}`} element={<LegalPage slug={doc.slug} />} />
