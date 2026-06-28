@@ -6,6 +6,7 @@ export default function NotFoundPage() {
   usePageMeta(
     'Page Not Found | Rapid Rise AI',
     'The page you are looking for may have moved, or the link may be incorrect.',
+    { noindex: true },
   )
 
   return (

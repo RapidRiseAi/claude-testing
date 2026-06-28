@@ -23,8 +23,14 @@ const IDLE_MS      = 150    // quiet period after a native scroll before snappin
 //     swipes again over the momentum tail) the next gesture fires straight away,
 //     so quick repeated flicks step quickly instead of feeling locked out.
 const GESTURE_GAP  = 150    // ms of wheel silence that ends a gesture
-const LONG_MS      = 700    // sustained-hold before each extra card step
-const REACCEL      = 1.7    // delta spike vs the decaying tail = a fresh swipe
+const LONG_MS      = 1000   // sustained-hold before each extra card step (trackpads
+                            // emit long momentum bursts; a slower cadence here keeps
+                            // a single continuous two-finger scroll from running
+                            // through several Section-2 cards at once)
+const REACCEL      = 2.4    // delta spike vs the decaying tail = a fresh swipe. Higher
+                            // = a bumpy trackpad momentum tail is less likely to be
+                            // misread as a new flick (which would fire an extra step
+                            // and skip a card)
 const MIN_STEP_GAP = 60     // hard floor between two fired steps (anti double-fire)
 // A step that crosses a SECTION boundary (anything other than card→card) can only
 // happen this often. Card stepping is never throttled (stays fully responsive); this

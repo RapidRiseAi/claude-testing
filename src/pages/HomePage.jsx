@@ -7,12 +7,19 @@ import OurWorkSection from '../components/ui/OurWorkSection'
 import CustomPossibilitiesSection from '../components/ui/CustomPossibilitiesSection'
 import SiteFooter from '../components/ui/SiteFooter'
 import useScrollSnap from '../hooks/useScrollSnap'
+import usePageMeta from '../hooks/usePageMeta'
 
 export default function HomePage() {
   // No loading screen: the scene + content animate straight in on mount. `loaded`
   // is permanently true so the Navbar / HeroSection entrance animations still
   // fire immediately (they were previously gated on the loader finishing).
   const loaded = true
+
+  // Mirrors the site-wide defaults in index.html and sets the homepage canonical.
+  usePageMeta(
+    'Rapid Rise AI | Custom Software, AI Systems & Business Automation',
+    'Rapid Rise AI builds custom websites, client portals, smart dashboards, AI agents, automations, IoT systems and connected digital ecosystems for businesses in South Africa.',
+  )
 
   useScrollSnap()
 
