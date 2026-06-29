@@ -1,7 +1,44 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/index.html", "destination": "/", "permanent": true },
+
+    { "source": "/solutions/support-assistant", "destination": "/services/ai-communication-agent", "permanent": true },
+    { "source": "/solutions/:path*", "destination": "/services", "permanent": true },
+    { "source": "/solutions", "destination": "/services", "permanent": true },
+
+    { "source": "/products/pricing", "destination": "/services", "permanent": true },
+    { "source": "/products/:path*", "destination": "/services", "permanent": true },
+    { "source": "/products", "destination": "/services", "permanent": true },
+
+    { "source": "/pricing", "destination": "/services", "permanent": true },
+
+    { "source": "/terms", "destination": "/services", "permanent": true },
+
+    { "source": "/legal/privacy-policy", "destination": "/privacy-policy", "permanent": true },
+    { "source": "/legal/terms-of-service", "destination": "/terms-of-service", "permanent": true },
+    { "source": "/legal/popia-notice", "destination": "/popia-notice", "permanent": true },
+    { "source": "/legal/paia-manual", "destination": "/paia-manual", "permanent": true },
+    { "source": "/legal/cookie-notice", "destination": "/cookie-notice", "permanent": true },
+    { "source": "/legal/refund-policy", "destination": "/refund-cancellation-policy", "permanent": true }
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/services", "destination": "/index.html" },
+    { "source": "/services/:slug", "destination": "/index.html" },
+    { "source": "/proof", "destination": "/index.html" },
+    { "source": "/about", "destination": "/index.html" },
+    { "source": "/process", "destination": "/index.html" },
+    { "source": "/industries", "destination": "/index.html" },
+    { "source": "/contact", "destination": "/index.html" },
+    { "source": "/privacy-policy", "destination": "/index.html" },
+    { "source": "/terms-of-service", "destination": "/index.html" },
+    { "source": "/popia-notice", "destination": "/index.html" },
+    { "source": "/paia-manual", "destination": "/index.html" },
+    { "source": "/cookie-notice", "destination": "/index.html" },
+    { "source": "/refund-cancellation-policy", "destination": "/index.html" },
+    { "source": "/r/:path*", "destination": "/index.html" }
   ],
   "headers": [
     {
@@ -13,6 +50,13 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()" },
         { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
       ]
     }
   ]

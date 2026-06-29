@@ -1,0 +1,9 @@
+# robots.txt — https://www.rapidriseai.com
+# The whole public website is open to crawlers. Only the affiliate referral
+# endpoints (functional redirects, not content) are disallowed.
+
+User-agent: *
+Allow: /
+Disallow: /r/
+
+Sitemap: https://www.rapidriseai.com/sitemap.xml

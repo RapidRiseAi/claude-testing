@@ -5,10 +5,14 @@ import {
   getStoredAffiliate,
   reportAffiliateVisit,
 } from '../utils/affiliate'
+import usePageMeta from '../hooks/usePageMeta'
 
 export default function AffiliateRedirectPage() {
   const location = useLocation()
   const navigate = useNavigate()
+
+  // Functional referral redirect, not a content page — never index it.
+  usePageMeta(undefined, undefined, { noindex: true })
 
   useEffect(() => {
     const captured = captureAffiliateFromRoute(location.pathname, location.search)

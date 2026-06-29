@@ -8,7 +8,6 @@ import PersistentScene from './components/scene/PersistentScene'
 import TransitionProvider from './components/transition/TransitionProvider'
 import CookieConsent from './components/ui/CookieConsent'
 import GoogleReviewsWidget from './components/ui/GoogleReviewsWidget'
-import ObjectDev from './pages/ObjectDev'
 import HomePage from './pages/HomePage'
 import ServicesPage from './pages/ServicesPage'
 import ServiceDetailPage from './pages/ServiceDetailPage'
@@ -38,8 +37,6 @@ export default function App() {
       <TransitionProvider>
       <Routes>
       <Route path="/" element={<HomePage />} />
-      {/* DEV-only: isolated object preview for reference matching (remove before ship) */}
-      <Route path="/objdev" element={<ObjectDev />} />
       <Route path="/services" element={<ServicesPage />} />
       <Route path="/services/:slug" element={<ServiceDetailPage />} />
       <Route path="/pricing" element={<Navigate to="/services" replace />} />

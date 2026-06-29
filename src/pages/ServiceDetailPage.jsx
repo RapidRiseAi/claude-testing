@@ -216,11 +216,15 @@ export default function ServiceDetailPage() {
   const service = ALL_SERVICES.find((s) => s.slug === slug)
   const content = SERVICE_CONTENT[slug]
 
+  const found = !!(service && content)
+
   usePageMeta(
     service ? `${service.name} | Rapid Rise AI` : 'Service Not Found | Rapid Rise AI',
     service
       ? `${service.tagline} ${service.description}`
       : 'The service you are looking for does not exist.',
+    // An unknown slug is a soft 404 — keep it out of the index.
+    { noindex: !found },
   )
 
   if (!service || !content) {
