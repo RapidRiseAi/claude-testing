@@ -19,6 +19,8 @@ export const env = {
   clickRpc: process.env.AFFILIATE_CLICK_RPC || 'record_website_referral_click',
   intentRpc: process.env.AFFILIATE_INTENT_RPC || 'record_website_referral_intent',
   hmacSecret: process.env.AFFILIATE_ATTRIBUTION_HMAC_SECRET || '',
+  upstashUrl: process.env.UPSTASH_REDIS_REST_URL || '',
+  upstashToken: process.env.UPSTASH_REDIS_REST_TOKEN || '',
   resendKey: process.env.RESEND_API_KEY || '',
   // Accept the project-wide Resend naming used by the other apps
   // (RESEND_FROM_EMAIL / RESEND_TO_EMAIL) as well as this app's own names, so the
@@ -86,6 +88,39 @@ export function visitorToken(req) {
   const ua = req.headers['user-agent'] || ''
   if (!ip && !ua) return null
   return crypto.createHmac('sha256', env.hmacSecret).update(`${ip}|${ua}`).digest('hex')
+}
+
+// ── Best-effort IP + rate limiting (Upstash Redis REST) ───────────────────────
+// FAIL-OPEN: if Upstash is not configured or unreachable, requests are allowed.
+// These public endpoints are unauthenticated, so this caps abuse/cost without
+// ever breaking a real visitor. Configure with UPSTASH_REDIS_REST_URL/TOKEN.
+export function clientIp(req) {
+  const fwd = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
+  return fwd || req.socket?.remoteAddress || 'unknown'
+}
+
+export async function rateLimit(key, limit, windowSeconds) {
+  if (!env.upstashUrl || !env.upstashToken) return { ok: true }
+  try {
+    const r = await fetch(`${env.upstashUrl.replace(/\/$/, '')}/pipeline`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.upstashToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify([
+        ['INCR', `rl:${key}`],
+        ['PEXPIRE', `rl:${key}`, windowSeconds * 1000, 'NX'],
+      ]),
+    })
+    if (!r.ok) return { ok: true }
+    const results = await r.json()
+    const count = Number(results?.[0]?.result ?? 0)
+    if (!Number.isFinite(count) || count <= 0) return { ok: true }
+    return { ok: count <= limit }
+  } catch {
+    return { ok: true }
+  }
 }
 
 // ── Call a Supabase RPC with the service role key (server-side only) ──────────

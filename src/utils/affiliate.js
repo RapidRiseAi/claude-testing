@@ -5,7 +5,7 @@
 //
 // This module is the ONE place that:
 //   1. reads that code off the URL, trims + validates it;
-//   2. stores it first-party (localStorage) for a 30-day attribution window;
+//   2. stores it first-party (localStorage) for a 90-day attribution window;
 //   3. hands it back to the contact form so submissions carry attribution.
 //
 // Privacy by design — this matches the site's no-third-party-cookie stance in
@@ -17,7 +17,10 @@
 
 export const AFFILIATE_PARAMS = ['ref', 'affiliate', 'utm_affiliate']
 export const AFFILIATE_KEY = 'rr-aff'
-export const AFFILIATE_TTL_DAYS = 30
+// Canonical attribution window. Must match the server-side window used by the
+// referral-session RPCs and the portal redirect cookie (90 days). Keeping the
+// client TTL shorter would silently drop attributions the server still honours.
+export const AFFILIATE_TTL_DAYS = 90
 const TTL_MS = AFFILIATE_TTL_DAYS * 24 * 60 * 60 * 1000
 const AFFILIATE_ROUTE_PREFIX = 'r'
 const ROUTE_DESTINATION_PARAM_NAMES = ['to', 'dest', 'destination', 'redirect']
@@ -159,7 +162,7 @@ export function readAffiliateRoute(pathname, search) {
 //
 // Rules (from the brief):
 //   • trim + validate before storing;
-//   • a 30-day attribution window;
+//   • a 90-day attribution window;
 //   • do NOT overwrite an existing stored code unless a new VALID code is
 //     explicitly present in this URL (first-touch attribution wins, but a fresh
 //     affiliate link the visitor just clicked takes precedence).
@@ -215,7 +218,7 @@ export function captureAffiliateFromRoute(pathname, search) {
   }
 }
 
-// Read the stored attribution, honouring the 30-day window. Expired or
+// Read the stored attribution, honouring the 90-day window. Expired or
 // malformed records are cleared and treated as "no attribution".
 export function getStoredAffiliate() {
   const ls = safeStorage()

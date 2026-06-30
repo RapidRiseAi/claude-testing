@@ -18,12 +18,18 @@ import {
   cleanString,
   cleanAffiliateCode,
   callRpc,
+  clientIp,
+  rateLimit,
 } from './_lib/server.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { ok: false })
   // Not configured yet → succeed quietly; the client ignores the body anyway.
   if (!isConfigured()) return json(res, 200, { ok: false, error: 'not_configured' })
+
+  // Cap click spam per IP (60 / 5 min). Fails open if Upstash is unset.
+  const limit = await rateLimit(`track:${clientIp(req)}`, 60, 300)
+  if (!limit.ok) return json(res, 200, { ok: false, error: 'rate_limited' })
 
   const body = await readJsonBody(req)
   const code = cleanAffiliateCode(body && body.code)

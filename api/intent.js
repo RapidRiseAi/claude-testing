@@ -9,11 +9,17 @@ import {
   cleanAffiliateCode,
   visitorToken,
   callRpc,
+  clientIp,
+  rateLimit,
 } from './_lib/server.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'method_not_allowed' })
   if (!isConfigured()) return json(res, 200, { ok: false, error: 'not_configured' })
+
+  // Cap intent spam per IP (30 / 5 min). Fails open if Upstash is unset.
+  const rl = await rateLimit(`intent:${clientIp(req)}`, 30, 300)
+  if (!rl.ok) return json(res, 200, { ok: false, error: 'rate_limited' })
 
   const body = await readJsonBody(req)
   const code = cleanAffiliateCode(body && body.code)
