@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { withAffiliateRef } from '../utils/affiliate'
+import { withAffiliateRef, reportAffiliateIntent } from '../utils/affiliate'
+import EmailComposeButton from '../components/ui/EmailComposeButton'
 import PageLayout from '../components/ui/PageLayout'
 import TiltCard from '../components/ui/TiltCard'
 import Reveal from '../components/ui/Reveal'
@@ -163,10 +164,8 @@ export default function ContactPage() {
   // attributable even if client-side tracking never lands. Computed after mount
   // (once the affiliate code is captured/available in storage).
   const [waHref, setWaHref] = useState(WHATSAPP_URL)
-  const [emailHref, setEmailHref] = useState(`mailto:${CONTACT_EMAIL}`)
   useEffect(() => {
     setWaHref(withAffiliateRef(WHATSAPP_URL))
-    setEmailHref(withAffiliateRef(`mailto:${CONTACT_EMAIL}`))
   }, [])
 
   // Smooth-scroll to the request form without navigating (no hash in the URL, no
@@ -220,7 +219,7 @@ export default function ContactPage() {
       text: (
         <>The fastest way to reach us. Message {WHATSAPP_DISPLAY} and we will reply during business hours.</>
       ),
-      link: { href: waHref, label: 'Open WhatsApp', external: true },
+      link: { href: waHref, label: 'Open WhatsApp', external: true, onClick: () => reportAffiliateIntent('whatsapp', waHref) },
     },
     {
       icon: <MailIcon />,
@@ -228,7 +227,7 @@ export default function ContactPage() {
       text: (
         <>Prefer writing it out? Email us directly and attach any documents, examples, or briefs.</>
       ),
-      link: { href: emailHref, label: CONTACT_EMAIL, external: false },
+      link: { label: CONTACT_EMAIL, compose: true },
     },
     {
       icon: <FormIcon />,
@@ -300,7 +299,13 @@ export default function ContactPage() {
             <li><CheckIcon />Tailored recommendation</li>
           </ul>
           <div className="pg-hero-actions">
-            <a className="pg-btn-primary" href={waHref} target="_blank" rel="noreferrer">
+            <a
+              className="pg-btn-primary"
+              href={waHref}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => reportAffiliateIntent('whatsapp', waHref)}
+            >
               <WhatsAppIcon />
               Message Us on WhatsApp
             </a>
@@ -308,7 +313,7 @@ export default function ContactPage() {
             <a className="pg-btn-ghost pg-btn--to-form" href="#project-form" onClick={scrollToForm}>
               Fill in the Form
             </a>
-            <a className="pg-btn-ghost" href={emailHref}>Email {CONTACT_EMAIL}</a>
+            <EmailComposeButton className="pg-btn-ghost">Email {CONTACT_EMAIL}</EmailComposeButton>
           </div>
         </header>
 
@@ -330,8 +335,12 @@ export default function ContactPage() {
                   <span className="ct2-card-ic tilt-pop-sm">{m.icon}</span>
                   <h3 className="ct2-card-title tilt-pop-sm">{m.title}</h3>
                   <p className="ct2-card-text">{m.text}</p>
-                  {m.link.external ? (
-                    <a className="ct2-card-link" href={m.link.href} target="_blank" rel="noreferrer">
+                  {m.link.compose ? (
+                    <EmailComposeButton className="ct2-card-link">
+                      {m.link.label} <ArrowIcon />
+                    </EmailComposeButton>
+                  ) : m.link.external ? (
+                    <a className="ct2-card-link" href={m.link.href} target="_blank" rel="noreferrer" onClick={m.link.onClick}>
                       {m.link.label} <ArrowIcon />
                     </a>
                   ) : (

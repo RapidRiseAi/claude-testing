@@ -267,10 +267,12 @@ export function clearStoredAffiliate() {
 // navigation does not spam the endpoint. Any failure is swallowed — tracking
 // must never affect page rendering.
 //
-// Disabled unless VITE_TRACK_API is set (a same-origin path like '/api/track'),
-// so the default build behaves exactly as before: no network call at all.
-const TRACK_API = import.meta.env.VITE_TRACK_API || ''
-const INTENT_API = import.meta.env.VITE_INTENT_API || ''
+// Default to the same-origin serverless routes so tracking works even if the
+// build-time VITE_* vars were never set (they only inline at build time — a
+// missing var used to silently disable all tracking). The routes themselves
+// return 501/no-op when Supabase isn't configured, so this is always safe.
+const TRACK_API = import.meta.env.VITE_TRACK_API || '/api/track'
+const INTENT_API = import.meta.env.VITE_INTENT_API || '/api/intent'
 
 export function reportAffiliateVisit(record) {
   if (!TRACK_API || !record || !record.code) return

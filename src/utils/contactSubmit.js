@@ -14,7 +14,7 @@
 
 import { getStoredAffiliate } from './affiliate'
 
-const CONTACT_API = import.meta.env.VITE_CONTACT_API || ''
+const CONTACT_API = import.meta.env.VITE_CONTACT_API || '/api/contact'
 const WEBHOOK_URL = ''
 
 export const CONTACT_EMAIL = 'team@rapidriseai.com'
