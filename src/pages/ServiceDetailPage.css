@@ -167,19 +167,33 @@
   /* Phones: package tiers become a compact side-swipe row (same strategy as the
      home/services pages) rather than a long stack of tall cards. */
   .sd2-pkg-grid {
+    --sd2-carousel-gutter: max(18px, 6vw);
     display: flex;
     grid-template-columns: none;
     align-items: flex-start;   /* tiers size to their content — no empty bottoms */
-    gap: 12px;
+    gap: var(--sd2-carousel-gutter);
+    width: 100vw;
+    max-width: 100vw;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding-bottom: 10px;
+    scroll-padding-inline: var(--sd2-carousel-gutter);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 4px var(--sd2-carousel-gutter) 12px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
   }
+  .sd2-section .sd2-pkg-grid { max-width: 100vw; }
   .sd2-pkg-grid::-webkit-scrollbar { display: none; }
-  .sd2-pkg-grid > * { flex: 0 0 80%; max-width: 300px; scroll-snap-align: start; height: auto; }
+  .sd2-pkg-grid > * {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: none;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    height: auto;
+  }
   .sd2-pkg { padding: 20px 17px 18px; height: auto; }
 
   /* Collapsible plan details: tap "See what's included" to expand. */

@@ -10,8 +10,11 @@ import Parallax from '../components/ui/Parallax'
 import usePageMeta from '../hooks/usePageMeta'
 import ObjectSlot from '../components/scene/ObjectSlot'
 import SwipeHint from '../components/ui/SwipeHint'
+import useResetMobileScrollRows from '../hooks/useResetMobileScrollRows'
 import { WORK_ITEMS } from '../data/workItems'
 import './ProofPage.css'
+
+const PROOF_ROW_SELECTOR = '.prf-grid, .prf-cat-grid'
 
 /* ── Icons (24×24, round caps) ─────────────────────────────────────────────── */
 const Ico = {
@@ -64,6 +67,8 @@ const STANDARDS = [
 const statusSlug = (s) => s.toLowerCase().replace(/\s+/g, '-')
 
 export default function ProofPage() {
+  useResetMobileScrollRows(PROOF_ROW_SELECTOR)
+
   usePageMeta(
     'Proof of What We Can Build | Rapid Rise AI',
     'Explore Rapid Rise AI concept previews, demo builds and example systems across websites, client portals, smart dashboards, AI agents and connected business ecosystems.',

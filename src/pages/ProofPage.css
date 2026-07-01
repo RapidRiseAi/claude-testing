@@ -270,22 +270,34 @@
   /* Phones: featured work + categories become compact side-swipe rows (same
      strategy as the home page) instead of a tall full-width stack. */
   .prf-grid, .prf-cat-grid {
+    --prf-carousel-gutter: max(18px, 6vw);
     display: flex;
     grid-template-columns: none;
     align-items: flex-start;   /* cards size to their content — no empty bottoms */
-    gap: 12px;
-    max-width: none;
+    gap: var(--prf-carousel-gutter);
+    width: 100vw;
+    max-width: 100vw;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    padding-bottom: 10px;
+    scroll-padding-inline: var(--prf-carousel-gutter);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 4px var(--prf-carousel-gutter) 12px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
   }
+  .prf-section .prf-grid,
+  .prf-section .prf-cat-grid { max-width: 100vw; }
   .prf-grid::-webkit-scrollbar, .prf-cat-grid::-webkit-scrollbar { display: none; }
   .prf-grid > *, .prf-cat-grid > * { height: auto; }
-  .prf-grid > * { flex: 0 0 80%; max-width: 300px; scroll-snap-align: start; }
-  .prf-cat-grid > * { flex: 0 0 68%; max-width: 250px; scroll-snap-align: start; }
+  .prf-grid > *, .prf-cat-grid > * {
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: none;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
   .prf-card { height: auto; }
 
   /* slightly smaller card text so the descriptive pills sit 2 to a row */

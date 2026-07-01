@@ -2597,14 +2597,15 @@ h2 {
   .fp-sub { font-size: 0.9rem; }
 
   .fp-grid {
+    --fp-carousel-gutter: max(18px, 6vw);
     display: flex;
     grid-template-columns: none;
     align-items: stretch;   /* all cards match the tallest; CTAs line up at the bottom */
-    gap: 12px;
+    gap: var(--fp-carousel-gutter);
     overflow-x: auto;
     scroll-snap-type: x mandatory;
-    scroll-padding-left: 6vw;
-    padding: 4px 6vw 10px;
+    scroll-padding-inline: var(--fp-carousel-gutter);
+    padding: 4px var(--fp-carousel-gutter) 10px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
@@ -2612,8 +2613,10 @@ h2 {
   .fp-grid::-webkit-scrollbar { display: none; }
   .fp-card {
     scroll-snap-align: start;
-    flex: 0 0 50%;
-    max-width: 188px;
+    scroll-snap-stop: always;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: none;
     min-height: 0;           /* desktop forces a tall 450px+ card for the pinned wave — not on mobile */
     padding: 14px 13px;
     border-radius: 15px;
@@ -3201,18 +3204,26 @@ h2 {
   .ow-section--mobile .ow-head { padding: 0 6vw; margin-bottom: 16px; }
   .ow-section--mobile .ow-title { font-size: clamp(1.7rem, min(7.0vw, 100.8px), 2.3rem); }
   .ow-scroller {
-    display: flex; gap: 14px;
+    --ow-carousel-gutter: max(18px, 6vw);
+    display: flex; gap: var(--ow-carousel-gutter);
     align-items: flex-start;   /* each card sizes to its own content — no empty tails */
     overflow-x: auto; overflow-y: hidden;
     scroll-snap-type: x mandatory;
-    scroll-padding-left: 6vw;
-    padding: 4px 6vw 12px;
+    scroll-padding-inline: var(--ow-carousel-gutter);
+    padding: 4px var(--ow-carousel-gutter) 12px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
   }
   .ow-scroller::-webkit-scrollbar { display: none; }
-  .ow-mcard { scroll-snap-align: start; flex: 0 0 76%; max-width: 300px; display: flex; }
+  .ow-mcard {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    flex: 0 0 100%;
+    width: 100%;
+    max-width: none;
+    display: flex;
+  }
   .ow-mcard .ow-preview { height: auto; width: 100%; margin: 0; }
   .ow-mcard .ow-preview-body { padding: 14px; }
   .ow-mcard .ow-preview-title { font-size: 0.98rem; margin-bottom: 6px; }

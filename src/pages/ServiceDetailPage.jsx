@@ -6,6 +6,7 @@ import Reveal from '../components/ui/Reveal'
 import ObjectSlot from '../components/scene/ObjectSlot'
 import SwipeHint from '../components/ui/SwipeHint'
 import usePageMeta from '../hooks/usePageMeta'
+import useResetMobileScrollRows from '../hooks/useResetMobileScrollRows'
 import { ALL_SERVICES } from '../data/services'
 import {
   SERVICE_CONTENT,
@@ -13,6 +14,8 @@ import {
   PRICING_DISCLAIMER,
 } from '../data/serviceContent'
 import './ServiceDetailPage.css'
+
+const SERVICE_DETAIL_PACKAGE_ROW_SELECTOR = '.sd2-pkg-grid'
 
 const ArrowIcon = () => (
   <svg width="14" height="14" viewBox="0 0 15 15" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -212,6 +215,8 @@ function ProblemSolution({ content }) {
 }
 
 export default function ServiceDetailPage() {
+  useResetMobileScrollRows(SERVICE_DETAIL_PACKAGE_ROW_SELECTOR)
+
   const { slug } = useParams()
   const service = ALL_SERVICES.find((s) => s.slug === slug)
   const content = SERVICE_CONTENT[slug]

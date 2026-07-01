@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import SwipeHint from './SwipeHint'
+import useResetMobileScrollRows from '../../hooks/useResetMobileScrollRows'
 
 /* ── Icons ─────────────────────────────────────────────────────────────────── */
 const MonitorCodeIcon = () => (
@@ -96,6 +97,7 @@ const PRODUCTS = [
 
 const EASE = [0.16, 1, 0.3, 1]
 const inView = { once: true, amount: 0.25, margin: '-60px' }
+const FIXED_PRICING_ROW_SELECTOR = '.fp-grid'
 // Touch: render the cards STATIC (no framer transform). The motion layer +
 // whileInView in a momentum scroll-snap row was both glitching the card during a
 // vertical drag and leaving off-screen-right cards hidden until swiped.
@@ -153,6 +155,8 @@ function ProductCard({ product, index }) {
 }
 
 export default function FixedPricingSection() {
+  useResetMobileScrollRows(FIXED_PRICING_ROW_SELECTOR, '(max-width: 820px)')
+
   return (
     <section className="fp-section" aria-label="Fixed pricing services">
       {/* The Section-3 wave is the shared HeroOrb particles (the funnel's orbs

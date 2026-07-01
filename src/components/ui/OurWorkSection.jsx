@@ -3,10 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { WORK_ITEMS, WORK_SECTION_COPY } from '../../data/workItems'
 import { isDesktopLayout } from '../../utils/scrollLayout'
+import useResetMobileScrollRows from '../../hooks/useResetMobileScrollRows'
 import SwipeHint from './SwipeHint'
 import ConceptPreview from './ConceptPreview'
 import InfoTip from './InfoTip'
 import Lightbox from './Lightbox'
+
+const OUR_WORK_ROW_SELECTOR = '.ow-scroller'
 
 /* ── Icons (line style matches the rest of the site: thin, round caps) ─────── */
 const ArrowUpRight = () => (
@@ -230,6 +233,8 @@ function WorkPreview({ item, num, onOpenGallery }) {
 }
 
 export default function OurWorkSection() {
+  useResetMobileScrollRows(OUR_WORK_ROW_SELECTOR, '(max-width: 1100px)')
+
   // Lead with the first item that has a real screenshot (a live client site),
   // not the placeholder mock, so the default preview is a real piece of proof.
   const firstReal = WORK_ITEMS.find((w) => w.mediaType === 'image') ?? WORK_ITEMS[0]
