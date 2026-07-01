@@ -252,32 +252,41 @@
 /* ── Mobile (phones): card sets become compact side-swipe rows — same strategy
    as the home page, so they read as browsable cards instead of a tall stack. ── */
 @media (max-width: 760px) {
-  .svc-section { padding: clamp(40px, 6vh, 64px) 0; }
-  .svc-price-grid, .svc-grid, .svc-guide-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: flex-start;   /* cards size to their content — no empty bottoms */
-    gap: 14px;
-    overflow-x: visible;
-    overflow-y: visible;
-    scroll-snap-type: none;
-    margin: 0;
-    padding: 0;
+  .svc-section {
+    --svc-carousel-gutter: max(18px, 6vw);
+    padding: clamp(40px, 6vh, 64px) 0;
   }
+  .svc-price-grid, .svc-grid, .svc-guide-grid {
+    display: flex;
+    grid-template-columns: none;
+    align-items: flex-start;   /* cards size to their content — no empty bottoms */
+    width: 100vw;
+    max-width: 100vw;
+    gap: var(--svc-carousel-gutter);
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--svc-carousel-gutter);
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    padding: 16px var(--svc-carousel-gutter) 22px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+  .svc-wrap .svc-price-grid,
+  .svc-wrap .svc-grid,
+  .svc-wrap .svc-guide-grid { max-width: 100vw; }
   .svc-price-grid::-webkit-scrollbar,
   .svc-grid::-webkit-scrollbar,
   .svc-guide-grid::-webkit-scrollbar { display: none; }
-  .svc-price-grid > *, .svc-guide-grid > * {
-    flex: 0 0 clamp(276px, 78vw, 320px);
+  .svc-price-grid > *, .svc-grid > *, .svc-guide-grid > * {
+    flex: 0 0 calc(100vw - (var(--svc-carousel-gutter) * 2));
+    width: calc(100vw - (var(--svc-carousel-gutter) * 2));
     max-width: none;
     min-width: 0;
     scroll-snap-align: start;
-  }
-  .svc-grid > * {
-    flex: 0 0 clamp(210px, 58vw, 245px);
-    max-width: none;
-    min-width: 0;
-    scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
   /* service + guide cards: natural height (no empty bottom) */
   .svc-service-link, .svc-service-card, .svc-guide-card { height: auto; }
@@ -302,16 +311,4 @@
   .svc-guide-title { font-size: 1rem; }
   .svc-guide-text { font-size: 0.84rem; margin-bottom: 14px; }
 
-  .svc-price-grid, .svc-grid, .svc-guide-grid {
-    align-items: stretch;
-    width: 100%;
-    max-width: 100%;
-  }
-  .svc-price-grid > *, .svc-grid > *, .svc-guide-grid > * {
-    flex: none;
-    width: 100%;
-    max-width: none;
-    scroll-snap-align: none;
-  }
-  .svc-wrap .swipe-hint { display: none; }
 }
